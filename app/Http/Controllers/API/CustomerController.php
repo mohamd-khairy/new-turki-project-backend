@@ -33,13 +33,13 @@ class CustomerController extends Controller
         }
 
         if (request('wallet') == 'all') {
-            $customers = $customers->get();
+            $customers = $customers->latest()->take(10000)->get();
         } elseif (request('wallet') == true) {
-            $customers = $customers->where('wallet', '>', 0)->get();
+            $customers = $customers->where('wallet', '>', 0)->latest()->take(10000)->get();
         } elseif (request('wallet') == false) {
-            $customers = $customers->where('wallet', '<=', 0)->get();
+            $customers = $customers->where('wallet', '<=', 0)->latest()->take(10000)->get();
         } else {
-            $customers = $customers->get();
+            $customers = $customers->latest()->take(10000)->get();
         }
 
 
