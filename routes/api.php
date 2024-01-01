@@ -23,6 +23,7 @@ use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\UserController;
+use App\Models\OrderState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -171,7 +172,6 @@ Route::prefix("v2")->group(function () {
             Route::get('/{dpId}', [DeliveryPeriodController::class, 'getById']);
             Route::get('/', [DeliveryPeriodController::class, 'getAll']);
         });
-
     });
 
 
@@ -181,6 +181,8 @@ Route::prefix("v2")->group(function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
 
         Route::get('order-status', [HomeController::class, 'GetOrderStatus']);
+
+        Route::get('all-order-status', fn () => successResponse(OrderState::whereIn('code', handleRoleOrderState(['admin'])['status'])->get()));
 
         /***********************HomeController******************* */
         Route::get('dashboard', [HomeController::class, 'dashboard']);

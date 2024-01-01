@@ -424,6 +424,30 @@ class OrderController extends Controller
                     $order->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 8]);
                 }
             }
+
+            if (!Payment::where(['order_ref_no' => $order->ref_no])->first()) {
+
+                $lastPayment = Payment::latest('id')->first();
+
+                $payment = Payment::create(
+                    [
+                        "ref_no" => GetNextPaymentRefNo('SA', $lastPayment != null ? $lastPayment->id + 1 : 1),
+                        "customer_id" => $order->customer_id,
+                        'order_ref_no' => $order->ref_no,
+                        'payment_type_id' => 1, //wallet
+                        'price' => $walletAmountUsed ?? 0,
+                        'status' => 'NotPaid',
+                        'manual' => 1,
+                        "description" => "Payment Created", // need to move to enum class
+                    ]
+                );
+
+                if ($payment) {
+
+                    $order->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                }
+            }
+            
             $this->storeOrderProducts($request->products, $order);
 
             return response()->json([

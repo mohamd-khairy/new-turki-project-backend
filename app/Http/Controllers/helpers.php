@@ -25,6 +25,7 @@ function generateQrInvoice($order)
             . ConvertHex("05") . ConvertHex(toHex(strlen($vat))) . $vat
     );
 }
+
 if (!function_exists('ConvertHex')) {
 
     function ConvertHex($hex)
