@@ -152,6 +152,104 @@ class OrderController extends Controller
         ], 200);
     }
 
+    public function getUserOrdersDashboard(Request $request)
+    {
+        try {
+            $order_states = (handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders']);
+        } catch (\Throwable $th) {
+            $order_states = null;
+        }
+
+        $perPage = 6;
+        if ($request->has('per_page'))
+            $perPage = $request->get('per_page');
+
+        if ($perPage == 0)
+            $perPage = 6;
+
+        $orders = DB::table('orders')
+            ->select(
+                'orders.*',
+                'customers.name as customer_name',
+                'customers.mobile as customer_mobile',
+                'order_states.state_ar as order_state_ar',
+                'order_states.state_en as order_state_en',
+                'shalwatas.name_ar as shalwata_name',
+                'shalwatas.price as shalwata_price',
+                'payment_types.name_ar as payment_type_name',
+                'delivery_periods.name_ar as delivery_period_name',
+                'delivery_periods.time_hhmm as delivery_period_time',
+                'payments.price as payment_price',
+                'payments.status as payment_status',
+                'addresses.address as address_address',
+                'addresses.lat as address_lat',
+                'addresses.long as address_long',
+                'addresses.country_id as address_country_id',
+                'addresses.city_id as address_city_id',
+                'cities.name_ar as city_name',
+            )
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
+            ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
+            ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
+            ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
+            ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+            ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
+            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
+
+        $orders = $orders->where('orders.user_id', request('user_id', auth()->user()->id));
+
+        if ($order_states) {
+            $orders = $orders->whereIn('orders.order_state_id', $order_states ?? []);
+        }
+        if (request('city_ids')) {
+            $orders = $orders->whereIn('addresses.city_id', request('city_ids'));
+        }
+        if (request('country_ids')) {
+            $orders = $orders->where('addresses.country_id', request('country_ids'));
+        }
+        if (request('order_state_ids')) {
+            $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
+        }
+        if (request('date_from') && request('date_to')) {
+            $orders = $orders->where(function ($q) {
+                $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
+            });
+        } else {
+            $orders = $orders->whereDate('orders.delivery_date', date('Y-m-d'));
+        }
+        
+        if (request('delivery_date')) {
+            $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+        }
+        if (request('delivery_period_id')) {
+            $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));
+        }
+        if (request('customer_id')) {
+            $orders = $orders->where('orders.customer_id', request('customer_id'));
+        }
+        if (request('mobile')) {
+            $orders = $orders->where('customers.mobile', request('mobile'));
+        }
+
+        $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
+
+        $items =  $orders->toArray()['data'];
+        $items = collect($items)->map(function ($i) {
+            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
+            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+            $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
+            return $i;
+        });
+
+        $orders->data = $items;
+
+        return response()->json([
+            'success' => true, 'data' => $orders,
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+        ], 200);
+    }
+    
     public function getOrderDashboard($order)
     {
         $order = Order::where('ref_no', $order)->with('paymentType', 'customer', 'payment', 'orderState', 'deliveryPeriod', 'selectedAddress')->first();

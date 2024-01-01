@@ -246,6 +246,7 @@ Route::prefix("v2")->group(function () {
             Route::post('edit-order-product', [OrderController::class, 'editOrderProducts']); //
             Route::post('delete-order-product', [OrderController::class, 'deleteOrderProducts']); //
             Route::get('get-order', [OrderController::class, 'getOrdersDashboard']); //getOrderDashboard
+            Route::get('get-user-order', [OrderController::class, 'getUserOrdersDashboard']); //getOrderDashboard
             Route::get('get-one-order/{order}', [OrderController::class, 'getOrderDashboard']); //
             Route::get('get-customer-wallet/{customer_id}', [OrderController::class, 'getCustomerWallet']); //getCustomerWallet
 
