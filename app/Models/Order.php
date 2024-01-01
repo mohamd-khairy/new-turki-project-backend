@@ -5,16 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Label\Label;
-use Endroid\QrCode\Logo\Logo;
-use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
-use Endroid\QrCode\Writer\ValidationException;
 
 class Order extends Model
 {
@@ -54,14 +48,18 @@ class Order extends Model
         'version_app',
         'user_id',
         'discount_applied',
-        'paid'
+        'paid',
+        'boxes_count',
+        'dishes_count',
+        'sales_representative_id',
+        'driver_name'
     ];
 
     protected $hidden = ['address'];
     protected $primaryKey = 'ref_no';
     public $incrementing = false;
 
-    public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount'];
+    public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount' , 'discount_code'];
 
     public function getRemainAmountAttribute()
     {
@@ -71,6 +69,11 @@ class Order extends Model
     public function getTotalAmountAfterTaxAttribute()
     {
         return  $this->total_amount_after_discount ? round($this->total_amount_after_discount / 1.15, 2) : 0;
+    }
+
+    public function getDiscountCodeAttribute()
+    {
+        return  $this->applied_discount_code ? $this->applied_discount_code : null;
     }
 
     public function getTaxFeesAttribute()
@@ -151,5 +154,10 @@ class Order extends Model
     public function order_products()
     {
         return $this->hasMany(OrderProduct::class, 'order_ref_no', 'ref_no');
+    }
+
+    public function salesRepresentative()
+    {
+        return $this->belongsTo(User::class, 'sales_representative_id');
     }
 }

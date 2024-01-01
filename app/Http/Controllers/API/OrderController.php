@@ -85,8 +85,10 @@ class OrderController extends Controller
                 'addresses.country_id as address_country_id',
                 'addresses.city_id as address_city_id',
                 'cities.name_ar as city_name',
+                'users.username as sales_officer_name'
             )
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->join('users', 'users.id', '=', 'orders.sales_representative_id')
             ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
             ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
             ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
@@ -129,7 +131,20 @@ class OrderController extends Controller
             $orders = $orders->where('customers.mobile', request('mobile'));
         }
         if (request('user_id')) {
-            $orders = $orders->where('orders.user_id', request('user_id' , auth()->user()->id));
+            $orders = $orders->where('orders.user_id', request('user_id'));
+        }
+
+        if (request('sales_agent_id')) {
+            $orders = $orders->where('orders.user_id', request('sales_agent_id'));
+        }
+
+        if (request('sales_representative_id')) {
+            $orders = $orders->where('orders.sales_representative_id', request('sales_representative_id'));
+        }
+
+        if (request('payment_type_ids')) {
+            $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
+            $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
         }
 
         $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
@@ -152,107 +167,19 @@ class OrderController extends Controller
         ], 200);
     }
 
-    public function getUserOrdersDashboard(Request $request)
-    {
-        try {
-            $order_states = (handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders']);
-        } catch (\Throwable $th) {
-            $order_states = null;
-        }
-
-        $perPage = 6;
-        if ($request->has('per_page'))
-            $perPage = $request->get('per_page');
-
-        if ($perPage == 0)
-            $perPage = 6;
-
-        $orders = DB::table('orders')
-            ->select(
-                'orders.*',
-                'customers.name as customer_name',
-                'customers.mobile as customer_mobile',
-                'order_states.state_ar as order_state_ar',
-                'order_states.state_en as order_state_en',
-                'shalwatas.name_ar as shalwata_name',
-                'shalwatas.price as shalwata_price',
-                'payment_types.name_ar as payment_type_name',
-                'delivery_periods.name_ar as delivery_period_name',
-                'delivery_periods.time_hhmm as delivery_period_time',
-                'payments.price as payment_price',
-                'payments.status as payment_status',
-                'addresses.address as address_address',
-                'addresses.lat as address_lat',
-                'addresses.long as address_long',
-                'addresses.country_id as address_country_id',
-                'addresses.city_id as address_city_id',
-                'cities.name_ar as city_name',
-            )
-            ->join('customers', 'customers.id', '=', 'orders.customer_id')
-            ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
-            ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
-            ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
-            ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
-            ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
-            ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
-            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
-
-        $orders = $orders->where('orders.user_id', request('user_id', auth()->user()->id));
-
-        if ($order_states) {
-            $orders = $orders->whereIn('orders.order_state_id', $order_states ?? []);
-        }
-        if (request('city_ids')) {
-            $orders = $orders->whereIn('addresses.city_id', request('city_ids'));
-        }
-        if (request('country_ids')) {
-            $orders = $orders->where('addresses.country_id', request('country_ids'));
-        }
-        if (request('order_state_ids')) {
-            $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
-        }
-        if (request('date_from') && request('date_to')) {
-            $orders = $orders->where(function ($q) {
-                $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
-            });
-        } else {
-            $orders = $orders->whereDate('orders.delivery_date', date('Y-m-d'));
-        }
-        
-        if (request('delivery_date')) {
-            $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
-        }
-        if (request('delivery_period_id')) {
-            $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));
-        }
-        if (request('customer_id')) {
-            $orders = $orders->where('orders.customer_id', request('customer_id'));
-        }
-        if (request('mobile')) {
-            $orders = $orders->where('customers.mobile', request('mobile'));
-        }
-
-        $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
-
-        $items =  $orders->toArray()['data'];
-        $items = collect($items)->map(function ($i) {
-            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
-            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
-            $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
-            return $i;
-        });
-
-        $orders->data = $items;
-
-        return response()->json([
-            'success' => true, 'data' => $orders,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
-        ], 200);
-    }
-    
     public function getOrderDashboard($order)
     {
-        $order = Order::where('ref_no', $order)->with('paymentType', 'customer', 'payment', 'orderState', 'deliveryPeriod', 'selectedAddress')->first();
+        $order = Order::where('ref_no', $order)
+            ->with(
+                'paymentType',
+                'customer',
+                'payment',
+                'orderState',
+                'deliveryPeriod',
+                'selectedAddress',
+                'user',
+                'salesRepresentative'
+            )->first();
 
         $data['order'] = $order;
 
@@ -269,16 +196,39 @@ class OrderController extends Controller
                 'order_state_id' => 'nullable|exists:order_states,code',
                 'user_id' => 'nullable|exists:users,id',
                 'discount_code' => 'nullable|exists:discounts,code',
-                'payment_type' => 'nullable|exists:payment_types,id',
+                'payment_type_id' => 'nullable|exists:payment_types,id',
                 'delivery_date' => 'nullable',
-                'delivery_period' => 'nullable|exists:delivery_periods,id',
+                'delivery_period_id' => 'nullable|exists:delivery_periods,id',
                 'paid' => 'nullable|in:0,1',
-                'notes' => 'nullable'
+                'comment' => 'nullable',
+                'address' => 'nullable',
+                'address_id' => 'nullable',
+                'boxes_count' => 'nullable|min:1',
+                'dishes_count' => 'nullable|min:1',
+                'delivery_fee' => 'nullable|min:1',
+                'driver_name' => 'nullable',
+                'sales_representative_id' => 'nullable',
             ]);
 
             $order = Order::where('id', $request->id)->first();
 
-            $items = $request->except('id');
+            $data = $request->only(
+                'order_state_id',
+                'user_id',
+                'discount_code',
+                'payment_type_id',
+                'delivery_date',
+                'delivery_period_id',
+                'paid',
+                'comment',
+                'boxes_count',
+                'dishes_count',
+                'delivery_fee',
+                'address',
+                'address_id',
+                'driver_name',
+                'sales_representative_id',
+            );
 
             if ($request->discount_code) {
 
@@ -299,28 +249,6 @@ class OrderController extends Controller
                 $data['total_amount'] = $order->total_amount - $discount;
             }
 
-            if ($request->payment_type) {
-                $data['payment_type_id'] = $request->payment_type;
-            }
-
-            if ($request->delivery_date) {
-                $data['delivery_date'] = date('Y-m-d', strtotime($request->delivery_date));
-            }
-
-            if ($request->delivery_period) {
-                $data['delivery_period_id'] = $request->delivery_period;
-            }
-
-            if ($request->user_id) {
-                $data['user_id'] = $request->user_id;
-            }
-
-            if ($request->order_state_id) {
-                $data['order_state_id'] = $request->order_state_id;
-            }
-            if ($request->notes) {
-                $data['comment'] = $request->notes ?? null;
-            }
 
             if (isset($request->paid)) {
                 $data['paid'] = $request->paid ?? 0;
@@ -424,7 +352,9 @@ class OrderController extends Controller
                 'products.*.size_id' => 'nullable|exists:sizes,id',
                 'products.*.cut_id' => 'nullable|exists:cuts,id',
                 'discount_code' => 'nullable',
-                'notes' => 'nullable'
+                'notes' => 'nullable',
+                'boxes_count' => 'nullable|min:1',
+                'dishes_count' => 'nullable|min:1',
             ]);
 
             $delivery = 0;
@@ -476,7 +406,9 @@ class OrderController extends Controller
                 'payment_type_id' => 1,
                 'applied_discount_code' => $discountCode,
                 'version_app' => $app,
-                'comment' => $validated['notes'] ?? null
+                'comment' => $validated['notes'] ?? null,
+                'boxes_count' => $validated["boxes_count"],
+                'dishes_count' => $validated["dishes_count"],
             ];
 
 
@@ -545,7 +477,7 @@ class OrderController extends Controller
                     $order->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
                 }
             }
-            
+
             $this->storeOrderProducts($request->products, $order);
 
             return response()->json([
@@ -569,6 +501,11 @@ class OrderController extends Controller
                 'preparation_ids' => 'nullable|exists:preparations,id',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
+                'is_kwar3' =>  'nullable|in:1,0',
+                'is_Ras' =>  'nullable|in:1,0',
+                'is_lyh' =>  'nullable|in:1,0',
+                'is_karashah' => 'nullable|in:1,0',
+                'shalwata' => 'nullable|in:1,0',
             ]);
 
             $order = Order::where('id', $request->order_id)->first();
@@ -580,6 +517,11 @@ class OrderController extends Controller
                     'preparation_id' => $request->preparation_ids,
                     'size_id' => $request->size_ids,
                     'cut_id' => $request->cut_ids,
+                    'is_kwar3' =>  $request->is_kwar3 ?? false,
+                    'is_Ras' =>  $request->is_Ras ?? false,
+                    'is_lyh' =>  $request->is_lyh ?? false,
+                    'is_karashah' => $request->is_karashah ?? false,
+                    'shalwata' => $request->shalwata ?? false,
                 ]
             ];
 
@@ -588,6 +530,42 @@ class OrderController extends Controller
             $this->reSumOrderProducts($order->ref_no);
 
             return successResponse(true, 'success');
+        });
+    }
+
+    public function storeOrderProducts($products, $order)
+    {
+        return DB::transaction(function () use ($products, $order) {
+            $orderProducts = [];
+            foreach ($products as $item) {
+                $product = Product::with('shalwata')->find($item['product_id']);
+
+                $product_size = Size::find($item['size_id']);
+
+                if ($product) {
+                    $quantity = $item['quantity'] ? $item['quantity'] : 1;
+
+                    array_push($orderProducts, [
+                        'order_ref_no' => $order->ref_no,
+                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price :  $product_size->price)  * $quantity : 0) + ($product->shalwata && $item['shalwata'] ? $product->shalwata->price : 0),
+                        'quantity' => $quantity,
+                        'product_id' => $product->id,
+                        'preparation_id' => $item['preparation_id'] ?? null,
+                        'size_id' =>  $item['size_id'] ?? null,
+                        'cut_id' =>  $item['cut_id'] ?? null,
+                        'is_kwar3' =>   $item['is_kwar3'] ??  false,
+                        'is_Ras' =>  $item['is_Ras'] ??  false,
+                        'is_lyh' =>  $item['is_lyh'] ??  false,
+                        'is_karashah' => $item['is_karashah'] ??  false,
+                        'shalwata_id' => $item['shalwata'] ? $product->shalwata_id ?? 1 : null,
+                    ]);
+
+                    $product->no_sale += 1;
+                    $product->update();
+                }
+            }
+
+            return OrderProduct::insert($orderProducts);
         });
     }
 
@@ -606,12 +584,20 @@ class OrderController extends Controller
 
             $product_size = Size::find($validated['size_ids']);
 
-            $product_price = isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0);
+            $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($OrderProduct->product->shalwata && $request->shalwata ? $OrderProduct->product->shalwata->price : 0);
+
             $OrderProduct->total_price = ($product_price ?? 0) * ($request->quantity ?? 1);
             $OrderProduct->quantity = $request->quantity ?? 1;
             $OrderProduct->preparation_id = $request->preparation_ids ?? null;
             $OrderProduct->size_id = $request->size_ids ?? null;
             $OrderProduct->cut_id = $request->cut_ids ?? null;
+
+            $OrderProduct->is_kwar3 = $request->is_kwar3 ?? false;
+            $OrderProduct->is_Ras = $request->is_Ras ?? false;
+            $OrderProduct->is_lyh = $request->is_lyh ?? false;
+            $OrderProduct->is_karashah = $request->is_karashah ?? false;
+            $OrderProduct->shalwata_id = $request->shalwata ? $OrderProduct->product->shalwata_id ?? 1  : null;
+
             $OrderProduct->save();
 
             $this->reSumOrderProducts($OrderProduct->order_ref_no);
@@ -675,42 +661,6 @@ class OrderController extends Controller
         return $sum;
     }
 
-    public function storeOrderProducts($products, $order)
-    {
-        return DB::transaction(function () use ($products, $order) {
-            $orderProducts = [];
-            foreach ($products as $item) {
-                $product = Product::with('shalwata')->find($item['product_id']);
-
-                $product_size = Size::find($item['size_id']);
-
-                if ($product) {
-                    $quantity = $item['quantity'] ? $item['quantity'] : 1;
-
-                    array_push($orderProducts, [
-                        'order_ref_no' => $order->ref_no,
-                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price :  $product_size->price)  * $quantity : 0) + ($product->shalwata ? $product->shalwata->price : 0),
-                        'quantity' => $quantity,
-                        'product_id' => $product->id,
-                        'preparation_id' => $item['preparation_id'] ?? null,
-                        'size_id' =>  $item['size_id'] ?? null,
-                        'cut_id' =>  $item['cut_id'] ?? null,
-                        'is_kwar3' => $product->is_kwar3,
-                        'is_Ras' => $product->is_Ras,
-                        'is_lyh' => $product->is_lyh,
-                        'is_karashah' => $product->is_karashah,
-                        'shalwata_id' => $product->shalwata_id,
-                    ]);
-
-                    $product->no_sale += 1;
-                    $product->update();
-                }
-            }
-
-            return OrderProduct::insert($orderProducts);
-        });
-    }
-
     public function handleDiscountAmount($code, $TotalAmountBeforeDiscount)
     {
         $value = 0;
@@ -732,6 +682,103 @@ class OrderController extends Controller
         return $value;
     }
 
+    public function getUserOrdersDashboard(Request $request)
+    {
+        try {
+            $order_states = (handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders']);
+        } catch (\Throwable $th) {
+            $order_states = null;
+        }
+
+        $perPage = 6;
+        if ($request->has('per_page'))
+            $perPage = $request->get('per_page');
+
+        if ($perPage == 0)
+            $perPage = 6;
+
+        $orders = DB::table('orders')
+            ->select(
+                'orders.*',
+                'customers.name as customer_name',
+                'customers.mobile as customer_mobile',
+                'order_states.state_ar as order_state_ar',
+                'order_states.state_en as order_state_en',
+                'shalwatas.name_ar as shalwata_name',
+                'shalwatas.price as shalwata_price',
+                'payment_types.name_ar as payment_type_name',
+                'delivery_periods.name_ar as delivery_period_name',
+                'delivery_periods.time_hhmm as delivery_period_time',
+                'payments.price as payment_price',
+                'payments.status as payment_status',
+                'addresses.address as address_address',
+                'addresses.lat as address_lat',
+                'addresses.long as address_long',
+                'addresses.country_id as address_country_id',
+                'addresses.city_id as address_city_id',
+                'cities.name_ar as city_name',
+            )
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
+            ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
+            ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
+            ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
+            ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+            ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
+            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
+
+        $orders = $orders->where('orders.user_id', request('user_id', auth()->user()->id));
+
+        if ($order_states) {
+            $orders = $orders->whereIn('orders.order_state_id', $order_states ?? []);
+        }
+        if (request('city_ids')) {
+            $orders = $orders->whereIn('addresses.city_id', request('city_ids'));
+        }
+        if (request('country_ids')) {
+            $orders = $orders->where('addresses.country_id', request('country_ids'));
+        }
+        if (request('order_state_ids')) {
+            $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
+        }
+        if (request('date_from') && request('date_to')) {
+            $orders = $orders->where(function ($q) {
+                $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
+            });
+        } else {
+            $orders = $orders->whereDate('orders.delivery_date', date('Y-m-d'));
+        }
+
+        if (request('delivery_date')) {
+            $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+        }
+        if (request('delivery_period_id')) {
+            $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));
+        }
+        if (request('customer_id')) {
+            $orders = $orders->where('orders.customer_id', request('customer_id'));
+        }
+        if (request('mobile')) {
+            $orders = $orders->where('customers.mobile', request('mobile'));
+        }
+
+        $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
+
+        $items =  $orders->toArray()['data'];
+        $items = collect($items)->map(function ($i) {
+            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
+            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+            $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
+            return $i;
+        });
+
+        $orders->data = $items;
+
+        return response()->json([
+            'success' => true, 'data' => $orders,
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+        ], 200);
+    }
     /********************************************************************************************************** */
     public function getOrders(Request $request)
     {
