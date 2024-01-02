@@ -61,11 +61,11 @@ class RolesService
     {
         return [
             'admin' => 'مدير النظام',
-            'general_manager' => 'مدير عام الادارة',
             'customer_servise' => 'خدمة عملاء',
             'production_manager' => 'مسئول الانتاج',
             'logistic_manager' => 'مسئول لوجيستي',
-            'store_manager' => 'مسئول المتجر',
+            'general_manager' => 'مشرف المبيعات',
+            'store_manager' => 'مسئول المبيعات',
             'delegate' => 'مندوب',
         ];
     }

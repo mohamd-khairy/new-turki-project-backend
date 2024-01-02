@@ -98,7 +98,7 @@ class Order extends Model
 
         $result->saveToFile(public_path('qr/' . $this->ref_no . '.png'));
 
-        return config('app.url') . '/' . 'qr/' . $this->ref_no . '.png';
+        return config('app.url') . '/public/' . 'qr/' . $this->ref_no . '.png';
     }
 
     public function getQrStringAttribute()
