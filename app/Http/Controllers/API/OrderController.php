@@ -99,7 +99,7 @@ class OrderController extends Controller
                 'users.username as sales_officer_name'
             )
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
-            ->join('users', 'users.id', '=', 'orders.sales_representative_id')
+            ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
             ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
             ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
             ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
