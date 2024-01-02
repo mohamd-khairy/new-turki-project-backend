@@ -40,6 +40,17 @@ class OrderController extends Controller
         }
     }
 
+    public function takeOrder($id)
+    {
+        $order = Order::where('id', $id)->first();
+        if ($order) {
+            $order->update(['sales_representative_id' => auth()->user()->id]);
+        }
+
+        return successResponse($order);
+    }
+
+
     public function getCustomerWallet($id)
     {
         $customer = Customer::with('wallet_orders.payment')->where('id', $id)->first();
@@ -1043,6 +1054,31 @@ class OrderController extends Controller
 
         if ($paymentType->code === "COD" || $TotalAmountAfterDiscount == 0) { // cod
 
+            try {
+
+                $lastPayment = Payment::latest('id')->first();
+
+                $payment = Payment::create(
+                    [
+                        "ref_no" => GetNextPaymentRefNo('SA', $lastPayment != null ? $lastPayment->id + 1 : 1),
+                        "customer_id" => $createdOrder->customer_id,
+                        'order_ref_no' => $createdOrder->ref_no,
+                        'payment_type_id' => 1, //wallet
+                        'price' => $TotalAmountAfterDiscount ?? 0,
+                        'status' => 'NotPaid',
+                        'manual' => 1,
+                        "description" => "Payment Created", // need to move to enum class
+                    ]
+                );
+
+                if ($payment) {
+
+                    $createdOrder->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                }
+                //code...
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
 
             // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
@@ -1265,6 +1301,33 @@ class OrderController extends Controller
                     'message' => '', 'description' => '', 'code' => '200'
                 ], 200);
             } else {
+
+                try {
+
+                    $lastPayment = Payment::latest('id')->first();
+
+                    $payment = Payment::create(
+                        [
+                            "ref_no" => GetNextPaymentRefNo('SA', $lastPayment != null ? $lastPayment->id + 1 : 1),
+                            "customer_id" => $createdOrder->customer_id,
+                            'order_ref_no' => $createdOrder->ref_no,
+                            'payment_type_id' => 1, //wallet
+                            'price' => $TotalAmountAfterDiscount ?? 0,
+                            'status' => 'NotPaid',
+                            'manual' => 1,
+                            "description" => "Payment Created", // need to move to enum class
+                        ]
+                    );
+
+                    if ($payment) {
+
+                        $createdOrder->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                    }
+                    //code...
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+
                 TraceError::create(['class_name' => "create order 351", 'method_name' => "Get_Payment_Status", 'error_desc' => json_encode($createdOrder)]);
                 return response()->json([
                     'success' => false, 'data' => $createdOrder,
