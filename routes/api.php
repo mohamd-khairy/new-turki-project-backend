@@ -249,7 +249,7 @@ Route::prefix("v2")->group(function () {
             Route::get('get-user-order', [OrderController::class, 'getUserOrdersDashboard']); //getOrderDashboard
             Route::get('get-one-order/{order}', [OrderController::class, 'getOrderDashboard']); //
             Route::get('get-customer-wallet/{customer_id}', [OrderController::class, 'getCustomerWallet']); //getCustomerWallet
-            Route::post('take-order/{id}', [OrderController::class, 'takeOrder']); //getCustomerWallet
+            Route::get('take-order/{id}', [OrderController::class, 'takeOrder']); //getCustomerWallet
 
 
             Route::get('get-orders-v2', [OrderController::class, 'getOrdersV2']);
