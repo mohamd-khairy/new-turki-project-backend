@@ -40,6 +40,21 @@ class OrderController extends Controller
         }
     }
 
+    public function assignUserOrder(Request $request)
+    {
+        $request->validate([
+            "user_id" => 'required|exists:users,id',
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'required|exists:orders,id',
+        ]);
+
+        $order_ids = is_array($request->order_ids) ? $request->order_ids : json_decode($request->order_ids);
+
+        $order = Order::whereIn('id', $order_ids ?? [])->get()->map->update(['user_id' => $request->user_id]);
+
+        return successResponse(true);
+    }
+
     public function takeOrder($id)
     {
         $order = Order::where('id', $id)->first();
@@ -49,7 +64,6 @@ class OrderController extends Controller
 
         return successResponse($order);
     }
-
 
     public function getCustomerWallet($id)
     {
@@ -96,9 +110,11 @@ class OrderController extends Controller
                 'addresses.country_id as address_country_id',
                 'addresses.city_id as address_city_id',
                 'cities.name_ar as city_name',
-                'users.username as sales_officer_name'
+                'users.username as sales_officer_name',
+                'u.username as driver_name',
             )
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
             ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
             ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
             ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
@@ -217,7 +233,6 @@ class OrderController extends Controller
                 'boxes_count' => 'nullable|min:1',
                 'dishes_count' => 'nullable|min:1',
                 'delivery_fee' => 'nullable|min:1',
-                'driver_name' => 'nullable',
                 'sales_representative_id' => 'nullable',
             ]);
 
@@ -237,7 +252,6 @@ class OrderController extends Controller
                 'delivery_fee',
                 'address',
                 'address_id',
-                'driver_name',
                 'sales_representative_id',
             );
 
