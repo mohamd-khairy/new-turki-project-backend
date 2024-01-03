@@ -174,6 +174,10 @@ class OrderController extends Controller
             $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
         }
 
+        if(in_array('delegate', auth()->user()->roles->pluck('name')->toArray())){
+            $orders = $orders->where('orders.user_id', auth()->user()->id);
+        }
+
         $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
 
         $items =  $orders->toArray()['data'];
