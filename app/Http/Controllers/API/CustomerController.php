@@ -23,6 +23,14 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
+
+        $perPage = 15;
+        if ($request->has('per_page'))
+            $perPage = $request->get('per_page');
+
+        if ($perPage == 0)
+            $perPage = 6;
+
         $customers = Customer::with('addresses')->latest();
 
         if (request('search')) {
@@ -33,14 +41,24 @@ class CustomerController extends Controller
         }
 
         if (request('wallet') == 'all') {
-            $customers = $customers->latest()->take(10000)->get();
+            $customers = $customers->latest();
         } elseif (request('wallet') == true) {
-            $customers = $customers->where('wallet', '>', 0)->latest()->take(10000)->get();
+            $customers = $customers->where('wallet', '>', 0)->latest();
         } elseif (request('wallet') == false) {
-            $customers = $customers->where('wallet', '<=', 0)->latest()->take(10000)->get();
+            $customers = $customers->where('wallet', '<=', 0)->latest();
         } else {
-            $customers = $customers->latest()->take(10000)->get();
+            $customers = $customers->latest();
         }
+
+        if (request('search')) {
+            $customers = $customers->where(function ($q) {
+                $q->where('name', 'like', '%' . request('search') . '%')
+                    ->orWhere('mobile', 'like', '%' . request('search') . '%');
+            });
+        }
+
+
+        $customers = request('per_page') == -1 ? $customers->get() : $customers->paginate($perPage);
 
 
         return successResponse($customers);
@@ -75,8 +93,8 @@ class CustomerController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'required|unique:customers,email,'.$customer->id,
-            'mobile' => 'required|unique:customers,mobile,'.$customer->id,
+            'email' => 'required|unique:customers,email,' . $customer->id,
+            'mobile' => 'required|unique:customers,mobile,' . $customer->id,
         ]);
 
         $data = $request->except('avatar');

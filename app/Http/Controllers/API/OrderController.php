@@ -174,6 +174,10 @@ class OrderController extends Controller
             $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
         }
 
+        if(in_array('delegate', auth()->user()->roles->pluck('name')->toArray())){
+            $orders = $orders->where('orders.user_id', auth()->user()->id);
+        }
+
         $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
 
         $items =  $orders->toArray()['data'];
@@ -280,17 +284,17 @@ class OrderController extends Controller
 
                 if ($request->paid) {
 
-                    $payment = Payment::where('order_ref_no', $order->ref_no)->where('status', 'Paid')->first();
-                    // if ($payment) {
-                    //     $payment->update(
-                    //         [
-                    //             // 'payment_type_id' => $order->payment_type_id,
-                    //             // 'price' => $order->total_amount_after_discount ?? 0,
-                    //             // 'status' => 'Paid',
-                    // 'manual' => 1
-                    //         ]
-                    //     );
-                    // } else {
+                    $payment = Payment::where('order_ref_no', $order->ref_no)->first();
+                    if ($payment) {
+                        $payment->update(
+                            [
+                                'payment_type_id' => $order->payment_type_id,
+                                'price' => $order->total_amount_after_discount ?? 0,
+                                'status' => 'Paid',
+                                'manual' => 1
+                            ]
+                        );
+                    }
                     if (!$payment) {
 
                         $lastPayment = Payment::latest('id')->first();
@@ -490,7 +494,7 @@ class OrderController extends Controller
                         "customer_id" => $order->customer_id,
                         'order_ref_no' => $order->ref_no,
                         'payment_type_id' => 1, //wallet
-                        'price' => $walletAmountUsed ?? 0,
+                        'price' => 0,
                         'status' => 'NotPaid',
                         'manual' => 1,
                         "description" => "Payment Created", // need to move to enum class
@@ -598,35 +602,35 @@ class OrderController extends Controller
     {
         return DB::transaction(function () use ($request) {
             $validated = $request->validate([
-                "order_product_id" => 'required|exists:order_products,id',
+                "order_product_id" => 'required',
                 'quantity' => 'required|min:1',
-                'preparation_ids' => 'nullable|exists:preparations,id',
+                'preparation_ids' => 'nullable',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
             ]);
 
-            $OrderProduct = OrderProduct::with('product', 'order')->where('id', $request->order_product_id)->first();
+            $OrderProduct = OrderProduct::with('product')->where('id', $request->order_product_id)->first();
+            if ($OrderProduct) {
+                $product_size = Size::find($validated['size_ids']);
 
-            $product_size = Size::find($validated['size_ids']);
+                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($OrderProduct->product->shalwata && $request->shalwata ? $OrderProduct->product->shalwata->price : 0);
 
-            $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($OrderProduct->product->shalwata && $request->shalwata ? $OrderProduct->product->shalwata->price : 0);
+                $OrderProduct->total_price = ($product_price ?? 0) * ($request->quantity ?? 1);
+                $OrderProduct->quantity = $request->quantity ?? 1;
+                $OrderProduct->preparation_id = $request->preparation_ids ?? null;
+                $OrderProduct->size_id = $request->size_ids ?? null;
+                $OrderProduct->cut_id = $request->cut_ids ?? null;
 
-            $OrderProduct->total_price = ($product_price ?? 0) * ($request->quantity ?? 1);
-            $OrderProduct->quantity = $request->quantity ?? 1;
-            $OrderProduct->preparation_id = $request->preparation_ids ?? null;
-            $OrderProduct->size_id = $request->size_ids ?? null;
-            $OrderProduct->cut_id = $request->cut_ids ?? null;
+                $OrderProduct->is_kwar3 = $request->is_kwar3 ?? false;
+                $OrderProduct->is_Ras = $request->is_Ras ?? false;
+                $OrderProduct->is_lyh = $request->is_lyh ?? false;
+                $OrderProduct->is_karashah = $request->is_karashah ?? false;
+                $OrderProduct->shalwata_id = $request->shalwata ? $OrderProduct->product->shalwata_id ?? 1  : null;
 
-            $OrderProduct->is_kwar3 = $request->is_kwar3 ?? false;
-            $OrderProduct->is_Ras = $request->is_Ras ?? false;
-            $OrderProduct->is_lyh = $request->is_lyh ?? false;
-            $OrderProduct->is_karashah = $request->is_karashah ?? false;
-            $OrderProduct->shalwata_id = $request->shalwata ? $OrderProduct->product->shalwata_id ?? 1  : null;
+                $OrderProduct->save();
 
-            $OrderProduct->save();
-
-            $this->reSumOrderProducts($OrderProduct->order_ref_no);
-
+                $this->reSumOrderProducts($OrderProduct->order_ref_no);
+            }
             return successResponse(true, 'success');
         });
     }
@@ -1078,7 +1082,7 @@ class OrderController extends Controller
                         "customer_id" => $createdOrder->customer_id,
                         'order_ref_no' => $createdOrder->ref_no,
                         'payment_type_id' => 1, //wallet
-                        'price' => $TotalAmountAfterDiscount ?? 0,
+                        'price' => 0,
                         'status' => 'NotPaid',
                         'manual' => 1,
                         "description" => "Payment Created", // need to move to enum class
@@ -1326,7 +1330,7 @@ class OrderController extends Controller
                             "customer_id" => $createdOrder->customer_id,
                             'order_ref_no' => $createdOrder->ref_no,
                             'payment_type_id' => 1, //wallet
-                            'price' => $TotalAmountAfterDiscount ?? 0,
+                            'price' => 0,
                             'status' => 'NotPaid',
                             'manual' => 1,
                             "description" => "Payment Created", // need to move to enum class
