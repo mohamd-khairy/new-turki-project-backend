@@ -32,7 +32,10 @@ class UserController extends Controller
             ->whereHas('roles', function ($q) {
                 $q->where('name', '!=', 'admin');
                 if (request('role_id')) {
-                    $q->where('id', request('role_id'))->orWhere('name', request('role_name'));
+                    $q->where('id', request('role_id'));
+                }
+                if (request('role_name')) {
+                    $q->where('name', request('role_name'));
                 }
             })
             ->where('id', '!=', auth()->id());
