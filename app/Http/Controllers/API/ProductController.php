@@ -122,7 +122,12 @@ class ProductController extends Controller
                 });
             }
 
-
+            if (request('search')) {
+                $products = $products->where(function ($q) {
+                    $q->where('name_ar', 'like', '%' . request('search') . '%')
+                        ->orWhere('name_en', 'like', '%' . request('search') . '%');
+                });
+            }
 
             $products = request('per_page') == -1 ? $products->get() : $products->paginate($perPage);
 
