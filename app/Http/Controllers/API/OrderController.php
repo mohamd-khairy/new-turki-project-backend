@@ -280,17 +280,17 @@ class OrderController extends Controller
 
                 if ($request->paid) {
 
-                    $payment = Payment::where('order_ref_no', $order->ref_no)->where('status', 'Paid')->first();
-                    // if ($payment) {
-                    //     $payment->update(
-                    //         [
-                    //             // 'payment_type_id' => $order->payment_type_id,
-                    //             // 'price' => $order->total_amount_after_discount ?? 0,
-                    //             // 'status' => 'Paid',
-                    // 'manual' => 1
-                    //         ]
-                    //     );
-                    // } else {
+                    $payment = Payment::where('order_ref_no', $order->ref_no)->first();
+                    if ($payment) {
+                        $payment->update(
+                            [
+                                'payment_type_id' => $order->payment_type_id,
+                                'price' => $order->total_amount_after_discount ?? 0,
+                                'status' => 'Paid',
+                                'manual' => 1
+                            ]
+                        );
+                    }
                     if (!$payment) {
 
                         $lastPayment = Payment::latest('id')->first();
@@ -490,7 +490,7 @@ class OrderController extends Controller
                         "customer_id" => $order->customer_id,
                         'order_ref_no' => $order->ref_no,
                         'payment_type_id' => 1, //wallet
-                        'price' => $walletAmountUsed ?? 0,
+                        'price' => 0,
                         'status' => 'NotPaid',
                         'manual' => 1,
                         "description" => "Payment Created", // need to move to enum class
@@ -1078,7 +1078,7 @@ class OrderController extends Controller
                         "customer_id" => $createdOrder->customer_id,
                         'order_ref_no' => $createdOrder->ref_no,
                         'payment_type_id' => 1, //wallet
-                        'price' => $TotalAmountAfterDiscount ?? 0,
+                        'price' => 0,
                         'status' => 'NotPaid',
                         'manual' => 1,
                         "description" => "Payment Created", // need to move to enum class
@@ -1326,7 +1326,7 @@ class OrderController extends Controller
                             "customer_id" => $createdOrder->customer_id,
                             'order_ref_no' => $createdOrder->ref_no,
                             'payment_type_id' => 1, //wallet
-                            'price' => $TotalAmountAfterDiscount ?? 0,
+                            'price' => 0,
                             'status' => 'NotPaid',
                             'manual' => 1,
                             "description" => "Payment Created", // need to move to enum class
