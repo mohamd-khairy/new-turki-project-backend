@@ -52,9 +52,9 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://najdiya.com.sa/laravel/public'),
+    'url' => env('APP_URL', 'https://turki.almaraacompany.com/admin'),
 
-    'payment_url' => env('Payment_URL', 'https://najdiya.com.sa/laravel/public/api'),
+    'payment_url' => env('Payment_URL', 'https://turki.almaraacompany.com/admin'),
 
     'asset_url' => env('ASSET_URL', null),
 

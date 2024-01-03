@@ -227,10 +227,10 @@ class TamaraApiServiceV2
                 "currency" => $country->currency_en
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/success",
-                "failure" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/failure",
-                "cancel" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/cancel",
-                "notification" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/success",
+                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/failure",
+                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/cancel",
+                "notification" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,
@@ -578,10 +578,10 @@ class TamaraApiServiceV2
                 "currency" => "SAR"
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/response",
-                "failure" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/response",
-                "cancel" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/checkout/response",
-                "notification" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
+                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
+                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
+                "notification" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,

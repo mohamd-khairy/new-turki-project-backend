@@ -110,9 +110,9 @@ class TabbyApiService
             "lang" => "en",
             "merchant_code" => $merchantCode,
             "merchant_urls" => [
-                "success" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/tabby/checkout/success",
-                "cancel" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/tabby/checkout/cancel",
-                "failure" => config("app.payment_url" , "https://najdiya.com.sa/laravel/public/api")."/api/v2/tabby/checkout/failure"
+                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/success",
+                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/cancel",
+                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/failure"
             ]
         ];
 

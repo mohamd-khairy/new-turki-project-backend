@@ -647,18 +647,17 @@ class AuthenticationController extends Controller
      * @param string $decoded
      * @param $customerOtpLog
      */
-    public function sendSMS(string $phone_code, string $phone, string $msg, $customerOtpLog)
+    private function sendSMS(string $phone_code, string $phone, string $decoded, $customerOtpLog): void
     {
-        $api_key = "9c46a695d5161dc9e11726800e850c4e5e645d57";
-        $senderid = "NajdiyaMeat"; //"TURKIDBH";
+        $senderid = "TURKIDBH";
         $countryCode = $phone_code;
-        $pwd = "Najdiya@123"; //"TaTa_1400@ahmed";
-        $smsUser = "najdiya"; // "TurkiBK";
+        $pwd = "TaTa_1400@ahmed";
+        $smsUser = "TurkiBK";
 
-        $url = "https://mora-sa.com/api/v1/sendsms?api_key=" . $api_key . "&username=" . $smsUser . "&numbers=" . $countryCode . "" . $phone . "&message=" . $msg . "&sender=" . $senderid;
-        // $url = "https://mshastra.com/sendurlcomma.aspx?&user=" . $smsUser . "&pwd=" . $pwd . "&senderid=" . $senderid . "&CountryCode=" . $countryCode . "&mobileno=" . $phone . "&msgtext=" . $decoded . $customerOtpLog->mobile_verification_code;
+        $url = "https://mshastra.com/sendurlcomma.aspx?&user=" . $smsUser . "&pwd=" . $pwd . "&senderid=" . $senderid . "&CountryCode=" . $countryCode . "&mobileno=" . $phone . "&msgtext=" . $decoded . $customerOtpLog->mobile_verification_code;
 
         $ch = curl_init($url);
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $curl_scraped_page = curl_exec($ch);
         curl_close($ch);

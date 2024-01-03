@@ -18,7 +18,7 @@ function generateQrInvoice($order)
     $date = $order->created_at;
 
     return base64_encode(
-        ConvertHex("01") . ConvertHex(toHex(strlen("Najdiya"))) . "Najdiya"
+        ConvertHex("01") . ConvertHex(toHex(strlen("Turki"))) . "Turki"
             . ConvertHex("02") . ConvertHex(toHex(strlen("311859965700003"))) . "311859965700003"
             . ConvertHex("03") . ConvertHex(toHex(strlen($date))) . $date
             . ConvertHex("04") . ConvertHex(toHex(strlen($total))) . $total
