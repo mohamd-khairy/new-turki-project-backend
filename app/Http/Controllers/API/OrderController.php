@@ -175,7 +175,7 @@ class OrderController extends Controller
             $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
         }
 
-        if(in_array('delegate', auth()->user()->roles->pluck('name')->toArray())){
+        if (in_array('delegate', auth()->user()->roles->pluck('name')->toArray())) {
             $orders = $orders->where('orders.user_id', auth()->user()->id);
         }
 
@@ -439,6 +439,7 @@ class OrderController extends Controller
                 'comment' => $validated['notes'] ?? null,
                 'boxes_count' => $validated["boxes_count"],
                 'dishes_count' => $validated["dishes_count"],
+                'sales_representative_id' => in_array('store_manager', auth()->user()->roles->pluck('name')->toArray()) ? auth()->user()->id : null,
             ];
 
 
