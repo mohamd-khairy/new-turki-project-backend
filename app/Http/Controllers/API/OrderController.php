@@ -588,7 +588,7 @@ class OrderController extends Controller
                         'is_Ras' =>  $item['is_Ras'] ??  false,
                         'is_lyh' =>  $item['is_lyh'] ??  false,
                         'is_karashah' => $item['is_karashah'] ??  false,
-                        'shalwata_id' => $item['shalwata'] ? $product->shalwata_id ?? 1 : null,
+                        'shalwata_id' => isset($item['shalwata']) ? ($product->shalwata_id ?? 1) : null,
                     ]);
 
                     $product->no_sale += 1;
