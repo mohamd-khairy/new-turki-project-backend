@@ -126,37 +126,38 @@ if (!function_exists('handleRoleOrderState')) {
                 'orders' =>    ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
             ];
         }
-        if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',
-            return [
-                'status' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
-                'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
-            ];
-        }
+
         if (in_array('customer_servise', $roles)) { // 'customer_servise' => 'خدمة عملاء',
             return [
                 'status' => ['101', '102', '103'],
                 'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
             ];
         }
-        if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',
+        if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             return [
                 'status' => ['104', '105'],
                 'orders' => ['101', '104', '105']
             ];
         }
-        if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',
+        if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',///////////////////
             return [
-                'status' =>  ['106', '200'],
+                'status' =>  ['103', '106', '200'],
                 'orders' =>   ['101', '104', '105', '106', '109', '200']
             ];
         }
-        if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات',
+        if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
             return [
                 'status' =>  ['101', '102', '103'],
                 'orders' =>  ['100', '101', '102', '103', '104', '105']
             ];
         }
-        if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',
+        if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
+            return [
+                'status' =>  ['101', '102', '103'],
+                'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
+            ];
+        }
+        if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////
             return [
                 'status' => ['103', '109', '200'],
                 'orders' => ['106', '200']
