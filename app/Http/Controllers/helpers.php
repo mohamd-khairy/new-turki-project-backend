@@ -160,7 +160,7 @@ if (!function_exists('handleRoleOrderState')) {
         if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////
             return [
                 'status' => ['103', '109', '200'],
-                'orders' => ['106', '200']
+                'orders' => ['106', '109']
             ];
         }
     }
