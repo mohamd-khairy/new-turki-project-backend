@@ -112,6 +112,7 @@ class OrderController extends Controller
                 'cities.name_ar as city_name',
                 'users.username as sales_officer_name',
                 'u.username as driver_name',
+                'u.id as driver_id',
             )
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
