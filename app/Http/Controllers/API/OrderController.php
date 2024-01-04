@@ -437,8 +437,8 @@ class OrderController extends Controller
                 'applied_discount_code' => $discountCode,
                 'version_app' => $app,
                 'comment' => $validated['notes'] ?? null,
-                'boxes_count' => $validated["boxes_count"],
-                'dishes_count' => $validated["dishes_count"],
+                'boxes_count' => isset($validated["boxes_count"]) ? $validated["boxes_count"] : null,
+                'dishes_count' => isset($validated["dishes_count"]) ? $validated["dishes_count"] : null,
                 'sales_representative_id' => in_array('store_manager', auth()->user()->roles->pluck('name')->toArray()) ? auth()->user()->id : null,
             ];
 
