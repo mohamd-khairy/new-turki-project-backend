@@ -526,9 +526,6 @@ class OrderController extends Controller
                 'order_id' => 'required|exists:orders,id',
                 "product_id" => 'required|exists:products,id',
                 'quantity' => 'required|min:1',
-                // 'preparation_id' => 'nullable|exists:preparations,id',
-                // 'size_id' => 'required|exists:sizes,id',
-                // 'cut_id' => 'nullable|exists:cuts,id',
                 'preparation_ids' => 'nullable|exists:preparations,id',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
@@ -578,7 +575,7 @@ class OrderController extends Controller
 
                     array_push($orderProducts, [
                         'order_ref_no' => $order->ref_no,
-                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price :  $product_size->price)  * $quantity : 0) + ($product->shalwata && $item['shalwata'] ? $product->shalwata->price : 0),
+                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price :  $product_size->price)  * $quantity : 0) + (isset($item['shalwata']) && $item['shalwata'] ? Shalwata::first()->price : 0),
                         'quantity' => $quantity,
                         'product_id' => $product->id,
                         'preparation_id' => $item['preparation_id'] ?? null,
@@ -609,13 +606,18 @@ class OrderController extends Controller
                 'preparation_ids' => 'nullable',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
+                'is_kwar3' =>  'nullable|in:1,0',
+                'is_Ras' =>  'nullable|in:1,0',
+                'is_lyh' =>  'nullable|in:1,0',
+                'is_karashah' => 'nullable|in:1,0',
+                'shalwata' => 'nullable|in:1,0',
             ]);
 
             $OrderProduct = OrderProduct::with('product')->where('id', $request->order_product_id)->first();
             if ($OrderProduct) {
                 $product_size = Size::find($validated['size_ids']);
 
-                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($OrderProduct->product->shalwata && $request->shalwata ? $OrderProduct->product->shalwata->price : 0);
+                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($request->shalwata ? Shalwata::first()->price : 0);
 
                 $OrderProduct->total_price = ($product_price ?? 0) * ($request->quantity ?? 1);
                 $OrderProduct->quantity = $request->quantity ?? 1;
