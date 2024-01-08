@@ -215,7 +215,10 @@ class OrderController extends Controller
 
         $data['order'] = $order;
 
-        $data['products'] = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')->where('order_ref_no', $order->ref_no)->get();
+        $data['products'] = OrderProduct::with('preparation', 'size', 'cut',  'product.productImages')->where('order_ref_no', $order->ref_no)->get()->map(function ($i) {
+            $i->shalwata = $i->shalwata_id ? true : false;
+            return $i;
+        });
 
         return \successResponse($data);
     }
@@ -553,6 +556,10 @@ class OrderController extends Controller
                 ]
             ];
 
+            if ($request->shalwata) {
+                $order->update(['shalwata_id' => 1]);
+            }
+
             $this->storeOrderProducts($products, $order);
 
             $this->reSumOrderProducts($order->ref_no);
@@ -585,11 +592,15 @@ class OrderController extends Controller
                         'is_Ras' =>  $item['is_Ras'] ??  false,
                         'is_lyh' =>  $item['is_lyh'] ??  false,
                         'is_karashah' => $item['is_karashah'] ??  false,
-                        'shalwata_id' => isset($item['shalwata']) ? ($product->shalwata_id ?? 1) : null,
+                        'shalwata_id' => isset($item['shalwata']) ? 1 : null,
                     ]);
 
                     $product->no_sale += 1;
                     $product->update();
+
+                    if (isset($item['shalwata'])) {
+                        $order->update(['shalwata_id' => 1]);
+                    }
                 }
             }
 
@@ -629,11 +640,15 @@ class OrderController extends Controller
                 $OrderProduct->is_Ras = $request->is_Ras ?? false;
                 $OrderProduct->is_lyh = $request->is_lyh ?? false;
                 $OrderProduct->is_karashah = $request->is_karashah ?? false;
-                $OrderProduct->shalwata_id = $request->shalwata ? $OrderProduct->product->shalwata_id ?? 1  : null;
+                $OrderProduct->shalwata_id = $request->shalwata ? 1  : null;
 
                 $OrderProduct->save();
 
                 $this->reSumOrderProducts($OrderProduct->order_ref_no);
+
+                if ($request->shalwata) {
+                    Order::where('ref_no', $OrderProduct->order_ref_no)->first()->update(['shalwata_id' => 1]);
+                }
             }
             return successResponse(true, 'success');
         });

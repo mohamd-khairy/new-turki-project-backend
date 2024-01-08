@@ -25,7 +25,7 @@ class OrderProduct extends Model
         'is_karashah'
     ];
 
-    protected $hidden = [ 'preparation_id', 'size_id', 'cut_id', 'shalwata_id'];
+    protected $hidden = [ 'preparation_id', 'size_id', 'cut_id'];
 
     protected $casts = [
         'is_karashah' => 'boolean',
