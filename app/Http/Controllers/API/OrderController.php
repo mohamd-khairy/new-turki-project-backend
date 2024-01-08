@@ -617,9 +617,9 @@ class OrderController extends Controller
             if ($OrderProduct) {
                 $product_size = Size::find($validated['size_ids']);
 
-                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0)) + ($request->shalwata ? Shalwata::first()->price : 0);
+                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0));
 
-                $OrderProduct->total_price = ($product_price ?? 0) * ($request->quantity ?? 1);
+                $OrderProduct->total_price = (($product_price ?? 0) * ($request->quantity ?? 1) +  + ($request->shalwata ? Shalwata::first()->price : 0));
                 $OrderProduct->quantity = $request->quantity ?? 1;
                 $OrderProduct->preparation_id = $request->preparation_ids ?? null;
                 $OrderProduct->size_id = $request->size_ids ?? null;
