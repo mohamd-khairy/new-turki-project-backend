@@ -22,9 +22,24 @@ use App\Services\PointLocation;
 class CouponController extends Controller
 {
 
-    public function getAll()
+    public function getAll(Request $request)
     {
-        $data = Discount::latest()->get();
+        $perPage = 15;
+        if ($request->has('per_page'))
+            $perPage = $request->get('per_page');
+
+        if ($perPage == 0)
+            $perPage = 6;
+
+        $data = Discount::latest();
+
+        if (request('code')) {
+            $data = $data->where(function ($q) {
+                $q->where('code', 'like', '%' . request('code') . '%');
+            });
+        }
+
+        $data = request('per_page') == -1 ? $data->get() : $data->paginate($perPage);
 
         return response()->json([
             'success' => 'true', 'data' => $data,

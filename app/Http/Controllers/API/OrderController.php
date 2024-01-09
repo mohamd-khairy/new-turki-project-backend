@@ -216,7 +216,7 @@ class OrderController extends Controller
         $data['order'] = $order;
 
         $data['products'] = OrderProduct::with('preparation', 'size', 'cut',  'product.productImages')->where('order_ref_no', $order->ref_no)->get()->map(function ($i) {
-            $i->shalwata = $i->shalwata_id ? true : false;
+            $i->shalwata = $i->shalwata ? true : false;
             return $i;
         });
 
@@ -552,7 +552,7 @@ class OrderController extends Controller
                     'is_Ras' =>  $request->is_Ras ?? false,
                     'is_lyh' =>  $request->is_lyh ?? false,
                     'is_karashah' => $request->is_karashah ?? false,
-                    'shalwata' => $request->shalwata ?? false,
+                    'shalwata' => $request->shalwata ? 1 : false,
                 ]
             ];
 
