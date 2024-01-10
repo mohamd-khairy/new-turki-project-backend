@@ -552,7 +552,7 @@ class OrderController extends Controller
                     'is_Ras' =>  $request->is_Ras ?? false,
                     'is_lyh' =>  $request->is_lyh ?? false,
                     'is_karashah' => $request->is_karashah ?? false,
-                    'shalwata' => $request->shalwata ? 1 : false,
+                    'shalwata' => $request->shalwata ?? false,
                 ]
             ];
 
@@ -592,7 +592,7 @@ class OrderController extends Controller
                         'is_Ras' =>  $item['is_Ras'] ??  false,
                         'is_lyh' =>  $item['is_lyh'] ??  false,
                         'is_karashah' => $item['is_karashah'] ??  false,
-                        'shalwata_id' => isset($item['shalwata']) ? 1 : null,
+                        'shalwata_id' => isset($item['shalwata']) && $item['shalwata'] ? 1 : null,
                     ]);
 
                     $product->no_sale += 1;
@@ -640,7 +640,7 @@ class OrderController extends Controller
                 $OrderProduct->is_Ras = $request->is_Ras ?? false;
                 $OrderProduct->is_lyh = $request->is_lyh ?? false;
                 $OrderProduct->is_karashah = $request->is_karashah ?? false;
-                $OrderProduct->shalwata_id = $request->shalwata ? 1  : null;
+                $OrderProduct->shalwata_id = $request->shalwata ?  1  : null;
 
                 $OrderProduct->save();
 
