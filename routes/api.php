@@ -21,6 +21,10 @@ use App\Http\Controllers\API\ProductShlwataController;
 use App\Http\Controllers\API\ProductSizeController;
 use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
+use App\Http\Controllers\API\Store\BankController;
+use App\Http\Controllers\API\Store\StockController;
+use App\Http\Controllers\API\Store\StoreController;
+use App\Http\Controllers\API\Store\SupplierController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\UserController;
 use App\Models\OrderState;
@@ -178,6 +182,14 @@ Route::prefix("v2")->group(function () {
 
 
     /************************************************** auth routes ******************************************************** */
+
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+        Route::apiResource('banks',  BankController::class);
+        Route::apiResource('stores', StoreController::class);
+        Route::apiResource('suppliers', SupplierController::class);
+        Route::apiResource('stocks', StockController::class);
+    });
+
     Route::group(['middleware' => 'auth:sanctum'], function () {
 
         Route::get('order-status', [HomeController::class, 'GetOrderStatus']);
