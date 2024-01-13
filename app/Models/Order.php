@@ -52,7 +52,8 @@ class Order extends Model
         'boxes_count',
         'dishes_count',
         'sales_representative_id',
-        'driver_name'
+        'driver_name',
+        'printed_at'
     ];
 
     protected $hidden = ['address'];

@@ -22,11 +22,9 @@ use App\Models\Size;
 use App\Models\TempCouponProducts;
 use App\Services\TamaraApiService;
 use App\Services\TamaraApiServiceV2;
-use App\Services\CallNetsuiteApi;
 use App\Services\NgeniusPaymentService;
 use App\Services\MyFatoorahApiService;
 use App\Services\TabbyApiService;
-use App\Services\CallOrderNetsuiteApi;
 use App\Services\PointLocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -242,6 +240,7 @@ class OrderController extends Controller
                 'dishes_count' => 'nullable|min:1',
                 'delivery_fee' => 'nullable|min:1',
                 'sales_representative_id' => 'nullable',
+                'is_printed' => 'nullable',
             ]);
 
             $order = Order::where('id', $request->id)->first();
@@ -338,6 +337,9 @@ class OrderController extends Controller
                 }
             }
 
+            if ($request->is_printed) {
+                $data['printed_at'] = now();
+            }
 
             $order->update($data);
 
