@@ -29,12 +29,12 @@ class RolesService
             'type' => null,
             'permissions' => [],
             'models' => []
-        ], 'customer_servise' => [
+        ], 'production_manager' => [
             'like' => 'admin',
             'type' => null,
             'permissions' => [],
             'models' => []
-        ], 'production_manager' => [
+        ], 'production_supervisor' => [
             'like' => 'admin',
             'type' => null,
             'permissions' => [],
@@ -61,8 +61,8 @@ class RolesService
     {
         return [
             'admin' => 'مدير النظام',
-            'customer_servise' => 'خدمة عملاء',
             'production_manager' => 'مسئول الانتاج',
+            'production_supervisor' => 'مشرف الانتاج',
             'logistic_manager' => 'مسئول لوجيستي',
             'general_manager' => 'مشرف المبيعات',
             'store_manager' => 'مسئول المبيعات',

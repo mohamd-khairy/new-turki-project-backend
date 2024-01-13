@@ -127,18 +127,20 @@ if (!function_exists('handleRoleOrderState')) {
             ];
         }
 
-        if (in_array('customer_servise', $roles)) { // 'customer_servise' => 'خدمة عملاء',
-            return [
-                'status' => ['101', '102', '103'],
-                'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
-            ];
-        }
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             return [
                 'status' => ['104', '105'],
                 'orders' => ['101', '104', '105']
             ];
         }
+
+        if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
+            return [
+                'status' => ['104', '105'],
+                'orders' => ['101', '104', '105']
+            ];
+        }
+
         if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',///////////////////
             return [
                 'status' =>  ['103', '106', '200'],

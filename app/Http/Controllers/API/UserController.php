@@ -78,7 +78,7 @@ class UserController extends Controller
 
         $user = User::create($data);
 
-        $roles = isset($request->roles) ? (is_array($request->roles) ? $request->roles : explode(',', $request->roles)) : ['customer_servise'];
+        $roles = isset($request->roles) ? (is_array($request->roles) ? $request->roles : explode(',', $request->roles)) : ['delegate'];
         $user->assignRole($roles);
 
         return successResponse($user, 'User has been successfully created');
