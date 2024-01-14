@@ -186,6 +186,7 @@ class OrderController extends Controller
             $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
             $i->orderProducts = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
                 ->where('order_ref_no', $i->ref_no)->get();
+            $i->is_printed = $i->printed_at ?  true : false;
             return $i;
         });
 
