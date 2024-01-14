@@ -1,10 +1,11 @@
 <?php
 
+use App\Models\OrderState;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-//base64_encode
+use Illuminate\Support\Facades\Schema;
 
 
 function generateQrInvoice($order)
@@ -121,49 +122,62 @@ if (!function_exists('handleRoleOrderState')) {
         //     'code' => "200",
 
         if (in_array('admin', $roles)) { // 'admin' => 'مدير النظام',
-            return [
+            $data = [
                 'status' =>  ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
                 'orders' =>    ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
             ];
         }
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
-            return [
+            $data = [
                 'status' => ['104', '105'],
                 'orders' => ['101', '104', '105']
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
-            return [
+            $data = [
                 'status' => ['104', '105'],
                 'orders' => ['101', '104', '105']
             ];
         }
 
         if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',///////////////////
-            return [
+            $data = [
                 'status' =>  ['103', '106', '200'],
                 'orders' =>   ['101', '104', '105', '106', '109', '200']
             ];
         }
         if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
-            return [
+            $data = [
                 'status' =>  ['101', '102', '103'],
                 'orders' =>  ['100', '101', '102', '103', '104', '105']
             ];
         }
         if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
-            return [
+            $data = [
                 'status' =>  ['101', '102', '103'],
                 'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
             ];
         }
         if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////
-            return [
+            $data = [
                 'status' => ['103', '109', '200'],
                 'orders' => ['106', '109']
             ];
+        }
+
+        if ($data) {
+            if (Schema::hasColumn('order_states', 'new_code')) {
+                $data = [
+                    'status' => OrderState::whereIn('new_code', $data['status'])->pluck('code')->toArray(),
+                    'orders' => OrderState::whereIn('new_code', $data['orders'])->pluck('code')->toArray()
+                ];
+            }
+
+            return $data;
+        } else {
+            return [];
         }
     }
 }
