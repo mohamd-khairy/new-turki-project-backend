@@ -23,30 +23,30 @@ class AlRajhiPaymentService
     {
         $lastPayment = Payment::latest('id')->first();
 
-            $data = [
-                "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
-                "customer_id" => $customer->id,
-                "order_ref_no" => $order->ref_no,
-                "price" => (double)$order->total_amount_after_discount,
-                "payment_type_id" => $paymentType->id,
-                "status" => "Waiting for Client", // need to move to enum class
-                "description" => "Payment Created", // need to move to enum class
-            ];
+        $data = [
+            "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
+            "customer_id" => $customer->id,
+            "order_ref_no" => $order->ref_no,
+            "price" => (float)$order->total_amount_after_discount,
+            "payment_type_id" => $paymentType->id,
+            "status" => "Waiting for Client", // need to move to enum class
+            "description" => "Payment Created", // need to move to enum class
+        ];
 
 
-            // todo: implement this
-//                Notification::send($order->foodOrders[0]->food->restaurant->users, new NewOrder($order));
+        // todo: implement this
+        //                Notification::send($order->foodOrders[0]->food->restaurant->users, new NewOrder($order));
 
-        $bodyReq =[[
-            'id'=> 'trs1dWTEB76b8C3',
-            'trandata'=> $this->trandata($order,$country->code) ,
-            'responseURL'=> 'https://merchantpage/PaymentResult.jsp',
-            'errorURL'=> 'https://merchantpage/PaymentResult.jsp'
+        $bodyReq = [[
+            'id' => 'trs1dWTEB76b8C3',
+            'trandata' => $this->trandata($order, $country->code),
+            'responseURL' => 'https://merchantpage/PaymentResult.jsp',
+            'errorURL' => 'https://merchantpage/PaymentResult.jsp'
         ]];
 
         $baseUrl = "https://digitalpayments.alrajhibank.com.sa/pg/";
         $endpoint = $baseUrl . "payment/hosted.htm?PaymentID=";
-        $options =  ["json"=>$bodyReq, "headers" => ["Accept" => "application/json", "Content-Type" => "application/json",]];
+        $options =  ["json" => $bodyReq, "headers" => ["Accept" => "application/json", "Content-Type" => "application/json",]];
 
         $this->client = new Client();
         $response = $this->client->request(strtoupper("post"), $endpoint, $options);
@@ -54,7 +54,7 @@ class AlRajhiPaymentService
         $body = (string)$response->getBody();
         $body = json_decode($body, true);
 
-        if(isset($body[0]['status']) && $body[0]['status'] == 1){
+        if (isset($body[0]['status']) && $body[0]['status'] == 1) {
 
 
             $arr = explode(":", trim($body[0]["result"]));
@@ -62,14 +62,14 @@ class AlRajhiPaymentService
 
             $data["bank_ref_no"] = $arr[0];
             $payment = Payment::create($data);
-            $order->update(['payment_id' => $payment->id]);
+            $order->update(['payment_id' => $payment->id, 'paid' => 1]);
 
 
-            $result['invoiceURL'] = "https://digitalpayments.alrajhibank.com.sa/pg/paymentpage.htm?PaymentID=".$arr[0];
+            $result['invoiceURL'] = "https://digitalpayments.alrajhibank.com.sa/pg/paymentpage.htm?PaymentID=" . $arr[0];
             $result['success'] = true;
 
             return $result;
-        }else{
+        } else {
             $result['success'] = false;
             $result['error'] = $body;
 
@@ -83,7 +83,7 @@ class AlRajhiPaymentService
         // if($countryCode == "AE")
         //     $currencyCode = "784";
 
-          // number_format($number, 2, '.', '')
+        // number_format($number, 2, '.', '')
 
         $details = collect([[
             'id' => "trs1dWTEB76b8C3",
@@ -92,12 +92,12 @@ class AlRajhiPaymentService
             'password' => "Meoj0#T53#Ys#5O",
             'currencyCode' => "682",
             'trackId' =>  $order->ref_no,
-            'responseURL' => env('APP_URL').'/api/v2/final_result?paid=1',
-            'errorURL' => env('APP_URL').'/api/v2/final_result?paid=0',
+            'responseURL' => env('APP_URL') . '/api/v2/final_result?paid=1',
+            'errorURL' => env('APP_URL') . '/api/v2/final_result?paid=0',
         ]]);
 
         $jsonDetails = json_encode($details);
-        TraceError::create(['class_name'=> "AlRajhiPaymentService::before sending to ARB line:94", 'method_name'=>"trandata", 'error_desc' => $jsonDetails]);
+        TraceError::create(['class_name' => "AlRajhiPaymentService::before sending to ARB line:94", 'method_name' => "trandata", 'error_desc' => $jsonDetails]);
 
         $str = $jsonDetails;
         return $this->encryptAES(($str), "11195079618911195079618911195079");
@@ -118,7 +118,7 @@ class AlRajhiPaymentService
     public function Get_Payment(Order $order)
     {
 
-        $payment = Payment:: find($order->payment_id);
+        $payment = Payment::find($order->payment_id);
 
         $details = collect([[
             'id' => "trs1dWTEB76b8C3",
@@ -148,13 +148,11 @@ class AlRajhiPaymentService
 
         $body = (string)$response->getBody();
         $body = json_decode($body, true);
-
-
     }
 
     function show_final_result(Request $request)
     {
-         TraceError::create(['class_name'=> "AlRajhiPaymentService", 'method_name'=>"show_final_result", 'error_desc' => json_encode($request->all())]);
+        TraceError::create(['class_name' => "AlRajhiPaymentService", 'method_name' => "show_final_result", 'error_desc' => json_encode($request->all())]);
 
         $validatedData = $request->validate([
             'trandata' => 'sometimes',
@@ -168,11 +166,10 @@ class AlRajhiPaymentService
 
             $decryptedData = json_decode(urldecode($decrypt), true);
             $decryptedData = $decryptedData[0];
-
         }
 
 
-        $logoPath = config('app.url').'/storage/assets/logo.png';
+        $logoPath = config('app.url') . '/storage/assets/logo.png';
         $paymentId = $decryptedData['paymentId'] ?? 'N/A';
         $paymentResult = $decryptedData['result'] ?? 'N/A';
 
@@ -242,7 +239,7 @@ class AlRajhiPaymentService
                 </span>
                 </div>';
         $html_sec1 = '<section id="turkeysection">
-                    <div class="image-frame"><img src="'. $logoPath .'" class="centerimglogo"></div>
+                    <div class="image-frame"><img src="' . $logoPath . '" class="centerimglogo"></div>
                     <div class="row">
                         <div class="turkeyd col-lg-6">
 
@@ -273,7 +270,6 @@ class AlRajhiPaymentService
 
                     </html>
                   ';
-
         } else {
             return $html_head . '
 
@@ -294,8 +290,6 @@ class AlRajhiPaymentService
                     </html>
               ' . $paymentId . '---' . $paymentResult;
         }
-
-
     }
 
     function encryptAES($str, $key)
@@ -325,7 +319,7 @@ class AlRajhiPaymentService
 
     public function Get_Payment_Status_ARB(Request $request)
     {
-            TraceError::create(['class_name'=> "AlRajhiPaymentService", 'method_name'=>"Get_Payment_Status_ARB", 'error_desc' => json_encode($request->all())]);
+        TraceError::create(['class_name' => "AlRajhiPaymentService", 'method_name' => "Get_Payment_Status_ARB", 'error_desc' => json_encode($request->all())]);
         $validatedData = $request->post();
 
 
@@ -339,29 +333,29 @@ class AlRajhiPaymentService
             $decryptedDate['payload'] = $validatedData['trandata'];
 
 
-        if(isset($decryptedData['paymentId'])){
-        $arp = ArbPayment::where('paymentId', $decryptedData['paymentId'])->get()->first();
+            if (isset($decryptedData['paymentId'])) {
+                $arp = ArbPayment::where('paymentId', $decryptedData['paymentId'])->get()->first();
 
-            if ($arp) {
-                TraceError::create(['class_name'=> "AlRajhiPaymentService", 'method_name'=>"Get_Payment_Status_ARB", 'error_desc' => 'duplicate, no action took!: ' .$decrypt]);
-                return;
+                if ($arp) {
+                    TraceError::create(['class_name' => "AlRajhiPaymentService", 'method_name' => "Get_Payment_Status_ARB", 'error_desc' => 'duplicate, no action took!: ' . $decrypt]);
+                    return;
+                }
             }
-        }
 
-        $arp = ArbPayment::create($decryptedData);
+            $arp = ArbPayment::create($decryptedData);
 
 
-        // why this is not correct? because you are creating the record and then checking if it exits by first, which will be there for sure. so i just swapped it.
+            // why this is not correct? because you are creating the record and then checking if it exits by first, which will be there for sure. so i just swapped it.
 
             // $arp = ArbPayment::create($decryptedData);
 
-        // $arp = ArbPayment::where('paymentId', $decryptedData['paymentId'])->get()->first();
-        //   if ($arp) {
-        // TraceError::create(['class_name'=> "AlRajhiPaymentService", 'method_name'=>"Get_Payment_Status_ARB", 'error_desc' => 'duplicate']);
-        //      }
+            // $arp = ArbPayment::where('paymentId', $decryptedData['paymentId'])->get()->first();
+            //   if ($arp) {
+            // TraceError::create(['class_name'=> "AlRajhiPaymentService", 'method_name'=>"Get_Payment_Status_ARB", 'error_desc' => 'duplicate']);
+            //      }
 
             $order = Order::find($decryptedData["trackId"]);
-            $payment = Payment:: find($order->payment_id);
+            $payment = Payment::find($order->payment_id);
 
             if (isset($decryptedData['result'])) {
 
@@ -369,16 +363,16 @@ class AlRajhiPaymentService
                     $payment->update([
                         "description" => $decryptedData['result'],
                         "status" => "Paid",
-                        "price" => (double)$decryptedData['amt'],
+                        "price" => (float)$decryptedData['amt'],
 
                     ]);
 
                     $objOrder = $order;
                     $order = $order->toArray();
-           //if($arp['duplicate'] == null){
-              $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-              $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order , $request);
-            //}
+                    //if($arp['duplicate'] == null){
+                    $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+                    $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
+                    //}
                 } else {
                     $payment->update([
                         "description" => $decryptedData['result'],
@@ -402,7 +396,6 @@ class AlRajhiPaymentService
         }
         // return response()->json([['status' => 1]]);
         return $this->show_final_result($request);
-
     }
 
     function decryptAES($code, $key)
@@ -411,8 +404,13 @@ class AlRajhiPaymentService
         $code = $this->byteArray2String($code);
         $iv = "PGKEYENCDECIVSPC";
         $code = base64_encode($code);
-        $decrypted = openssl_decrypt($code, 'AES-256-CBC', $key, OPENSSL_ZERO_PADDING,
-            $iv);
+        $decrypted = openssl_decrypt(
+            $code,
+            'AES-256-CBC',
+            $key,
+            OPENSSL_ZERO_PADDING,
+            $iv
+        );
         return $this->pkcs5_unpad($decrypted);
     }
 
@@ -439,6 +437,4 @@ class AlRajhiPaymentService
         }
         return substr($text, 0, -1 * $pad);
     }
-
-
 }

@@ -185,10 +185,10 @@ class OrderController extends Controller
             $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
             $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
 
-            if ($i->remain_amount <= 0 && !$i->paid) {
-                Order::where('id', $i->id)->update(['paid' => 1]);
-                $i->paid = 1;
-            }
+            // if ($i->remain_amount <= 0) {
+            //     Order::where('id', $i->id)->update(['paid' => 1]);
+            //     $i->paid = 1;
+            // }
             $i->orderProducts = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
                 ->where('order_ref_no', $i->ref_no)->get();
             $i->is_printed = $i->printed_at ?  true : false;

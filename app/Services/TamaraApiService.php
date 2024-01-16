@@ -291,7 +291,7 @@ class TamaraApiService
         if(isset($response->order_id)){
             $createPayment["bank_ref_no"] = $response->order_id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id]);
+            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
 
             $result['checkout_url'] = $response->checkout_url;
             $result['success'] = true;
@@ -642,7 +642,7 @@ class TamaraApiService
         if(isset($response->order_id)){
             $createPayment["bank_ref_no"] = $response->order_id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id]);
+            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
 
             $result['checkout_url'] = $response->checkout_url;
             $result['success'] = true;

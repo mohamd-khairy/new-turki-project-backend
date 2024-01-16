@@ -147,7 +147,7 @@ class TabbyApiService
         if (isset($response->id)) {
             $createPayment["bank_ref_no"] = $response->payment->id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id]);
+            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
             $installments = $response->configuration->available_products->installments[0];
             $result['checkout_url'] = $installments->web_url;
             $result['success'] = true;
