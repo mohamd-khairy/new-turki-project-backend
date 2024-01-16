@@ -185,8 +185,8 @@ class OrderController extends Controller
             $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
             $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
 
-            if($i->remain_amount <= 0 && !$i->paid){
-                Order::where('id' , $i->id)->update(['paid' => 1]);
+            if ($i->remain_amount <= 0 && !$i->paid) {
+                Order::where('id', $i->id)->update(['paid' => 1]);
                 $i->paid = 1;
             }
             $i->orderProducts = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
@@ -268,7 +268,7 @@ class OrderController extends Controller
                 'sales_representative_id',
             );
 
-            if ($request->discount_code) {
+            if ($request->discount_code && $request->discount_code != $order->applied_discount_code) {
 
                 if ($order->discount_applied) {
                     $order->total_amount_after_discount += $order->discount_applied;
