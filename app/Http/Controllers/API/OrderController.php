@@ -291,7 +291,7 @@ class OrderController extends Controller
             if (isset($request->paid)) {
                 $data['paid'] = $request->paid ?? 0;
 
-                if ($request->paid) {
+                if ($request->paid && !$order->paid) {
 
                     $payment = Payment::where('order_ref_no', $order->ref_no)->first();
                     if ($payment) {
