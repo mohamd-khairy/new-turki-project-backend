@@ -139,6 +139,16 @@ class OrderController extends Controller
         if (request('order_state_ids')) {
             $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
         }
+
+        // if (request('date_from') && request('date_to')) {
+        //     $orders = $orders->where(function ($q) {
+        //         $q->where('orders.delivery_date', ">=",  date('m-d', strtotime(request('date_from'))))->where('orders.delivery_date', "<=", date('m-d', strtotime(request('date_to'))));
+        //     });
+        // }
+        // if (request('delivery_date')) {
+        //     $orders = $orders->where('orders.delivery_date', date('m-d', strtotime(request('delivery_date'))));
+        // }
+
         if (request('date_from') && request('date_to')) {
             $orders = $orders->where(function ($q) {
                 $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
