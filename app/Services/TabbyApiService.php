@@ -27,18 +27,18 @@ class TabbyApiService
             "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
             "customer_id" => $customer->id,
             "order_ref_no" => $order->ref_no,
-            "price" => (double)$order->total_amount_after_discount,
+            "price" => (float)$order->total_amount_after_discount,
             "payment_type_id" => 7, //tabby
             "status" => "Waiting for the client", // need to move to enum class
             "description" => "Payment Created", // need to move to enum class
         ];
 
         $merchantCode = "";
-        if ($country->code == "SA"){
+        if ($country->code == "SA") {
             $merchantCode = "TD_APP";
-        }elseif ($country->code == "AE"){
+        } elseif ($country->code == "AE") {
             $merchantCode = "TD_APPAE";
-        }else{
+        } else {
             $merchantCode = "N/A";
         }
 
@@ -58,16 +58,15 @@ class TabbyApiService
             }
 
             $item = [
-                    "title" => $size->name_ar,
-                    "quantity" => (int)$qty,
-                    "unit_price" => $unitPrice,
-                    "discount_amount" => "0.00",
-                    "reference_id" => (string)$size->id,
-                    "category" => "string",
+                "title" => $size->name_ar,
+                "quantity" => (int)$qty,
+                "unit_price" => $unitPrice,
+                "discount_amount" => "0.00",
+                "reference_id" => (string)$size->id,
+                "category" => "string",
             ];
 
             array_push($items, $item);
-
         }
 
 
@@ -110,9 +109,9 @@ class TabbyApiService
             "lang" => "en",
             "merchant_code" => $merchantCode,
             "merchant_urls" => [
-                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/success",
-                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/cancel",
-                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/tabby/checkout/failure"
+                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/success",
+                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/cancel",
+                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/failure"
             ]
         ];
 
@@ -147,7 +146,7 @@ class TabbyApiService
         if (isset($response->id)) {
             $createPayment["bank_ref_no"] = $response->payment->id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
+            $order->update(['payment_id' => $payment->id]);
             $installments = $response->configuration->available_products->installments[0];
             $result['checkout_url'] = $installments->web_url;
             $result['success'] = true;
@@ -161,7 +160,6 @@ class TabbyApiService
             $result['error'] = $response;
             return $result;
         }
-
     }
 
     public function response(Request $request)
@@ -173,7 +171,7 @@ class TabbyApiService
         $paymentId = $post["payment_id"] ?? "N/A";
         $paymentResult = isset($post["payment_id"]) ? "Paid" : "N/A";
 
-        $payment = Payment:: where('bank_ref_no', $paymentId)->get()->last();
+        $payment = Payment::where('bank_ref_no', $paymentId)->get()->last();
 
         if ($payment != null) {
             $order = Order::where('ref_no', $payment->order_ref_no)->get()->last();
@@ -189,15 +187,15 @@ class TabbyApiService
             $payment->update([
                 "description" => $paymentResult,
                 "status" => "Client's payment process has " . $paymentResult,
-                "price" => (double)$order->total_amount_after_discount,
+                "price" => (float)$order->total_amount_after_discount,
             ]);
         }
 
-                $objOrder = $order;
-                    $order = $order->toArray();
+        $objOrder = $order;
+        $order = $order->toArray();
 
-              $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-              $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order , $request);
+        $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+        $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
 
         $html_head = '<!DOCTYPE html>
                <html lang="en-US">
@@ -278,6 +276,8 @@ class TabbyApiService
 
         if ($paymentResult == "Paid") {
 
+            $order->update(['paid' => 1]);
+
             return $html_head . '
 
 
@@ -296,8 +296,10 @@ class TabbyApiService
 
                    </html>
                  ';
-
         } else {
+
+            $order->update(['paid' => 0]);
+
             return $html_head . '
 
 
@@ -317,10 +319,10 @@ class TabbyApiService
                    </html>
              ' . $paymentId . '---' . $paymentResult;
         }
-
     }
 
-        public function createManualPayment($customer,$address, $createdOrder,$country){
+    public function createManualPayment($customer, $address, $createdOrder, $country)
+    {
 
         $customer = Customer::find(auth()->user()->id);
         $lastPayment = Payment::latest('id')->first();
@@ -331,14 +333,14 @@ class TabbyApiService
         //     'country_id' => 'required|exists:countries,code'
         // ]);
 
-        $order = Order::where('ref_no',$createdOrder->ref_no)->get()->first();
+        $order = Order::where('ref_no', $createdOrder->ref_no)->get()->first();
         $country = Country::where('code', $country->code)->get()->first();
 
         $createPayment = [
             "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
             "customer_id" => $customer->id,
             "order_ref_no" => $createdOrder->ref_no,
-            "price" => (double) $order->total_amount_after_discount,
+            "price" => (float) $order->total_amount_after_discount,
             "payment_type_id" => 7, //tabby
             "status" => "Waiting for the client", // need to move to enum class
             "description" => "Payment Created", // need to move to enum class
@@ -346,33 +348,38 @@ class TabbyApiService
 
         $payment = Payment::create($createPayment);
 
-       return [
-        'payment_ref' => $payment->ref_no,
-         'order_ref' => $payment->order_ref_no,];
+        return [
+            'payment_ref' => $payment->ref_no,
+            'order_ref' => $payment->order_ref_no,
+        ];
     }
 
 
-    public function manualResponseUpdate(Request $request){
+    public function manualResponseUpdate(Request $request)
+    {
         $validData = $request->validate([
             "payment_ref" => 'required|exists:payments,ref_no',
             "order_ref" => 'required|exists:orders,ref_no',
             "paid" => 'required|bool',
         ]);
 
-        $payment = Payment::where([['ref_no', $validData['payment_ref']],['order_ref_no', $validData['order_ref']]])->get()->last();
+        $payment = Payment::where([['ref_no', $validData['payment_ref']], ['order_ref_no', $validData['order_ref']]])->get()->last();
         $payment->update([
             "description" => 'paid from mobile manual.',
             "status" => $validData['paid'] == 1 ? "Paid" : "Unpaid",
             'manual' => 1
         ]);
 
-        return response()->json(['success' => true, 'message' => 'success', 'description' => "", "code" => "200",
-            "data" => $payment], 200);
+        return response()->json([
+            'success' => true, 'message' => 'success', 'description' => "", "code" => "200",
+            "data" => $payment
+        ], 200);
     }
 
-    public function testHash(Request $request){
+    public function testHash(Request $request)
+    {
         $validData = $request->validate([
-        "bank_ref"=>'required',
+            "bank_ref" => 'required',
             "payment_ref" => 'required',
             "order_ref" => 'required',
             "paid" => 'required|bool',
@@ -382,27 +389,27 @@ class TabbyApiService
         $onlyReqData = $validData;
         unset($onlyReqData['sauce']);
         $spicy = '';
-       	if($request->query("test") != null && $request->query("test") == 1 ){
-       		$spicy = '9be22db5-16c9-4c98-ae6c-b7670f5b2e3c';
-       	}else{
-       		$spicy = '330b838b-6c2a-450d-8e2e-0cde4c38abb6';
-       	}
-
-        $mySauce = base64_encode(hash('sha512', json_encode($onlyReqData).$spicy, false));
-
-        if($mySauce !== $validData["sauce"]){
-            return response()->json(['success' => false, 'yourhash' =>$validData['sauce'], 'serverhash' => $mySauce], 400);
-        }else{
-            return response()->json(['success' => true, 'yourhash' =>$validData['sauce'], 'serverhash' => $mySauce], 200);
+        if ($request->query("test") != null && $request->query("test") == 1) {
+            $spicy = '9be22db5-16c9-4c98-ae6c-b7670f5b2e3c';
+        } else {
+            $spicy = '330b838b-6c2a-450d-8e2e-0cde4c38abb6';
         }
 
+        $mySauce = base64_encode(hash('sha512', json_encode($onlyReqData) . $spicy, false));
+
+        if ($mySauce !== $validData["sauce"]) {
+            return response()->json(['success' => false, 'yourhash' => $validData['sauce'], 'serverhash' => $mySauce], 400);
+        } else {
+            return response()->json(['success' => true, 'yourhash' => $validData['sauce'], 'serverhash' => $mySauce], 200);
+        }
     }
 
-    public function manualResponseUpdateV2(Request $request){
+    public function manualResponseUpdateV2(Request $request)
+    {
 
 
         $validData = $request->validate([
-        "bank_ref"=>'required',
+            "bank_ref" => 'required',
             "payment_ref" => 'required',
             "order_ref" => 'required',
             "paid" => 'required|bool',
@@ -412,28 +419,30 @@ class TabbyApiService
         $onlyReqData = $validData;
         unset($onlyReqData['sauce']);
         $spicy = '330b838b-6c2a-450d-8e2e-0cde4c38abb6';
-        $mySauce = base64_encode(hash('sha512', json_encode($onlyReqData).$spicy, false));
+        $mySauce = base64_encode(hash('sha512', json_encode($onlyReqData) . $spicy, false));
 
 
-        if($mySauce !== $validData["sauce"]){
-            return response()->json(['success' => false, 'message' => 'failed', 'description' => "hmmm!", "code" => "404",
-                "data" => null], 404);
+        if ($mySauce !== $validData["sauce"]) {
+            return response()->json([
+                'success' => false, 'message' => 'failed', 'description' => "hmmm!", "code" => "404",
+                "data" => null
+            ], 404);
         }
 
-        $payment = Payment::where([['ref_no', $validData['payment_ref']],['order_ref_no', $validData['order_ref']]])->get()->last();
+        $payment = Payment::where([['ref_no', $validData['payment_ref']], ['order_ref_no', $validData['order_ref']]])->get()->last();
         $order = Order::where('ref_no', $payment->order_ref_no)->get()->last();
 
         $payment->update([
-        "bank_ref_no" => $validData['bank_ref'],
+            "bank_ref_no" => $validData['bank_ref'],
             "description" => 'paid from mobile app tappy manual.',
             "status" => $validData['paid'] == 1 ? "Paid" : "Unpaid",
             'manual' => 1,
-            "price" => (double)$order->total_amount_after_discount,
+            "price" => (float)$order->total_amount_after_discount,
         ]);
 
 
-       $order->update([
-        "payment_id" => $payment->id,
+        $order->update([
+            "payment_id" => $payment->id,
 
         ]);
         PaymentLog::create([
@@ -447,9 +456,10 @@ class TabbyApiService
         $order = $order->toArray();
 
         $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-        $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order , $request);
-        return response()->json(['success' => true, 'message' => 'success', 'description' => "", "code" => "200",
-            "data" => $payment], 200);
+        $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
+        return response()->json([
+            'success' => true, 'message' => 'success', 'description' => "", "code" => "200",
+            "data" => $payment
+        ], 200);
     }
-
 }

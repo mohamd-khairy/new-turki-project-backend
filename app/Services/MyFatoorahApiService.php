@@ -90,7 +90,7 @@ class MyFatoorahApiService
             $data["bank_ref_no"] = $InvoiceId;
             // $data["description"] = json_encode($json['Data']['InvoiceURL']);
             $payment = Payment::create($data);
-            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
+            $order->update(['payment_id' => $payment->id , 'paid' => 0]);
             return $result;
         } else {
             $result['success'] = false;

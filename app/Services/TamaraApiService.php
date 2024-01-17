@@ -82,14 +82,14 @@ class TamaraApiService
 
     public function getPaymentTypes($countryIsoCode = 'SA', $currencyCode, $orderValue)
     {
-//      $configuration = Configuration::create($apiUrl, $API_KEY, $apiRequestTimeout, $transport);
-//      $client = Client::create($configuration);
-//
-//      $response = $client->getPaymentTypes('SA');
-//
-//      if ($response->isSuccess()) {
-//          var_dump($response->getPaymentTypes());
-//      }
+        //      $configuration = Configuration::create($apiUrl, $API_KEY, $apiRequestTimeout, $transport);
+        //      $client = Client::create($configuration);
+        //
+        //      $response = $client->getPaymentTypes('SA');
+        //
+        //      if ($response->isSuccess()) {
+        //          var_dump($response->getPaymentTypes());
+        //      }
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => ('https://api.tamara.co/checkout/payment-types' . '?country=' . $countryIsoCode . '&currency=' . $currencyCode . '&order_value=' . $orderValue),
@@ -116,15 +116,15 @@ class TamaraApiService
 
         $lastPayment = Payment::latest('id')->first();
 
-            $createPayment = [
-                "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
-                "customer_id" => $customer->id,
-                "order_ref_no" => $order->ref_no,
-                "price" => (double)$order->total_amount_after_discount,
-                "payment_type_id" => 4, //tamara
-                "status" => "Waiting for the client", // need to move to enum class
-                "description" => "Payment Created", // need to move to enum class
-            ];
+        $createPayment = [
+            "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
+            "customer_id" => $customer->id,
+            "order_ref_no" => $order->ref_no,
+            "price" => (float)$order->total_amount_after_discount,
+            "payment_type_id" => 4, //tamara
+            "status" => "Waiting for the client", // need to move to enum class
+            "description" => "Payment Created", // need to move to enum class
+        ];
 
         $city = City::find($address['city_id']);
         $Country = Country::find($address['country_id']);
@@ -166,7 +166,6 @@ class TamaraApiService
             ];
 
             array_push($items, $item);
-
         }
 
 
@@ -227,10 +226,10 @@ class TamaraApiService
                 "currency" => $country->currency_en
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/success",
-                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/failure",
-                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/cancel",
-                "notification" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/success",
+                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/failure",
+                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/cancel",
+                "notification" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,
@@ -288,10 +287,10 @@ class TamaraApiService
 
         $response = json_decode($response);
 
-        if(isset($response->order_id)){
+        if (isset($response->order_id)) {
             $createPayment["bank_ref_no"] = $response->order_id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
+            $order->update(['payment_id' => $payment->id]);
 
             $result['checkout_url'] = $response->checkout_url;
             $result['success'] = true;
@@ -299,13 +298,12 @@ class TamaraApiService
         }
 
 
-        if(isset($response->message)){
+        if (isset($response->message)) {
             TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "checkoutTamara:297", 'error_desc' => json_encode($response)]);
             $result['success'] = false;
             $result['error'] = $response;
             return $result;
         }
-
     }
 
 
@@ -314,32 +312,31 @@ class TamaraApiService
         $post = $request->all();
         TraceError::create(['class_name' => "TamaraApiService", 'method_name' => $request->query('paymentStatus'), 'error_desc' => json_encode($request->all())]);
 
-        $logoPath = config('app.url').'/storage/assets/logo.png';
+        $logoPath = config('app.url') . '/storage/assets/logo.png';
         $paymentId = $request->query('orderId') ?? 'N/A';
         $paymentResult = $request->query('paymentStatus') ?? 'N/A';
 
-        $payment = Payment:: where('bank_ref_no',$paymentId)->get()->last();
+        $payment = Payment::where('bank_ref_no', $paymentId)->get()->last();
 
 
 
-         if ($payment != null) {
-             $order = Order::where('ref_no', $payment->order_ref_no)->get()->last();
+        if ($payment != null) {
+            $order = Order::where('ref_no', $payment->order_ref_no)->get()->last();
 
-             PaymentLog::create([
+            PaymentLog::create([
                 "payment_name" => "Tamara",
                 "payment_ref" => $payment->ref_no,
                 "order_ref" => $payment->order_ref_no,
                 "descraption" => $payment->description,
                 "payment_status" => $payment->status
-                ]);
+            ]);
 
             $payment->update([
-                    "description" => $paymentResult,
-                    "status" => "Client's payment process has ".$paymentResult,
-                    "price" => (double)$order->total_amount_after_discount,
-                    ]);
-
-         }
+                "description" => $paymentResult,
+                "status" => "Client's payment process has " . $paymentResult,
+                "price" => (float)$order->total_amount_after_discount,
+            ]);
+        }
 
         $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
@@ -407,7 +404,7 @@ class TamaraApiService
                 </span>
                 </div>';
         $html_sec1 = '<section id="turkeysection">
-                    <div class="image-frame"><img src="'. $logoPath .'" class="centerimglogo"></div>
+                    <div class="image-frame"><img src="' . $logoPath . '" class="centerimglogo"></div>
                     <div class="row">
                         <div class="turkeyd col-lg-6">
 
@@ -438,7 +435,6 @@ class TamaraApiService
 
                     </html>
                   ';
-
         } else {
             return $html_head . '
 
@@ -459,23 +455,22 @@ class TamaraApiService
                     </html>
               ' . $paymentId . '---' . $paymentResult;
         }
-
     }
 
 
- public function checkoutTamaratest($customer, $address, $order, $paymentType, $country, $instalments = null)
+    public function checkoutTamaratest($customer, $address, $order, $paymentType, $country, $instalments = null)
     {
         $lastPayment = Payment::latest('id')->first();
 
-            $createPayment = [
-                "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
-                "customer_id" => 8,
-                "order_ref_no" => "SAO000017390",
-                "price" => 500.00,
-                "payment_type_id" => 4, //tamara
-                "status" => "Waiting for the client", // need to move to enum class
-                "description" => "Payment Created", // need to move to enum class
-            ];
+        $createPayment = [
+            "ref_no" => GetNextPaymentRefNo($country->code, $lastPayment != null ? $lastPayment->id + 1 : 1),
+            "customer_id" => 8,
+            "order_ref_no" => "SAO000017390",
+            "price" => 500.00,
+            "payment_type_id" => 4, //tamara
+            "status" => "Waiting for the client", // need to move to enum class
+            "description" => "Payment Created", // need to move to enum class
+        ];
 
         $city = City::find($address['city_id']);
         $Country = Country::find($address['country_id']);
@@ -517,7 +512,6 @@ class TamaraApiService
             ];
 
             array_push($items, $item);
-
         }
 
 
@@ -578,10 +572,10 @@ class TamaraApiService
                 "currency" => "SAR"
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
-                "failure" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
-                "cancel" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/checkout/response",
-                "notification" => config("app.payment_url" , "https://turki.almaraacompany.com/admin")."/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
+                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
+                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
+                "notification" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,
@@ -639,10 +633,10 @@ class TamaraApiService
 
         $response = json_decode($response);
 
-        if(isset($response->order_id)){
+        if (isset($response->order_id)) {
             $createPayment["bank_ref_no"] = $response->order_id;
             $payment = Payment::create($createPayment);
-            $order->update(['payment_id' => $payment->id , 'paid' => 1]);
+            $order->update(['payment_id' => $payment->id]);
 
             $result['checkout_url'] = $response->checkout_url;
             $result['success'] = true;
@@ -650,13 +644,12 @@ class TamaraApiService
         }
 
 
-        if(isset($response->message)){
+        if (isset($response->message)) {
             TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "checkoutTamara:297", 'error_desc' => json_encode($response)]);
             $result['success'] = false;
             $result['error'] = $response;
             return $result;
         }
-
     }
 
     public function orderDetails($order)
@@ -682,7 +675,6 @@ class TamaraApiService
 
         curl_close($curl);
         return json_decode($response);
-
     }
 
 
@@ -695,20 +687,20 @@ class TamaraApiService
         TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:474", 'error_desc' => json_encode($request->all())]);
 
         // validate the request by the token in authorization header
-//         $notifToken =  $request->header("Authorization");
-//         $notifToken = str_replace("Bearer", '',$notifToken);
-//         $notifToken = str_replace(" ", '',$notifToken);
+        //         $notifToken =  $request->header("Authorization");
+        //         $notifToken = str_replace("Bearer", '',$notifToken);
+        //         $notifToken = str_replace(" ", '',$notifToken);
 
         // $token = $this->decode($data['tamaraToken']);
 
         // need test
-//         if ($token != $this->API_KEY){
+        //         if ($token != $this->API_KEY){
         // TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:485", 'error_desc' => 'token not matched!,  '.json_encode($request->all())]);
-//             return;
-//         }
+        //             return;
+        //         }
 
 
-       $tamara = TamaraPayment::create([
+        $tamara = TamaraPayment::create([
             'order_ref_no' => $data['order_reference_id'],
             'tamara_order_id' => $data['order_id'],
             'status' => $data['order_status'],
@@ -717,24 +709,24 @@ class TamaraApiService
 
 
         $order = Order::find($data['order_reference_id']);
-        $payment = Payment:: where('bank_ref_no',$data['order_id'])->get()->last();
+        $payment = Payment::where('bank_ref_no', $data['order_id'])->get()->last();
 
-        if(isset($data['order_status'])){
-            if ($data['order_status'] == "approved"){
+        if (isset($data['order_status'])) {
+            if ($data['order_status'] == "approved") {
 
                 $payment->update([
                     "description" => $data['order_status'],
                     "status" => "Calling Tamara for Authorizing the Order!",
-                    "price" => (double)$order->total_amount_after_discount,
-                    ]);
+                    "price" => (float)$order->total_amount_after_discount,
+                ]);
 
                 $res = $this->authoriseOrder($data['order_id']);
-                   $orderArray = $order->toArray();
+                $orderArray = $order->toArray();
 
-                  $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-                  $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
+                $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+                $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray, $request);
 
-            TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
+                TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
 
 
                 if (isset($res->status)) {
@@ -743,56 +735,56 @@ class TamaraApiService
                     $tamara->save();
 
                     $payment->update([
-                    "description" => $res->status,
-                    "status" => "Paid",
-                    "price" => (double)$order->total_amount_after_discount,
+                        "description" => $res->status,
+                        "status" => "Paid",
+                        "price" => (float)$order->total_amount_after_discount,
                     ]);
 
-                //   $orderArray = $order->toArray();
+                    $order->update(['paid' => 1]);
 
-                //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-                //   $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
-                //   TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:557", 'error_desc' => 'order sent to NetsuiteApi!,  '.json_encode($resNetsuiteApi)]);
+                    //   $orderArray = $order->toArray();
+
+                    //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+                    //   $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
+                    //   TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:557", 'error_desc' => 'order sent to NetsuiteApi!,  '.json_encode($resNetsuiteApi)]);
                 } else {
 
-                    if(isset($res->errors) && isset($res->errors->data) && isset($res->errors->data->new_state)){
+                    if (isset($res->errors) && isset($res->errors->data) && isset($res->errors->data->new_state)) {
                         TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:554", 'error_desc' => json_encode($res->errors)]);
-                        if($res->errors->data->new_state == "authorised") {
+                        if ($res->errors->data->new_state == "authorised") {
                             $tamara->update([
                                 'status' => $res->errors->data->new_state
-                                ]);
-
-                            $payment->update([
-                            "description" => $res->errors->data->new_state,
-                            "status" => "Paid",
-                            "price" => (double)$order->total_amount_after_discount,
                             ]);
 
-                        //   $orderArray = $order->toArray();
+                            $payment->update([
+                                "description" => $res->errors->data->new_state,
+                                "status" => "Paid",
+                                "price" => (float)$order->total_amount_after_discount,
+                            ]);
 
-                        //     //add trace error fro this
-                        //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-                        //   $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
+                            $order->update(['paid' => 1]);
+
+
+                            //   $orderArray = $order->toArray();
+
+                            //     //add trace error fro this
+                            //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+                            //   $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
                         }
-                    }else{
-                        TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:559", 'error_desc' => 'order not authorized!,  '.json_encode($res)]);
-                         $payment->update([
+                    } else {
+                        TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:559", 'error_desc' => 'order not authorized!,  ' . json_encode($res)]);
+                        $payment->update([
                             "description" => $res->message,
                             "status" => "order not authorized from Tamara!",
                         ]);
 
                         $tamara->update([
-                                'status' => $res->message
-                                ]);
-
+                            'status' => $res->message
+                        ]);
                     }
-
-
                 }
             }
         }
-
-
     }
 
 
@@ -807,13 +799,14 @@ class TamaraApiService
         return JWT::encode($payload, $this->SECRET_KEY, 'HS256');
     }
 
-    private function authoriseOrder($tamaraOrderId){
+    private function authoriseOrder($tamaraOrderId)
+    {
         $curl = curl_init();
 
         $payload = json_encode([]);
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.tamara.co/orders/'.$tamaraOrderId.'/authorise',
+            CURLOPT_URL => 'https://api.tamara.co/orders/' . $tamaraOrderId . '/authorise',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -836,7 +829,8 @@ class TamaraApiService
     }
 
     // when order is ready for shipped, this api should be called
-    public function capturedOrder($order, $country){
+    public function capturedOrder($order, $country)
+    {
         $curl = curl_init();
 
         $tamara = TamaraPayment::where('order_ref_no', $order->ref_no)->get()->last();
@@ -878,11 +872,12 @@ class TamaraApiService
         return json_decode($response);
     }
 
-    private function getTamaraOrder($orderRef){
+    private function getTamaraOrder($orderRef)
+    {
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.tamara.co/merchants/orders/reference-id/'.$orderRef,
+            CURLOPT_URL => 'https://api.tamara.co/merchants/orders/reference-id/' . $orderRef,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -901,5 +896,4 @@ class TamaraApiService
 
         return json_decode($response);
     }
-
 }
