@@ -140,22 +140,21 @@ class OrderController extends Controller
             $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
         }
 
-        // if (request('date_from') && request('date_to')) {
-        //     $orders = $orders->where(function ($q) {
-        //         $q->where('orders.delivery_date', ">=",  date('m-d', strtotime(request('date_from'))))->where('orders.delivery_date', "<=", date('m-d', strtotime(request('date_to'))));
-        //     });
-        // }
-        // if (request('delivery_date')) {
-        //     $orders = $orders->where('orders.delivery_date', date('m-d', strtotime(request('delivery_date'))));
-        // }
-
         if (request('date_from') && request('date_to')) {
-            $orders = $orders->where(function ($q) {
-                $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
+            // $orders = $orders->where(function ($q) {
+            //     $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
+            // });
+
+            $orders = $orders->where(function ($query) {
+                $query->whereRaw(
+                    'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
+                    [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
+                );
             });
         }
         if (request('delivery_date')) {
-            $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+            // $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+            $orders = $orders->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
         }
         if (request('delivery_period_id')) {
             $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));

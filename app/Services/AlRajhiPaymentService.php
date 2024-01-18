@@ -172,7 +172,7 @@ class AlRajhiPaymentService
         $logoPath = config('app.url') . '/storage/assets/logo.png';
         $paymentId = $decryptedData['paymentId'] ?? 'N/A';
         $paymentResult = $decryptedData['result'] ?? 'N/A';
-
+// #e7c05d;/images/PCh7OpSSPm1608014433.png
         $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
                 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -206,7 +206,7 @@ class AlRajhiPaymentService
                             background-size: contain;
                         }
                         .lte-btn {
-                            background-color: #e7c05d;
+                            background-color: #6d1442;
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;

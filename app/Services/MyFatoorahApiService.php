@@ -90,7 +90,7 @@ class MyFatoorahApiService
             $data["bank_ref_no"] = $InvoiceId;
             // $data["description"] = json_encode($json['Data']['InvoiceURL']);
             $payment = Payment::create($data);
-            $order->update(['payment_id' => $payment->id , 'paid' => 0]);
+            $order->update(['payment_id' => $payment->id, 'paid' => 0]);
             return $result;
         } else {
             $result['success'] = false;
@@ -166,7 +166,8 @@ class MyFatoorahApiService
             //  }
             TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
             //   $order = $this->orderRepository->update(['order_status_id' => '14'], $CustomerReference);
-
+            // background-color: #e7c05d;
+            //
             $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
                 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -209,7 +210,8 @@ class MyFatoorahApiService
                             background-size: contain;
                         }
                         .lte-btn {
-                            background-color: #e7c05d;
+                            background-color: #6d1442;
+
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -229,8 +231,10 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
+
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/success.png" class="centerimglogo">
+                <img style="width:250px" src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -289,8 +293,10 @@ class MyFatoorahApiService
                 }
             } else {
 
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
+
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/fail.png" class="centerimglogo">
+                <img src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -393,6 +399,8 @@ class MyFatoorahApiService
             TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
             //   $order = $this->orderRepository->update(['order_status_id' => '14'], $CustomerReference);
 
+            // background-color: #e7c05d;
+
             $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
                 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -435,7 +443,8 @@ class MyFatoorahApiService
                             background-size: contain;
                         }
                         .lte-btn {
-                            background-color: #e7c05d;
+                            background-color: #6d1442;
+
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -455,8 +464,10 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
+
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/success.png" class="centerimglogo">
+                <img src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -513,9 +524,10 @@ class MyFatoorahApiService
                    ';
                 }
             } else {
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
 
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/fail.png" class="centerimglogo">
+                <img  src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -667,6 +679,7 @@ class MyFatoorahApiService
             $CustomerReference = $res_arr['Data']['CustomerReference'];
 
             TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
+            // background-color: #e7c05d;
 
             $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
@@ -710,7 +723,8 @@ class MyFatoorahApiService
                             background-size: contain;
                         }
                         .lte-btn {
-                            background-color: #e7c05d;
+                            background-color: #6d1442;
+
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -730,8 +744,10 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
+
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/success.png" class="centerimglogo">
+                <img src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -794,10 +810,10 @@ class MyFatoorahApiService
                    ';
                 }
             } else {
-
+                $logoPath = config('app.url') . '/storage/assets/logo.png';
 
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="https://turki.almaraacompany.com/admin/public/images/fail.png" class="centerimglogo">
+                <img  src="' . $logoPath . '" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 

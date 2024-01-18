@@ -196,6 +196,7 @@ class TabbyApiService
 
         $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
         $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
+        // background-color: #e7c05d;
 
         $html_head = '<!DOCTYPE html>
                <html lang="en-US">
@@ -230,7 +231,8 @@ class TabbyApiService
                            background-size: contain;
                        }
                        .lte-btn {
-                           background-color: #e7c05d;
+                           background-color: #6d1442;
+
                            border-radius: 30px;
                            padding: 9px 6px;
                            color: #6c3434;
