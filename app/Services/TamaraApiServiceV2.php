@@ -373,7 +373,7 @@ class TamaraApiServiceV2
                             background-size: contain;
                         }
                         .lte-btn {
-                            background-color: #6d1442;
+                            background-color: #e7c05d;
 
                             border-radius: 30px;
                             padding: 9px 6px;
