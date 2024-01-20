@@ -184,7 +184,7 @@ class AlRajhiPaymentService
                     <meta property="og:type" content="website"/>
                     <meta property="og:url" content="Food Explorer"/>
                     <meta property="og:title" content="Food Explorer"/>
-                    <meta property="og:image" content="/images/PCh7OpSSPm1608014433.png"/>
+                    <meta property="og:image" content="/images/logo_new.png"/>
                     <meta property="og:image:width" content="250px"/>
                     <meta property="og:image:height" content="250px"/>
                     <meta property="og:site_name" content="Food Explorer"/>
@@ -198,7 +198,7 @@ class AlRajhiPaymentService
                         body{
                             text-align: center;
                             margin: 0;
-                            background: url();
+                            background: url(/images/background.jpg);
                             color: #000;
                             font-size: 16px;
                             line-height: 2;
@@ -239,7 +239,7 @@ class AlRajhiPaymentService
                 </span>
                 </div>';
         $html_sec1 = '<section id="turkeysection">
-                    <div class="image-frame"><img src="' . $logoPath . '" class="centerimglogo"></div>
+                    <div class="image-frame"><img src="/images/logo_new.png" class="centerimglogo"></div>
                     <div class="row">
                         <div class="turkeyd col-lg-6">
 

@@ -168,6 +168,10 @@ class MyFatoorahApiService
             //   $order = $this->orderRepository->update(['order_status_id' => '14'], $CustomerReference);
             // background-color: #e7c05d;
             //
+
+            $logo = config('app.url') . '/images/logo_new.png';
+            $background = config('app.url') . '/images/background.jpg';
+
             $html_head = '<!DOCTYPE html>
                 <html lang="en-US">
                 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
@@ -179,7 +183,7 @@ class MyFatoorahApiService
                     <meta property="og:type" content="website"/>
                     <meta property="og:url" content="Food Explorer"/>
                     <meta property="og:title" content="Food Explorer"/>
-                    <meta property="og:image" content="/images/PCh7OpSSPm1608014433.png"/>
+                    <meta property="og:image" content="/images/logo_new.png"/>
                     <meta property="og:image:width" content="250px"/>
                     <meta property="og:image:height" content="250px"/>
                     <meta property="og:site_name" content="Food Explorer"/>
@@ -202,7 +206,7 @@ class MyFatoorahApiService
                             text-align: center;
                             margin: 0;
                             font-family: \'29ltbukraregular\';
-                            background: url(/images/slider-eclipse.png);
+                            background: url(/images/background.jpg);
                             color: #fff;
                             font-size: 16px;
                             line-height: 2;
@@ -211,7 +215,6 @@ class MyFatoorahApiService
                         }
                         .lte-btn {
                             background-color: #e7c05d;
-
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -231,10 +234,8 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
-
                 $html_sec1 = '<section id="turkeysection">
-                <img style="width:250px" src="' . $logoPath . '" class="centerimglogo">
+                <img src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -293,10 +294,9 @@ class MyFatoorahApiService
                 }
             } else {
 
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
 
                 $html_sec1 = '<section id="turkeysection">
-                <img src="' . $logoPath . '" class="centerimglogo">
+                <img src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -412,7 +412,7 @@ class MyFatoorahApiService
                     <meta property="og:type" content="website"/>
                     <meta property="og:url" content="Food Explorer"/>
                     <meta property="og:title" content="Food Explorer"/>
-                    <meta property="og:image" content="/images/PCh7OpSSPm1608014433.png"/>
+                    <meta property="og:image" content="/images/logo_new.png"/>
                     <meta property="og:image:width" content="250px"/>
                     <meta property="og:image:height" content="250px"/>
                     <meta property="og:site_name" content="Food Explorer"/>
@@ -435,7 +435,7 @@ class MyFatoorahApiService
                             text-align: center;
                             margin: 0;
                             font-family: \'29ltbukraregular\';
-                            background: url(/images/slider-eclipse.png);
+                            background: url(/images/background.jpg);
                             color: #fff;
                             font-size: 16px;
                             line-height: 2;
@@ -444,7 +444,6 @@ class MyFatoorahApiService
                         }
                         .lte-btn {
                             background-color: #e7c05d;
-
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -464,10 +463,8 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
-
                 $html_sec1 = '<section id="turkeysection">
-                <img src="' . $logoPath . '" class="centerimglogo">
+                <img src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -524,10 +521,9 @@ class MyFatoorahApiService
                    ';
                 }
             } else {
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
 
                 $html_sec1 = '<section id="turkeysection">
-                <img  src="' . $logoPath . '" class="centerimglogo">
+                <img  src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -692,7 +688,7 @@ class MyFatoorahApiService
                     <meta property="og:type" content="website"/>
                     <meta property="og:url" content="Food Explorer"/>
                     <meta property="og:title" content="Food Explorer"/>
-                    <meta property="og:image" content="/images/PCh7OpSSPm1608014433.png"/>
+                    <meta property="og:image" content="/images/logo_new.png"/>
                     <meta property="og:image:width" content="250px"/>
                     <meta property="og:image:height" content="250px"/>
                     <meta property="og:site_name" content="Food Explorer"/>
@@ -715,7 +711,7 @@ class MyFatoorahApiService
                             text-align: center;
                             margin: 0;
                             font-family: \'29ltbukraregular\';
-                            background: url(/images/slider-eclipse.png);
+                            background: url(/images/background.jpg);
                             color: #fff;
                             font-size: 16px;
                             line-height: 2;
@@ -724,7 +720,6 @@ class MyFatoorahApiService
                         }
                         .lte-btn {
                             background-color: #e7c05d;
-
                             border-radius: 30px;
                             padding: 9px 6px;
                             color: #6c3434;
@@ -744,10 +739,8 @@ class MyFatoorahApiService
 
             if ($InvoiceStatus == 'Paid') {
 
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
-
                 $html_sec1 = '<section id="turkeysection">
-                <img src="' . $logoPath . '" class="centerimglogo">
+                <img src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
@@ -810,10 +803,9 @@ class MyFatoorahApiService
                    ';
                 }
             } else {
-                $logoPath = config('app.url') . '/storage/assets/logo.png';
 
                 $html_sec1 = '<section id="turkeysection">
-                <img  src="' . $logoPath . '" class="centerimglogo">
+                <img  src="/images/logo_new.png" class="centerimglogo">
                 <div class="row">
                     <div class="turkeyd col-lg-6">
 
