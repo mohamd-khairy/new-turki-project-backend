@@ -40,7 +40,7 @@ class UserController extends Controller
             })
             ->where('id', '!=', auth()->id());
 
-        $data = request('pageSize') == -1 ? $data->get() : $data->paginate(request('pageSize', 20));
+        $data = request('per_page') == -1 ? $data->get() : $data->paginate(request('per_page', 20));
 
         return successResponse($data);
     }

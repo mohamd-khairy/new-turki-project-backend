@@ -27,6 +27,7 @@ use App\Services\MyFatoorahApiService;
 use App\Services\TabbyApiService;
 use App\Services\PointLocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -73,20 +74,158 @@ class OrderController extends Controller
         return successResponse($customer);
     }
 
+    // public function getOrdersDashboard(Request $request)
+    // {
+    // $order_states = Cache::remember('order_states', $minutes = 365 * 24 * 60, function () {
+    //     return handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'];
+    // });
+
+    //     $perPage = $request->input('per_page', 6);
+    // $perPage = ($perPage == 0) ? 6 : $perPage;
+
+    //     $orders = DB::table('orders')
+    //         ->select(
+    //             'orders.*',
+    //             'customers.name as customer_name',
+    //             'customers.mobile as customer_mobile',
+    //             'order_states.state_ar as order_state_ar',
+    //             'order_states.state_en as order_state_en',
+    //             'shalwatas.name_ar as shalwata_name',
+    //             'shalwatas.price as shalwata_price',
+    //             'payment_types.name_ar as payment_type_name',
+    //             'delivery_periods.name_ar as delivery_period_name',
+    //             'delivery_periods.time_hhmm as delivery_period_time',
+    //             'payments.price as payment_price',
+    //             'payments.status as payment_status',
+    //             'addresses.address as address_address',
+    //             'addresses.lat as address_lat',
+    //             'addresses.long as address_long',
+    //             'addresses.country_id as address_country_id',
+    //             'addresses.city_id as address_city_id',
+    //             'cities.name_ar as city_name',
+    //             'users.username as sales_officer_name',
+    //             'u.username as driver_name',
+    //             'u.id as driver_id',
+    //         )
+    //         ->join('customers', 'customers.id', '=', 'orders.customer_id')
+    //         ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
+    //         ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
+    //         ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
+    //         ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
+    //         ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
+    //         ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
+    //         ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+    //         ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
+    //         ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
+
+    //     if (request()->header('Type') != 'dashboard') {
+    //         $orders = $orders->where('orders.customer_id', auth()->user()->id);
+    //     }
+
+    //     if ($order_states) {
+    //         $orders = $orders->whereIn('orders.order_state_id', $order_states ?? []);
+    //     }
+    //     if (request('city_ids')) {
+    //         $orders = $orders->whereIn('addresses.city_id', request('city_ids'));
+    //     }
+    //     if (request('country_ids')) {
+    //         $orders = $orders->where('addresses.country_id', request('country_ids'));
+    //     }
+    //     if (request('order_state_ids')) {
+    //         $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
+    //     }
+
+    //     if (request('date_from') && request('date_to')) {
+    //         // $orders = $orders->where(function ($q) {
+    //         //     $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
+    //         // });
+
+    //         $orders = $orders->where(function ($query) {
+    //             $query->whereRaw(
+    //                 'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
+    //                 [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
+    //             );
+    //         });
+    //     }
+    //     if (request('delivery_date')) {
+    //         // $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+    //         $orders = $orders->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
+    //     }
+    //     if (request('delivery_period_id')) {
+    //         $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));
+    //     }
+    //     if (request('customer_id')) {
+    //         $orders = $orders->where('orders.customer_id', request('customer_id'));
+    //     }
+    //     if (request('mobile')) {
+    //         $orders = $orders->where('customers.mobile', request('mobile'));
+    //     }
+    //     if (request('user_id')) {
+    //         $orders = $orders->where('orders.user_id', request('user_id'));
+    //     }
+
+    //     if (request('sales_agent_id')) {
+    //         $orders = $orders->where('orders.user_id', request('sales_agent_id'));
+    //     }
+
+    //     if (request('sales_representative_id')) {
+    //         $orders = $orders->where('orders.sales_representative_id', request('sales_representative_id'));
+    //     }
+
+    //     if (request('payment_type_ids')) {
+    //         $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
+    //         $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
+    //     }
+
+    //     if (in_array('delegate', auth()->user()->roles->pluck('name')->toArray())) {
+    //         $orders = $orders->where('orders.user_id', auth()->user()->id);
+    //     }
+
+    //     $total = $orders->sum('total_amount_after_discount');
+
+    //     $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
+
+    //     $items =  $orders->toArray()['data'];
+
+    //     $items = collect($items)->map(function ($i) {
+    //         $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
+    //         $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+
+    //         if ($i->payment_status == 'Paid') {
+    //             $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
+
+    //             if (!$i->paid && $i->remain_amount <= 0) {
+    //                 Order::where('id', $i->id)->update(['paid' => 1]);
+    //                 $i->paid = 1;
+    //             }
+    //         } else {
+    //             $i->remain_amount = $i->total_amount_after_discount;
+    //             $i->payment_price = 0;
+    //         }
+
+    //         $i->orderProducts = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
+    //             ->where('order_ref_no', $i->ref_no)->get();
+    //         $i->is_printed = $i->printed_at ?  true : false;
+    //         return $i;
+    //     });
+
+    //     $orders->data = $items;
+
+    //     return response()->json([
+    //         'success' => true, 'data' => $orders, 'total' => $total,
+    //         'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+    //     ], 200);
+    // }
+
     public function getOrdersDashboard(Request $request)
     {
-        try {
-            $order_states = (handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders']);
-        } catch (\Throwable $th) {
-            $order_states = null;
-        }
+        $total = 0;
+        $orderStates = Cache::remember('order_states', $minutes = 365 * 24 * 60, function () {
+            return handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'];
+        });
 
-        $perPage = 6;
-        if ($request->has('per_page'))
-            $perPage = $request->get('per_page');
-
-        if ($perPage == 0)
-            $perPage = 6;
+        $perPage = $request->input('per_page', 6);
+        $perPage = ($perPage == 0) ? 6 : $perPage;
 
         $orders = DB::table('orders')
             ->select(
@@ -110,7 +249,7 @@ class OrderController extends Controller
                 'cities.name_ar as city_name',
                 'users.username as sales_officer_name',
                 'u.username as driver_name',
-                'u.id as driver_id',
+                'u.id as driver_id'
             )
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
@@ -121,106 +260,125 @@ class OrderController extends Controller
             ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
-            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
-
-        if (request()->header('Type') != 'dashboard') {
-            $orders = $orders->where('orders.customer_id', auth()->user()->id);
-        }
-
-        if ($order_states) {
-            $orders = $orders->whereIn('orders.order_state_id', $order_states ?? []);
-        }
-        if (request('city_ids')) {
-            $orders = $orders->whereIn('addresses.city_id', request('city_ids'));
-        }
-        if (request('country_ids')) {
-            $orders = $orders->where('addresses.country_id', request('country_ids'));
-        }
-        if (request('order_state_ids')) {
-            $orders = $orders->whereIn('orders.order_state_id', request('order_state_ids'));
-        }
-
-        if (request('date_from') && request('date_to')) {
-            // $orders = $orders->where(function ($q) {
-            //     $q->whereDate('orders.delivery_date', ">=", request('date_from'))->whereDate('orders.delivery_date', "<=", request('date_to'));
-            // });
-
-            $orders = $orders->where(function ($query) {
-                $query->whereRaw(
-                    'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
-                    [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
-                );
+            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
+            ->when(request()->header('Type') != 'dashboard', function ($query) {
+                $query->where('orders.customer_id', auth()->user()->id);
+            })
+            ->when($orderStates, function ($query) use ($orderStates) {
+                $query->whereIn('orders.order_state_id', $orderStates);
+            })
+            ->when(request('city_ids'), function ($query) {
+                $query->whereIn('addresses.city_id', request('city_ids'));
+            })
+            ->when(request('country_ids'), function ($query) {
+                $query->where('addresses.country_id', request('country_ids'));
+            })
+            ->when(request('date_from') && request('date_to'), function ($query) {
+                $query->where(function ($q) {
+                    $q->whereRaw(
+                        'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
+                        [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
+                    );
+                });
+            })
+            ->when(request('delivery_date'), function ($query) {
+                $query->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
+            })
+            ->when(request('delivery_period_id'), function ($query) {
+                $query->where('orders.delivery_period_id', request('delivery_period_id'));
+            })
+            ->when(request('customer_id'), function ($query) {
+                $query->where('orders.customer_id', request('customer_id'));
+            })
+            ->when(request('mobile'), function ($query) {
+                $query->where('customers.mobile', request('mobile'));
+            })
+            ->when(request('user_id'), function ($query) {
+                $query->where('orders.user_id', request('user_id'));
+            })
+            ->when(request('sales_agent_id'), function ($query) {
+                $query->where('orders.user_id', request('sales_agent_id'));
+            })
+            ->when(request('sales_representative_id'), function ($query) {
+                $query->where('orders.sales_representative_id', request('sales_representative_id'));
+            })
+            ->when(request('payment_type_ids'), function ($query) {
+                $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
+                $query->whereIn('orders.payment_type_id', $payment_type_ids ?? []);
+            })
+            ->when(in_array('delegate', auth()->user()->roles->pluck('name')->toArray()), function ($query) {
+                $query->where('orders.user_id', auth()->user()->id);
+            })
+            ->when(request('ref_no'), function ($query) {
+                $query->where('orders.ref_no', request('ref_no'));
             });
-        }
-        if (request('delivery_date')) {
-            // $orders = $orders->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
-            $orders = $orders->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
-        }
-        if (request('delivery_period_id')) {
-            $orders = $orders->where('orders.delivery_period_id', request('delivery_period_id'));
-        }
-        if (request('customer_id')) {
-            $orders = $orders->where('orders.customer_id', request('customer_id'));
-        }
-        if (request('mobile')) {
-            $orders = $orders->where('customers.mobile', request('mobile'));
-        }
-        if (request('user_id')) {
-            $orders = $orders->where('orders.user_id', request('user_id'));
+
+        // Add more conditions based on request parameters
+        $orders = $orders->orderBy('orders.id', 'desc');
+
+        if (request()->header('Type') == 'dashboard') {
+            $total = $orders->sum('total_amount_after_discount');
         }
 
-        if (request('sales_agent_id')) {
-            $orders = $orders->where('orders.user_id', request('sales_agent_id'));
-        }
+        $orders = $orders->paginate($perPage);
 
-        if (request('sales_representative_id')) {
-            $orders = $orders->where('orders.sales_representative_id', request('sales_representative_id'));
-        }
-
-        if (request('payment_type_ids')) {
-            $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
-            $orders = $payment_type_ids  ? $orders->whereIn('orders.payment_type_id', $payment_type_ids ?? []) : $orders;
-        }
-
-        if (in_array('delegate', auth()->user()->roles->pluck('name')->toArray())) {
-            $orders = $orders->where('orders.user_id', auth()->user()->id);
-        }
-
-        $total = $orders->sum('total_amount_after_discount');
-
-        $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
-
-        $items =  $orders->toArray()['data'];
-
-        $items = collect($items)->map(function ($i) {
-            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
-            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
-
-            if ($i->payment_status == 'Paid') {
-                $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
-
-                if (!$i->paid && $i->remain_amount <= 0) {
-                    Order::where('id', $i->id)->update(['paid' => 1]);
-                    $i->paid = 1;
-                }
-            } else {
-                $i->remain_amount = $i->total_amount_after_discount;
-                $i->payment_price = 0;
-            }
-
-            $i->orderProducts = OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
-                ->where('order_ref_no', $i->ref_no)->get();
-            $i->is_printed = $i->printed_at ?  true : false;
-            return $i;
-        });
+        $items = $this->transformOrderData($orders->items());
 
         $orders->data = $items;
 
         return response()->json([
-            'success' => true, 'data' => $orders, 'total' => $total,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+            'success' => true,
+            'data' => $orders,
+            'total' => $total,
+            'message' => 'Retrieved successfully',
+            'description' => '',
+            'code' => '200'
         ], 200);
     }
+
+
+    private function transformOrderData($items)
+    {
+        return collect($items)->map(function ($i) {
+
+            // Handle payment status logic
+            $this->handlePaymentStatus($i);
+
+            if (request()->header('Type') != 'dashboard') {
+                // Perform the common calculations
+                $i->total_amount_after_tax = round($i->total_amount_after_discount ? $i->total_amount_after_discount / 1.15 : 0, 2);
+                $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+                $i->orderProducts = $this->loadOrderProducts($i->ref_no);
+            }
+
+            // Additional transformations and checks
+            $i->is_printed = $i->printed_at ? true : false;
+
+            return $i;
+        });
+    }
+
+    private function handlePaymentStatus($order)
+    {
+        if ($order->payment_status == 'Paid') {
+            $order->remain_amount = $order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0;
+
+            if (!$order->paid && $order->remain_amount <= 0) {
+                Order::where('id', $order->id)->update(['paid' => 1]);
+            }
+        } else {
+            $order->remain_amount = $order->total_amount_after_discount;
+            $order->payment_price = 0;
+        }
+    }
+
+    private function loadOrderProducts($orderRefNo)
+    {
+        return OrderProduct::with('preparation', 'size', 'cut', 'shalwata', 'product.productImages')
+            ->where('order_ref_no', $orderRefNo)
+            ->get();
+    }
+
 
     public function getOrderDashboard($order)
     {
@@ -364,6 +522,9 @@ class OrderController extends Controller
 
             if ($request->is_printed) {
                 $data['printed_at'] = now();
+            }
+            if (request('delivery_period')) {
+                $data['delivery_period_id'] = request('delivery_period');
             }
 
             $order->update($data);
