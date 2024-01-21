@@ -523,9 +523,9 @@ class OrderController extends Controller
             if ($request->is_printed) {
                 $data['printed_at'] = now();
             }
-            if (request('delivery_period')) {
-                $data['delivery_period_id'] = request('delivery_period');
-            }
+            // if (request('delivery_period')) {
+            //     $data['delivery_period_id'] = request('delivery_period');
+            // }
 
             $order->update($data);
 
