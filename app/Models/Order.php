@@ -60,7 +60,7 @@ class Order extends Model
     protected $primaryKey = 'ref_no';
     public $incrementing = false;
 
-    public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount' , 'discount_code' , 'is_printed'];
+    public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount', 'discount_code', 'is_printed'];
 
     public function getIsPrintedAttribute()
     {
@@ -129,7 +129,7 @@ class Order extends Model
 
     public function selectedAddress()
     {
-        return $this->belongsTo(Address::class, 'address_id')->select(['id', 'address', 'comment', 'label', 'long', 'lat']);
+        return $this->belongsTo(Address::class, 'address_id')->select(['id', 'address', 'comment', 'label', 'long', 'lat', 'country_id']);
     }
 
     public function deliveryPeriod()
