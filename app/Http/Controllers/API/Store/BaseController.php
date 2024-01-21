@@ -9,7 +9,7 @@ class BaseController extends Controller
 {
     public function index()
     {
-        $items = $this->model::with($this->with ?? [])->get();
+        $items = $this->model::with($this->with ?? [])->paginate(request("page_size", 10));
 
         return successResponse($items);
     }
