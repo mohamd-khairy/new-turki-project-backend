@@ -11,6 +11,8 @@ class SupplierController extends BaseController
 
     public $with = ['city'];
 
+    public $search = ['name', 'mobile'];
+
     public function storeValidation()
     {
         return [

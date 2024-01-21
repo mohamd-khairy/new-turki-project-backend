@@ -11,6 +11,8 @@ class StoreController extends BaseController
 
     public $with = ['city', 'user'];
 
+    public $search = ['name'];
+
     public function storeValidation()
     {
         return [

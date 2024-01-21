@@ -9,9 +9,39 @@ class BaseController extends Controller
 {
     public function index()
     {
-        $items = $this->model::with($this->with ?? [])->paginate(request("per_page", 10));
+        $items = $this->model::with($this->with ?? []);
+
+        $this->filter($items);
+
+        $items = $items->paginate(request("per_page", 10));
 
         return successResponse($items);
+    }
+
+    public function filter($items)
+    {
+        try {
+
+            foreach (array_keys(request()->all()) as $filter) {
+                if (in_array($filter, app($this->model)->getFillable())) {
+                    $items = $items->where($filter, request($filter));
+                }
+            }
+
+            if (request('search') && isset($this->search)) {
+                $items = $items->where(function ($q) {
+                    foreach ($this->search ?? [] as $search) {
+                        $q->orWhere($search, 'LIKE', '%' . request('search') . '%');
+                    }
+                });
+            }
+
+            return $items;
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+            return $items;
+        }
     }
 
     public function show($id)

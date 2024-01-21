@@ -10,7 +10,9 @@ class StockController extends BaseController
 {
     public $model = Stock::class;
 
-    public $with = ['store', 'user','supplier' , 'product'];
+    public $with = ['store', 'user', 'supplier', 'product'];
+
+    public $search = ['product_name'];
 
     public function storeValidation()
     {

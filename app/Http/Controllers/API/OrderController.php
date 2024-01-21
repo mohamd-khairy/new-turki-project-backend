@@ -267,6 +267,9 @@ class OrderController extends Controller
             ->when($orderStates, function ($query) use ($orderStates) {
                 $query->whereIn('orders.order_state_id', $orderStates);
             })
+            ->when(request('order_state_ids'), function ($query) {
+                $query->whereIn('orders.order_state_id', request('order_state_ids'));
+            })
             ->when(request('city_ids'), function ($query) {
                 $query->whereIn('addresses.city_id', request('city_ids'));
             })
