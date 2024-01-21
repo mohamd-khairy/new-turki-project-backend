@@ -284,8 +284,8 @@ class OrderController extends Controller
             ->when(request('delivery_date'), function ($query) {
                 $query->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
             })
-            ->when(request('delivery_period_id'), function ($query) {
-                $query->where('orders.delivery_period_id', request('delivery_period_id'));
+            ->when(request('delivery_period_ids'), function ($query) {
+                $query->whereIn('orders.delivery_period_id', request('delivery_period_ids'));
             })
             ->when(request('customer_id'), function ($query) {
                 $query->where('orders.customer_id', request('customer_id'));
