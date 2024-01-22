@@ -101,7 +101,12 @@ class ProductController extends Controller
                 'productImages',
                 'productPreparations',
                 'productPaymentTypes'
-            )->orderBy('id', 'desc');
+            )->orderBy('id', 'desc')
+                ->when(!in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
+                    $query->whereHas('cities', function ($q) {
+                        $q->where('country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);;
+                    });
+                });
 
             if (request('is_active')) {
                 $products = $products->where('is_active', request('is_active'));

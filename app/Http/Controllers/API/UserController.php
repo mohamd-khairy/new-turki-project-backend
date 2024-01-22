@@ -60,6 +60,7 @@ class UserController extends Controller
             'mobile' => 'required|unique:users',
             'age' => 'required|numeric',
             'gender' => 'required|numeric',
+            'country_code' => 'required',
             'roles.*' => 'required|exists:roles,id'
         ]);
 
@@ -111,7 +112,8 @@ class UserController extends Controller
             'username' => 'required|string|max:100',
             'email' => 'required|string|max:255|unique:users,email,' . $id,
             'mobile' => 'required|unique:users,mobile,' . $id,
-            'roles.*' => 'required|exists:roles,id'
+            'roles.*' => 'required|exists:roles,id',
+            'country_code' => 'required',
         ]);
 
         $data = $request->except('password', 'avatar');
