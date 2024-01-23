@@ -43,6 +43,10 @@ class ProductController extends Controller
             $this->middleware('permission:update-product', ['only' => ['update']]);
             $this->middleware('permission:delete-product', ['only' => ['delete']]);
         }
+
+        if (request()->header('Type', 'dashboard')) {
+            $this->middleware('auth:sanctum');
+        }
     }
 
     public function autoAddress(Request $request)
@@ -102,7 +106,7 @@ class ProductController extends Controller
                 'productPreparations',
                 'productPaymentTypes'
             )->orderBy('id', 'desc')
-                ->when(!in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
+                ->when(auth()->check() && !in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
                     $query->whereHas('cities', function ($q) {
                         $q->where('country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);;
                     });
