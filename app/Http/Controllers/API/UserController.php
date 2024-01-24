@@ -61,16 +61,15 @@ class UserController extends Controller
             'age' => 'required|numeric',
             'gender' => 'required|numeric',
             'country_code' => 'required',
-            'roles.*' => 'required|exists:roles,id'
+            'roles.*' => 'required|exists:roles,id',
+            'avatar' => 'nullable|image'
         ]);
 
         $data = $request->except('avatar');
         $data['password'] = bcrypt($request->password);
 
         if ($request->avatar) {
-            $avatar = UploadService::store($request->avatar, 'profile');
-            $data['avatar'] = $avatar;
-            $data['avatar_thumb'] = $avatar;
+            $data = User::uploadImage($request, null, $data);
         }
 
         if ($request->is_active) {
@@ -107,13 +106,13 @@ class UserController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-
         $validateData = $request->validate([
             'username' => 'required|string|max:100',
             'email' => 'required|string|max:255|unique:users,email,' . $id,
             'mobile' => 'required|unique:users,mobile,' . $id,
-            'roles.*' => 'required|exists:roles,id',
+            'roles.*' => 'nullable|exists:roles,id',
             'country_code' => 'required',
+            'avatar' => 'nullable|image'
         ]);
 
         $data = $request->except('password', 'avatar');
@@ -121,13 +120,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         if ($request->avatar) {
-            if ($user->avatar) {
-                UploadService::delete($user->avatar);
-            }
-
-            $avatar = UploadService::store($request->avatar, 'profile');
-            $data['avatar'] = $avatar;
-            $data['avatar_thumb'] = $avatar;
+            $data = User::uploadImage($request, $user, $data);
         }
 
         if ($request->password) {

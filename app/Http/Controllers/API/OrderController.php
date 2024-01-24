@@ -351,8 +351,14 @@ class OrderController extends Controller
             $this->handlePaymentStatus($i);
 
             if (request()->header('Type') != 'dashboard') {
+
+                $per = 1.15;
+                if ($i->address_country_id == 4) {
+                    $per = 1.05;
+                }
+
                 // Perform the common calculations
-                $i->total_amount_after_tax = round($i->total_amount_after_discount ? $i->total_amount_after_discount / 1.15 : 0, 2);
+                $i->total_amount_after_tax = round($i->total_amount_after_discount ? $i->total_amount_after_discount / $per : 0, 2);
                 $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
                 $i->orderProducts = $this->loadOrderProducts($i->ref_no);
             }
@@ -1008,7 +1014,13 @@ class OrderController extends Controller
 
         $items =  $orders->toArray()['data'];
         $items = collect($items)->map(function ($i) {
-            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / 1.15, 2) : 0;
+
+            $per = 1.15;
+            if ($i->address_country_id == 4) {
+                $per = 1.05;
+            }
+
+            $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / $per, 2) : 0;
             $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
             $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
             return $i;

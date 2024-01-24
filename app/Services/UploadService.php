@@ -13,28 +13,30 @@ class UploadService
      * @param string $disk
      * @return array|false|mixed|string
      */
-    public static function store($files = null, string $path = 'files', string $disk = 'public')
+    public static function store($files, string $path = 'files', string $disk = 'public')
     {
         $items = is_array($files) ? $files : [$files];
 
         $paths = [];
-        foreach (array_filter($items) as $item) {
+        if (!empty($items)) {
+            foreach ($items as $name => $item) {
+                if (is_file($item)) {
+                    $paths[] = Storage::disk($disk)->putFile($path, $item);
 
-            if (is_string($item) && ($data = explode(',', $item))) {
+                } elseif (is_string($item)) {
 
-                $file = $path . '/' . (isset($data[1]) ? self::generateUniqueFileName($item) : (time() . 'png'));
-                $paths[] = Storage::disk($disk)->put($file, base64_decode($data[1] ?? $data[0])) ? $file : null;
+                    $name = is_numeric($name) ? (Str::random(10) . time()) : $name;
+                    $path .= "/$name.jpg";
 
-            } else {
-                $paths[] = is_file($item) ? Storage::disk($disk)->putFile($path, $item) : null;
+                    if (Storage::disk($disk)->put($path, base64_decode($item))) {
+                        $paths[] = $path;
+                    }
+                }
             }
         }
 
-        $paths =  array_filter($paths);
-
-        return count($paths) > 1 ? $paths : ($paths[0] ?? null);
+        return $paths ? (count($paths) == 1 ? $paths[0] : $paths) : null;
     }
-
 
     /**
      * @param array|string|null $files
