@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Supplier extends Model
 {
     use HasFactory;
+    public $inPermission = true;
 
     protected $fillable = [
-        'name', 'city_id', 'mobile', 'balance'
+        'name', 'city_id', 'mobile', 'balance', 'details'
     ];
 
     public function city()

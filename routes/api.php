@@ -22,6 +22,7 @@ use App\Http\Controllers\API\ProductSizeController;
 use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Store\BankController;
+use App\Http\Controllers\API\Store\MoneySafeController;
 use App\Http\Controllers\API\Store\StockController;
 use App\Http\Controllers\API\Store\StoreController;
 use App\Http\Controllers\API\Store\SupplierController;
@@ -185,6 +186,7 @@ Route::prefix("v2")->group(function () {
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::apiResource('banks',  BankController::class);
+        Route::apiResource('money-safes',  MoneySafeController::class);
         Route::apiResource('stores', StoreController::class);
         Route::apiResource('suppliers', SupplierController::class);
         Route::apiResource('stocks', StockController::class);

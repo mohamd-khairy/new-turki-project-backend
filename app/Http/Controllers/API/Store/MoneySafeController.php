@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers\API\Store;
 
-use App\Models\Supplier;
+use App\Models\MoneySafe;
 use Illuminate\Http\Request;
 
-class SupplierController extends BaseController
+class MoneySafeController extends BaseController
 {
-    public $model = Supplier::class;
+    public $model = MoneySafe::class;
 
-    public $with = ['city'];
+    public $with = ['city', 'user'];
 
-    public $search = ['name', 'mobile', 'details'];
+    public $search = ['name'];
 
     public function storeValidation()
     {
         return [
             'name' => 'required',
-            'mobile' => 'required',
+            'currency' => 'required',
             'balance' => 'required',
             'city_id' => 'required|exists:cities,id',
-            'details' => 'required'
+            'user_id'  => 'required|exists:users,id',
         ];
     }
 
@@ -28,10 +28,10 @@ class SupplierController extends BaseController
     {
         return [
             'name' => 'nullable',
-            'mobile' => 'nullable',
+            'currency' => 'nullable',
             'balance' => 'nullable',
             'city_id' => 'nullable|exists:cities,id',
-            'details' => 'nullable'
+            'user_id'  => 'nullable|exists:users,id',
         ];
     }
 }

@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Storage;
 class Stock extends Model
 {
     use HasFactory;
+    public $inPermission = true;
 
     protected $fillable = [
-        'city_id', 'user_id', 'supplier_id', 'store_id', 'product_id',
+        'user_id', 'supplier_id', 'store_id', 'product_id',
         'invoice', 'invoice_price', 'product_name', 'quantity', 'price', 'tax', 'paid', 'notes'
     ];
 

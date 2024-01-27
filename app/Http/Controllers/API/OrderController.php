@@ -220,8 +220,9 @@ class OrderController extends Controller
     public function getOrdersDashboard(Request $request)
     {
         $total = 0;
-        $orderStates = Cache::remember('order_states', $minutes = 365 * 24 * 60, function () {
-            return handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'];
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $orderStates = Cache::remember('order_states_' . $roles[0], $minutes = 365 * 24 * 60, function () use ($roles) {
+            return handleRoleOrderState($roles)['orders'];
         });
 
         $perPage = $request->input('per_page', 6);
@@ -337,7 +338,7 @@ class OrderController extends Controller
             'data' => $orders,
             'total' => $total,
             'message' => 'Retrieved successfully',
-            'description' => '',
+            'description' => $orderStates,
             'code' => '200'
         ], 200);
     }

@@ -11,7 +11,7 @@ class BaseController extends Controller
     {
         $items = $this->model::with($this->with ?? []);
 
-        $this->filter($items);
+        $items = $this->filter($items);
 
         $items = $items->paginate(request("per_page", 10));
 
@@ -23,21 +23,20 @@ class BaseController extends Controller
         try {
 
             foreach (array_keys(request()->all()) as $filter) {
-                if (in_array($filter, app($this->model)->getFillable())) {
+                if (in_array($filter, app($this->model)->getFillable()) && !empty(request($filter))) {
                     $items = $items->where($filter, request($filter));
                 }
             }
 
-            if (request('search') && isset($this->search)) {
+            if (request('q') && !empty(request('q')) && isset($this->search)) {
                 $items = $items->where(function ($q) {
                     foreach ($this->search ?? [] as $search) {
-                        $q->orWhere($search, 'LIKE', '%' . request('search') . '%');
+                        $q->orWhere($search, 'LIKE', '%' . request('q') . '%');
                     }
                 });
             }
 
             return $items;
-            //code...
         } catch (\Throwable $th) {
             //throw $th;
             return $items;

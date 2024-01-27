@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Store extends Model
 {
     use HasFactory;
+    public $inPermission = true;
 
     protected $fillable = [
         'name', 'city_id', 'user_id'
