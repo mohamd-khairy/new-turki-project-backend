@@ -130,15 +130,15 @@ if (!function_exists('handleRoleOrderState')) {
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105'],
-                'orders' => ['101', '104', '105']
+                'status' => ['104', '105', '106'],
+                'orders' => ['101', '104', '105', '106']
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105'],
-                'orders' => ['101', '104', '105']
+                'status' => ['104', '105', '106'],
+                'orders' => ['101', '104', '105', '106']
             ];
         }
 
@@ -151,7 +151,7 @@ if (!function_exists('handleRoleOrderState')) {
         if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
             $data = [
                 'status' =>  ['101', '102', '103', '106', '200'],
-                'orders' =>  ['100', '101', '102', '103', '104', '105', '200']
+                'orders' =>  ['100', '101', '102', '103', '104', '105', '106', '200']
             ];
         }
         if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
