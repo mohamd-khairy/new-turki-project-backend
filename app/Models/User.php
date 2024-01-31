@@ -63,7 +63,7 @@ class User extends Authenticatable
 
             $file = $request->file('avatar');
 
-            if ($file->isValid()) {
+            if ($file) {
                 if ($user && Storage::exists($user->avatar)) {
                     Storage::delete($user->avatar);
                     Storage::delete($user->avatar_thumb);
