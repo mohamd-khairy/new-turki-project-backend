@@ -36,6 +36,10 @@ class BaseController extends Controller
                 });
             }
 
+            if (request('date_from') && request('date_to')) {
+                $items = $items->whereBetween('created_at', [request('date_from'), request('date_to')]);
+            }
+
             return $items;
         } catch (\Throwable $th) {
             //throw $th;
