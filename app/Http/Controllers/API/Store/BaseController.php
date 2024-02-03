@@ -28,10 +28,10 @@ class BaseController extends Controller
                 }
             }
 
-            if (request('q') && !empty(request('q')) && isset($this->search)) {
+            if (request('search') && !empty(request('search')) && isset($this->search)) {
                 $items = $items->where(function ($q) {
                     foreach ($this->search ?? [] as $search) {
-                        $q->orWhere($search, 'LIKE', '%' . request('q') . '%');
+                        $q->orWhere($search, 'LIKE', '%' . request('search') . '%');
                     }
                 });
             }
