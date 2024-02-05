@@ -69,7 +69,7 @@ class Order extends Model
 
     public function getRemainAmountAttribute()
     {
-        return  $this->payment ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0;
+        return  ($this->payment ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
     }
 
     public function getTotalAmountAfterTaxAttribute()

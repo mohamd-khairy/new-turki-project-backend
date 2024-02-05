@@ -371,13 +371,13 @@ class OrderController extends Controller
     private function handlePaymentStatus($order)
     {
         if ($order->payment_status == 'Paid') {
-            $order->remain_amount = $order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0;
+            $order->remain_amount = ($order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0) + $order->wallet_amount_used;
 
             if (!$order->paid && $order->remain_amount <= 0) {
                 Order::where('id', $order->id)->update(['paid' => 1]);
             }
         } else {
-            $order->remain_amount = $order->total_amount_after_discount;
+            $order->remain_amount = $order->total_amount_after_discount + $order->wallet_amount_used;
             $order->payment_price = 0;
         }
     }
@@ -1020,7 +1020,7 @@ class OrderController extends Controller
 
             $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / $per, 2) : 0;
             $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
-            $i->remain_amount = $i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0;
+            $i->remain_amount = ($i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0) + $i->wallet_amount_used;
             return $i;
         });
 
