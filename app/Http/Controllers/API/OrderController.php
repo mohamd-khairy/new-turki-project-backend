@@ -1312,6 +1312,13 @@ class OrderController extends Controller
                     ]
                 );
 
+                if($createdOrder->wallet_amount_used > 0){
+                    $payment->price = $createdOrder->wallet_amount_used;
+                    $payment->status = 'Paid';
+                    $payment->description = "Payment Wallet Created";
+                    $payment->save();
+                }
+
                 if ($payment) {
 
                     $createdOrder->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
@@ -1559,6 +1566,13 @@ class OrderController extends Controller
                             "description" => "Payment Created", // need to move to enum class
                         ]
                     );
+
+                    if($createdOrder->wallet_amount_used > 0){
+                        $payment->price = $createdOrder->wallet_amount_used;
+                        $payment->status = 'Paid';
+                        $payment->description = "Payment Wallet Created";
+                        $payment->save();
+                    }
 
                     if ($payment) {
 
