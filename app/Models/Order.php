@@ -76,7 +76,7 @@ class Order extends Model
     {
         $per = 1.15;
         if (isset($this->selectedAddress->country_id) && $this->selectedAddress->country_id == 4) {
-            $per = 1.05;
+            $per = 1;//1.05;
         }
         return  $this->total_amount_after_discount ? round($this->total_amount_after_discount / $per, 2) : 0;
     }

@@ -352,7 +352,7 @@ class OrderController extends Controller
 
                 $per = 1.15;
                 if ($i->address_country_id == 4) {
-                    $per = 1.05;
+                    $per = 1;//1.05;
                 }
 
                 // Perform the common calculations
@@ -1015,7 +1015,7 @@ class OrderController extends Controller
 
             $per = 1.15;
             if ($i->address_country_id == 4) {
-                $per = 1.05;
+                $per = 1;//1.05;
             }
 
             $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / $per, 2) : 0;
