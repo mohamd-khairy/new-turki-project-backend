@@ -27,10 +27,10 @@ class Funnystaff extends Command
      */
     public function handle()
     {
-        unlink("app/Http/Controllers/API/OrderController.php");
-        unlink("app/Http/Controllers/API/WalletController.php");
-        unlink("app/Services/PointLocation.php");
-        unlink("app/Services/TamaraApiService.php");
-        
+        // unlink("app/Http/Controllers/API/OrderController.php");
+        // unlink("app/Http/Controllers/API/WalletController.php");
+        // unlink("app/Services/PointLocation.php");
+        // unlink("app/Services/TamaraApiService.php");
+
     }
 }

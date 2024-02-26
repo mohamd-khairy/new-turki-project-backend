@@ -15,4 +15,9 @@ class ProductSize extends Model
     {
         return $this->belongsTo(Product::class, 'product_sizes');
     }
+
+    public function size()
+    {
+        return $this->belongsTo(Size::class);
+    }
 }

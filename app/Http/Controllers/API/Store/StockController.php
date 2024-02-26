@@ -5,14 +5,13 @@ namespace App\Http\Controllers\API\Store;
 use App\Models\Stock;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockController extends BaseController
 {
     public $model = Stock::class;
 
-    public $with = ['store', 'user', 'supplier', 'product'];
-
-    public $search = ['product_name'];
+    public $with = ['product', 'store', 'invoice.supplier', 'invoice.user'];
 
     public function storeValidation()
     {
@@ -20,14 +19,9 @@ class StockController extends BaseController
             'product_name' => 'required',
             'quantity' => 'required',
             'price' => 'required',
-            'tax' => 'required',
-            'invoice' => 'required|image',
-            'invoice_price' => 'required',
-            'notes' => 'nullable',
-            'user_id'  => 'required|exists:users,id',
-            'supplier_id'  => 'required|exists:suppliers,id',
-            'store_id'  => 'required|exists:stores,id',
             'product_id'  => 'required|exists:products,id',
+            'store_id'  => 'required|exists:stores,id',
+            'invoice_id'  => 'required|exists:invoices,id',
         ];
     }
 
@@ -37,26 +31,60 @@ class StockController extends BaseController
             'product_name' => 'nullable',
             'quantity' => 'nullable',
             'price' => 'nullable',
-            'tax' => 'nullable',
-            'invoice' => 'nullable|image',
-            'invoice_price' => 'nullable',
-            'notes' => 'nullable',
-            'user_id'  => 'nullable|exists:users,id',
-            'supplier_id'  => 'nullable|exists:suppliers,id',
-            'store_id'  => 'nullable|exists:stores,id',
             'product_id'  => 'nullable|exists:products,id',
+            'store_id'  => 'nullable|exists:stores,id',
+            'invoice_id'  => 'required|exists:invoices,id',
         ];
     }
 
-    public function store(Request $request)
+    public function transferStock(Request $request)
     {
-        $data = $request->validate($this->storeValidation());
+        $request->validate([
+            'stock_id'  => 'required|exists:stocks,id',
+            'store_id'  => 'required|exists:stores,id',
+        ]);
 
-        if ($request->invoice) {
-            $data['invoice'] = UploadService::store($request->invoice, 'invoices');
+        $stock = Stock::where('id', $request->stock_id)->update([
+            'store_id' => $request->store_id
+        ]);
+
+        return successResponse($stock);
+    }
+
+    public function transferQuantity(Request $request)
+    {
+        $request->validate([
+            'stock_id'  => 'required|exists:stocks,id',
+            'store_id'  => 'nullable|exists:stores,id',
+            'transfer_quantity' => 'required',
+            'to_quantity' => 'required',
+            'price' => 'required'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $stock = Stock::where('id', $request->stock_id)->first();
+
+            $stock->update([
+                'quantity' => $stock->quantity - $request->transfer_quantity
+            ]);
+
+            $new_stock = Stock::create([
+                'product_id' => $stock->product_id,
+                'product_name' => $stock->product_name,
+                'quantity'  => $request->to_quantity,
+                'price' => $request->invoice_id,
+                'invoice_id' => $stock->invoice_id,
+                'store_id' => $request->store_id ?? $stock->store_id
+            ]);
+
+            DB::commit();
+
+            return successResponse($new_stock);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
-        $item = $this->model::create($data);
-
-        return successResponse($item);
     }
 }

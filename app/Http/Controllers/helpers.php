@@ -167,7 +167,7 @@ if (!function_exists('handleRoleOrderState')) {
             ];
         }
 
-        if ($data) {
+        if (isset($data)) {
             if (Schema::hasColumn('order_states', 'new_code')) {
                 $data = [
                     'status' => OrderState::whereIn('new_code', $data['status'])->pluck('code')->toArray(),
@@ -177,7 +177,10 @@ if (!function_exists('handleRoleOrderState')) {
 
             return $data;
         } else {
-            return [];
+            return [
+                'status' =>  ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'orders' =>    ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
+            ];
         }
     }
 }

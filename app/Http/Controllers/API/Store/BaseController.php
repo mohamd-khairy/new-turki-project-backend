@@ -13,7 +13,7 @@ class BaseController extends Controller
 
         $items = $this->filter($items);
 
-        $items = $items->paginate(request("per_page", 10));
+        $items = $items->orderBy('id', 'desc')->paginate(request("per_page", 10));
 
         return successResponse($items);
     }

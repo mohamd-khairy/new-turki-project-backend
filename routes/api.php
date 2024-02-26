@@ -22,6 +22,7 @@ use App\Http\Controllers\API\ProductSizeController;
 use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Store\BankController;
+use App\Http\Controllers\API\Store\InvoiceController;
 use App\Http\Controllers\API\Store\MoneySafeController;
 use App\Http\Controllers\API\Store\StockController;
 use App\Http\Controllers\API\Store\StoreController;
@@ -107,18 +108,17 @@ Route::prefix("v2")->group(function () {
 
         /*********************ProductController***************** */
         Route::prefix('products')->group(function () {
-            Route::get('/all', [ProductController::class, 'all']);
-            Route::get('/', [ProductController::class, 'getAll']);
-            Route::get('clicked/{product}', [ProductController::class, 'isClicked']);
-            Route::get('/by-subcategory/{subCategory}', [ProductController::class, 'getProductBySubCategory']);
-            Route::get('/{product}', [ProductController::class, 'getProductById']);
-
             Route::middleware('coordinates')->group(function () {
                 Route::get('/by-category/{category}', [ProductController::class, 'getProductByCategory']);
                 Route::get('getProduct/{productApp}', [ProductController::class, 'getAppProductById']);
                 Route::get('/best-seller', [ProductController::class, 'bestSeller']);
                 Route::get('search/{name}', [ProductController::class, 'search']);
             });
+            Route::get('/all', [ProductController::class, 'all']);
+            Route::get('/', [ProductController::class, 'getAll']);
+            Route::get('clicked/{product}', [ProductController::class, 'isClicked']);
+            Route::get('/by-subcategory/{subCategory}', [ProductController::class, 'getProductBySubCategory']);
+            Route::get('/{product}', [ProductController::class, 'getProductById']);
         });
 
         /*********************ProductCutController***************** */
@@ -180,17 +180,19 @@ Route::prefix("v2")->group(function () {
     });
 
 
-
-
     /************************************************** auth routes ******************************************************** */
-
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::apiResource('banks',  BankController::class);
         Route::apiResource('money-safes',  MoneySafeController::class);
         Route::apiResource('stores', StoreController::class);
         Route::apiResource('suppliers', SupplierController::class);
         Route::apiResource('stocks', StockController::class);
+        Route::apiResource('invoices', InvoiceController::class);
+        Route::post('pay-invoice', [InvoiceController::class, 'payInvoice']);
+        Route::post('transfer-stock', [StockController::class, 'transferStock']);
+        Route::post('transfer-quantity', [StockController::class, 'transferQuantity']);
     });
+
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
 

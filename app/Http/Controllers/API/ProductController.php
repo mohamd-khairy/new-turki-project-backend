@@ -44,7 +44,7 @@ class ProductController extends Controller
             $this->middleware('permission:delete-product', ['only' => ['delete']]);
         }
 
-        if (request()->header('Type', 'dashboard')) {
+        if (request()->header('Type') == 'dashboard') {
             $this->middleware('auth:sanctum');
         }
     }

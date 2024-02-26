@@ -194,8 +194,8 @@ class TabbyApiService
         $objOrder = $order;
         $order = $order->toArray();
 
-        $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-        $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
+        // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+        // $res = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
         // background-color: #e7c05d;
 
         $html_head = '<!DOCTYPE html>
@@ -457,8 +457,8 @@ class TabbyApiService
 
         $order = $order->toArray();
 
-        $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-        $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
+        // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+        // $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
         return response()->json([
             'success' => true, 'message' => 'success', 'description' => "", "code" => "200",
             "data" => $payment

@@ -14,6 +14,8 @@ class Supplier extends Model
         'name', 'city_id', 'mobile', 'balance', 'details'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function city()
     {
         return $this->belongsTo(City::class);

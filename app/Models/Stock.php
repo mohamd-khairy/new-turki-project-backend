@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Stock extends Model
 {
@@ -12,37 +11,21 @@ class Stock extends Model
     public $inPermission = true;
 
     protected $fillable = [
-        'user_id', 'supplier_id', 'store_id', 'product_id',
-        'invoice', 'invoice_price', 'product_name', 'quantity', 'price', 'tax', 'paid', 'notes'
+        'product_id', 'product_name', 'quantity', 'price', 'invoice_id', 'store_id'
     ];
 
-    public function getInvoiceAttribute()
+    public function product()
     {
-        return $this->attributes['invoice']? config('app.url') . Storage::url($this->attributes['invoice']) : null;
+        return $this->belongsTo(Product::class);
     }
 
-    public function city()
+    public function invoice()
     {
-        return $this->belongsTo(City::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     public function store()
     {
         return $this->belongsTo(Store::class);
-    }
-
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class);
-    }
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
     }
 }

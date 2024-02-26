@@ -299,9 +299,9 @@ class AuthenticationController extends Controller
 
 
         if (strtolower($local) == "ar") {
-            $text = "رمز&nbsp;التحقق&nbsp;$otpCode";
+            $text = "رمز&nbsp;التحقق&nbsp;&nbsp;$otpCode";
         } else {
-            $text = "your&nbsp;verify&nbsp;code&nbsp;is&nbsp;$otpCode";
+            $text = "your&nbsp;verify&nbsp;code&nbsp;is&nbsp;&nbsp;$otpCode";
         }
 
         $decoded = html_entity_decode($text);
@@ -473,12 +473,12 @@ class AuthenticationController extends Controller
 
         $customer->uploadAvatar($request);
 
-        $res = app(CallNetsuiteApi::class)->sendCustomerToNS($customer, $request);
+        // $res = app(CallNetsuiteApi::class)->sendCustomerToNS($customer, $request);
 
-        if (!isset($res->status)) {
+        // if (!isset($res->status)) {
 
-            $customer->update(['integrate_id' => $res->id]);
-        }
+        //     $customer->update(['integrate_id' => $res->id]);
+        // }
 
         return response()->json(['message' => 'successfully updated.', 'success' => true, 'description' => '', 'code' => 200, 'data' => $customer], 200);
     }

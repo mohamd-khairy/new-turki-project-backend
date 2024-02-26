@@ -727,8 +727,8 @@ class TamaraApiService
                 $res = $this->authoriseOrder($data['order_id']);
                 $orderArray = $order->toArray();
 
-                $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
-                $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray, $request);
+                // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
+                // $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray, $request);
 
                 TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
 
