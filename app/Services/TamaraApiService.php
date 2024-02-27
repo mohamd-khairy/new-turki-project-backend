@@ -226,10 +226,10 @@ class TamaraApiService
                 "currency" => $country->currency_en
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/success",
-                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/failure",
-                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/cancel",
-                "notification" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/success",
+                "failure" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/failure",
+                "cancel" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/cancel",
+                "notification" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,
@@ -289,6 +289,8 @@ class TamaraApiService
 
         if (isset($response->order_id)) {
             $createPayment["bank_ref_no"] = $response->order_id;
+            // $createPayment["status"] = 'Paid';
+            // $createPayment["paid"] = 1;
             $payment = Payment::create($createPayment);
             $order->update(['payment_id' => $payment->id]);
 
@@ -317,8 +319,6 @@ class TamaraApiService
         $paymentResult = $request->query('paymentStatus') ?? 'N/A';
 
         $payment = Payment::where('bank_ref_no', $paymentId)->get()->last();
-
-
 
         if ($payment != null) {
             $order = Order::where('ref_no', $payment->order_ref_no)->get()->last();
@@ -576,10 +576,10 @@ class TamaraApiService
                 "currency" => "SAR"
             ],
             "merchant_url" => [
-                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
-                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
-                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/checkout/response",
-                "notification" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/payments/tamarapay"
+                "success" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/response",
+                "failure" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/response",
+                "cancel" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/checkout/response",
+                "notification" => config("app.payment_url", "https://almaraacompany.com/dashboard") . "/api/v2/payments/tamarapay"
             ],
             "platform" => "web",
             "is_mobile" => true,

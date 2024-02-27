@@ -52,9 +52,9 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://turki.almaraacompany.com/admin'),
+    'url' => env('APP_URL', 'https://almaraacompany.com/dashboard'),
 
-    'payment_url' => env('Payment_URL', 'https://turki.almaraacompany.com/admin'),
+    'payment_url' => env('Payment_URL', 'https://almaraacompany.com/dashboard'),
 
     'asset_url' => env('ASSET_URL', null),
 

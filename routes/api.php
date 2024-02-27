@@ -391,7 +391,6 @@ Route::prefix("v2")->group(function () {
         Route::get('tabby/checkout/failure', [\App\Services\TabbyApiService::class, 'response']);
 
         Route::get('checkout/response ', [\App\Services\TamaraApiService::class, 'response']);
-
         Route::get('checkout/success', [\App\Services\TamaraApiService::class, 'response']);
         Route::get('checkout/failure', [\App\Services\TamaraApiService::class, 'response']);
         Route::get('checkout/cancel', [\App\Services\TamaraApiService::class, 'response']);
