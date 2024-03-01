@@ -41,11 +41,12 @@ class StockController extends BaseController
     {
         $request->validate([
             'stock_id'  => 'required|exists:stocks,id',
+            'to_store'  => 'required|exists:stores,id',
             'store_id'  => 'required|exists:stores,id',
         ]);
 
         $stock = Stock::where('id', $request->stock_id)->update([
-            'store_id' => $request->store_id
+            'store_id' => $request->to_store
         ]);
 
         return successResponse($stock);

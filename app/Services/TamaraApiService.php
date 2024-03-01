@@ -333,7 +333,7 @@ class TamaraApiService
 
             $payment->update([
                 "description" => $paymentResult,
-                "status" => "Client's payment process has " . $paymentResult,
+                "status" => $paymentResult == 'approved' ? 'Paid' : "Client's payment process has " . $paymentResult,
                 "price" => (float)$order->total_amount_after_discount,
             ]);
         }
