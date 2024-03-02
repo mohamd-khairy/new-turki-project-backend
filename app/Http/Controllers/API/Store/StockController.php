@@ -68,14 +68,14 @@ class StockController extends BaseController
             $stock = Stock::where('id', $request->stock_id)->first();
 
             $stock->update([
-                'quantity' => $stock->quantity - $request->transfer_quantity
+                'quantity' => ($stock->quantity - $request->transfer_quantity) ?? 0
             ]);
 
             $new_stock = Stock::create([
                 'product_id' => $stock->product_id,
                 'product_name' => $stock->product_name,
                 'quantity'  => $request->to_quantity,
-                'price' => $request->invoice_id,
+                'price' => $request->price,
                 'invoice_id' => $stock->invoice_id,
                 'store_id' => $request->store_id ?? $stock->store_id
             ]);
