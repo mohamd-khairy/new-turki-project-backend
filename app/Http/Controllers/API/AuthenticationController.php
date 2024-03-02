@@ -654,7 +654,7 @@ class AuthenticationController extends Controller
         $pwd = "TaTa_1400@ahmed";
         $smsUser = "TurkiBK";
 
-        $url = "https://mshastra.com/sendurlcomma.aspx?&user=" . $smsUser . "&pwd=" . $pwd . "&senderid=" . $senderid . "&CountryCode=" . $countryCode . "&mobileno=" . $phone . "&msgtext=" . $decoded . $customerOtpLog->mobile_verification_code;
+        $url = "https://mshastra.com/sendurlcomma.aspx?&user=" . $smsUser . "&pwd=" . $pwd . "&senderid=" . $senderid . "&CountryCode=" . $countryCode . "&mobileno=" . $phone . "&msgtext=" . $decoded; //. $customerOtpLog->mobile_verification_code;
 
         $ch = curl_init($url);
 
