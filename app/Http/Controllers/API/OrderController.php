@@ -254,6 +254,7 @@ class OrderController extends Controller
                 'paymentType',
                 'customer',
                 'payment',
+                'paidpayment',
                 'orderState',
                 'deliveryPeriod',
                 'selectedAddress',

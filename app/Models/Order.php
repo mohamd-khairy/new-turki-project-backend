@@ -69,7 +69,7 @@ class Order extends Model
 
     public function getRemainAmountAttribute()
     {
-        return  ($this->payment ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
+        return  ($this->payment && $this->payment->status == 'Paid' ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
     }
 
     public function getTotalAmountAfterTaxAttribute()
@@ -139,6 +139,11 @@ class Order extends Model
     public function deliveryPeriod()
     {
         return $this->belongsTo(DeliveryPeriod::class, 'delivery_period_id');
+    }
+
+    public function paidpayment()
+    {
+        return $this->belongsTo(Payment::class, 'payment_id')->where('status' , 'Paid')->latest();
     }
 
     public function payment()
