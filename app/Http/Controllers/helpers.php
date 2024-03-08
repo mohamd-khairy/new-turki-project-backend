@@ -185,6 +185,26 @@ if (!function_exists('handleRoleOrderState')) {
     }
 }
 
+if (!function_exists('handleDate')) {
+
+    function handleDate($date)
+    {
+        $all = explode('-', $date);
+
+        if (isset($all[0]) && strlen($all[0]) > 3) {
+            $date = date('Y-m-d',strtotime($date));
+        } elseif (isset($all[2]) && strlen($all[2]) > 3) {
+            $date = date('Y-m-d',strtotime($all[2] . '-' . $all[1] . '-' . $all[0]));
+        } elseif (!isset($all[2])) {
+            $date = date('Y-m-d',strtotime(date('Y') . '-' . $date));
+        } else {
+            $date = date('Y-m-d',strtotime($date));
+        }
+
+        return $date;
+    }
+}
+
 if (!function_exists('Paginator')) {
 
     function successResponse($data = [], $msg = 'success')

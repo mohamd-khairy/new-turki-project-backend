@@ -395,7 +395,7 @@ Route::prefix("v2")->group(function () {
         Route::get('checkout/failure', [\App\Services\TamaraApiService::class, 'response']);
         Route::get('checkout/cancel', [\App\Services\TamaraApiService::class, 'response']);
 
-        Route::post('payments/tamarapay ', [\App\Services\TamaraApiService::class, 'tamarapay']);
+        Route::post('payments/tamarapay', [\App\Services\TamaraApiService::class, 'tamarapay']);
 
         Route::get('order-details/{order} ', [\App\Services\TamaraApiService::class, 'orderDetails']);
 

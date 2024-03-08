@@ -289,8 +289,6 @@ class TamaraApiService
 
         if (isset($response->order_id)) {
             $createPayment["bank_ref_no"] = $response->order_id;
-            // $createPayment["status"] = 'Paid';
-            // $createPayment["paid"] = 1;
             $payment = Payment::create($createPayment);
             $order->update(['payment_id' => $payment->id]);
 
@@ -725,7 +723,7 @@ class TamaraApiService
                 ]);
 
                 $res = $this->authoriseOrder($data['order_id']);
-                $orderArray = $order->toArray();
+                // $orderArray = $order->toArray();
 
                 // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
                 // $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray, $request);
@@ -733,21 +731,20 @@ class TamaraApiService
                 TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
 
 
-                if (isset($res->status)) {
+                if (isset($res->status) && $res->status == "authorised") {
                     $tamara->status = $res->status;
                     $tamara->payment_type = $res->payment_type;
                     $tamara->save();
 
                     $payment->update([
                         "description" => $res->status,
-                        "status" => "Paid",
+                        "status" =>  "Paid",
                         "price" => (float)$order->total_amount_after_discount,
                     ]);
 
                     $order->update(['paid' => 1]);
 
                     //   $orderArray = $order->toArray();
-
                     //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
                     //   $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray , $request);
                     //   TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "tamarapay:557", 'error_desc' => 'order sent to NetsuiteApi!,  '.json_encode($resNetsuiteApi)]);

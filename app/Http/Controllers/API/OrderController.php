@@ -131,16 +131,22 @@ class OrderController extends Controller
             ->when(request('country_ids'), function ($query) {
                 $query->where('addresses.country_id', request('country_ids'));
             })
+            // ->when(request('date_from') && request('date_to'), function ($query) {
+            //     $query->where(function ($q) {
+            //         $q->whereRaw(
+            //             'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
+            //             [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
+            //         );
+            //     });
+            // })
+            // ->when(request('delivery_date'), function ($query) {
+            //     $query->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
+            // })
             ->when(request('date_from') && request('date_to'), function ($query) {
-                $query->where(function ($q) {
-                    $q->whereRaw(
-                        'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
-                        [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
-                    );
-                });
+                $query->whereBetween('orders.delivery_date', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
             })
             ->when(request('delivery_date'), function ($query) {
-                $query->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
+                $query->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
             })
             ->when(request('delivery_period_ids'), function ($query) {
                 $query->whereIn('orders.delivery_period_id', request('delivery_period_ids'));
@@ -209,7 +215,7 @@ class OrderController extends Controller
 
                 $per = 1.15;
                 if ($i->address_country_id == 4) {
-                    $per = 1;//1.05;
+                    $per = 1; //1.05;
                 }
 
                 // Perform the common calculations
@@ -873,7 +879,7 @@ class OrderController extends Controller
 
             $per = 1.15;
             if ($i->address_country_id == 4) {
-                $per = 1;//1.05;
+                $per = 1; //1.05;
             }
 
             $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / $per, 2) : 0;
@@ -1112,7 +1118,7 @@ class OrderController extends Controller
             'total_amount' => $TotalAmountBeforeDiscount + $delivery,
             'total_amount_after_discount' => $TotalAmountAfterDiscount,
             'discount_applied' => $discountAmount,
-            'delivery_date' => $validated["delivery_date"],
+            'delivery_date' => handleDate($validated["delivery_date"]),
             'delivery_period_id' => $validated["delivery_period_id"],
             "comment" => $validated["comment"],
             "using_wallet" => $validated["using_wallet"],
@@ -1170,7 +1176,7 @@ class OrderController extends Controller
                     ]
                 );
 
-                if($createdOrder->wallet_amount_used > 0){
+                if ($createdOrder->wallet_amount_used > 0) {
                     // $payment->price = $createdOrder->wallet_amount_used;
                     // $payment->status = 'Paid';
                     $payment->description = "Payment Wallet Created";
@@ -1425,7 +1431,7 @@ class OrderController extends Controller
                         ]
                     );
 
-                    if($createdOrder->wallet_amount_used > 0){
+                    if ($createdOrder->wallet_amount_used > 0) {
                         // $payment->price = $createdOrder->wallet_amount_used;
                         // $payment->status = 'Paid';
                         $payment->description = "Payment Wallet Created";
