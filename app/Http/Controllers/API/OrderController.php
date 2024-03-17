@@ -800,12 +800,12 @@ class OrderController extends Controller
             $order_states = null;
         }
 
-        $perPage = 6;
+        $perPage = 6000000;
         if ($request->has('per_page'))
             $perPage = $request->get('per_page');
 
         if ($perPage == 0)
-            $perPage = 6;
+            $perPage = 6000000;
 
         $orders = DB::table('orders')
             ->select(
