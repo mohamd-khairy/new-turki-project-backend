@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\DataExport;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Cart;
@@ -29,6 +30,8 @@ use App\Services\PointLocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -77,7 +80,7 @@ class OrderController extends Controller
     public function getOrdersDashboard(Request $request)
     {
         $total = 0;
-        $orderStates = handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'];
+        $orderStates = auth()->check() ? handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'] : null;
 
         $perPage = $request->input('per_page', 6);
         $perPage = ($perPage == 0) ? 6 : $perPage;
@@ -116,7 +119,7 @@ class OrderController extends Controller
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
             ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
-            ->when(request()->header('Type') != 'dashboard', function ($query) {
+            ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
                 $query->where('orders.customer_id', auth()->user()->id);
             })
             ->when($orderStates, function ($query) use ($orderStates) {
@@ -131,17 +134,6 @@ class OrderController extends Controller
             ->when(request('country_ids'), function ($query) {
                 $query->where('addresses.country_id', request('country_ids'));
             })
-            // ->when(request('date_from') && request('date_to'), function ($query) {
-            //     $query->where(function ($q) {
-            //         $q->whereRaw(
-            //             'IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) BETWEEN ? AND ?',
-            //             [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]
-            //         );
-            //     });
-            // })
-            // ->when(request('delivery_date'), function ($query) {
-            //     $query->whereRaw('IF(LENGTH(orders.delivery_date) - LENGTH(REPLACE(orders.delivery_date, "-", "")) < 2, CONCAT(SUBSTRING_INDEX(orders.created_at, "-", 1), "-", orders.delivery_date), orders.delivery_date) = ?', [date('Y-m-d', strtotime(request('delivery_date')))]);
-            // })
             ->when(request('date_from') && request('date_to'), function ($query) {
                 $query->whereBetween('orders.delivery_date', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
             })
@@ -170,13 +162,13 @@ class OrderController extends Controller
                 $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
                 $query->whereIn('orders.payment_type_id', $payment_type_ids ?? []);
             })
-            ->when(in_array('delegate', auth()->user()->roles->pluck('name')->toArray()), function ($query) {
+            ->when(auth()->check() && in_array('delegate', auth()->user()->roles->pluck('name')->toArray()), function ($query) {
                 $query->where('orders.user_id', auth()->user()->id);
             })
             ->when(request('ref_no'), function ($query) {
                 $query->where('orders.ref_no', request('ref_no'));
             })
-            ->when(!in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
+            ->when(auth()->check() && !in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
                 $query->where('addresses.country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);
             });
 
@@ -187,7 +179,11 @@ class OrderController extends Controller
             $total = $orders->sum('total_amount_after_discount');
         }
 
-        $orders = $orders->paginate($perPage);
+        if (request('export', null) == 1 && $orders->count() > 0) {
+            return $this->exportCsv($orders);
+        } else {
+            $orders = $orders->paginate($perPage);
+        }
 
         $items = $this->transformOrderData($orders->items());
 
@@ -203,7 +199,94 @@ class OrderController extends Controller
         ], 200);
     }
 
+    public function exportCsv($orders)
+    {
+        $data = $orders->take(50000)
+            ->select(
+                'orders.id',
+                'orders.ref_no',
+                'customers.name',
+                'customers.mobile',
+                'order_states.state_ar',
+                'payment_types.name_ar',
+                'addresses.address',
+                'cities.name_ar as c_name_ar',
+                'users.username', // مسئول المبيعات
+                'u.username as m_name', // المندوب
+                'orders.delivery_date',
+                'delivery_periods.name_ar as p_name_ar',
+                'payments.price as payment_price',
+                'payments.status as payment_status',
+                'orders.total_amount_after_discount',
+                'orders.wallet_amount_used',
+                'addresses.country_id as address_country_id'
+            )->get();
+        // Define CSV file headers
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="export.csv"',
+        ];
 
+        // Generate CSV content
+        $callback = function () use ($data) {
+            $file = fopen('php://output', 'w');
+
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Write CSV headers
+            fputcsv($file, [
+                'الرقم',
+                'الرقم التعريفي',
+                'الاسم',
+                "الرقم",
+                "حالة الطلب",
+                "طريقة الدفع",
+                "عنوان الطلب",
+                "المدينة",
+                "مسئول المبيعات",
+                "المندوب",
+                "تاريخ التسليم",
+                "فترة الطلب",
+                "المبلغ الدفوع",
+                "حالة الدفع",
+                "المبلغ المتبقي",
+            ]);
+
+            // Write data rows
+            foreach ($data as $row) {
+                if ($row->payment_status == 'Paid') {
+                    $remain_amount = (($row->payment_price ? ($row->total_amount_after_discount - $row->payment_price) : $row->total_amount_after_discount ?? 0) + $row->wallet_amount_used) ?? 0;
+                    $payment_price = $row->payment_price;
+                } else {
+                    $remain_amount = ($row->total_amount_after_discount + $row->wallet_amount_used) ?? 0;
+                    $payment_price = 0;
+                }
+
+                fputcsv($file, [
+                    $row->id,
+                    $row->ref_no,
+                    $row->name,
+                    $row->mobile,
+                    $row->state_ar,
+                    $row->name_ar,
+                    $row->address,
+                    $row->c_name_ar,
+                    $row->username,
+                    $row->m_name,
+                    $row->delivery_date,
+                    $row->p_name_ar,
+                    $payment_price,
+                    $row->payment_status,
+                    $remain_amount
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        // Return CSV as a downloadable file
+        return new StreamedResponse($callback, 200, $headers);
+    }
     private function transformOrderData($items)
     {
         return collect($items)->map(function ($i) {
@@ -230,7 +313,6 @@ class OrderController extends Controller
             return $i;
         });
     }
-
     private function handlePaymentStatus($order)
     {
         if ($order->payment_status == 'Paid') {
@@ -895,6 +977,23 @@ class OrderController extends Controller
             'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
         ], 200);
     }
+
+
+
+    public function exportOrder(Request $request)
+    {
+    }
+
+
+
+
+
+
+
+
+
+
+
     /********************************************************************************************************** */
     public function getOrders(Request $request)
     {
