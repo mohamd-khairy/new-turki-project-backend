@@ -199,6 +199,97 @@ class OrderController extends Controller
         ], 200);
     }
 
+    public function exportOrderProducts()
+    {
+        $data = DB::table('order_products')->select(
+            DB::raw('sum(order_products.quantity) as sum'),
+            DB::raw('sum(order_products.total_price) as price'),
+            'size_id',
+            'sizes.name_ar'
+        )
+            ->join('orders', 'orders.ref_no', 'order_products.order_ref_no')
+            ->join('sizes', 'sizes.id', 'order_products.size_id')
+            ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
+            ->when(request('order_state_ids'), function ($query) {
+                $query->whereIn('orders.order_state_id', request('order_state_ids'));
+            })
+            ->when(request('city_ids'), function ($query) {
+                $query->whereIn('addresses.city_id', request('city_ids'));
+            })
+            ->when(request('country_ids'), function ($query) {
+                $query->where('addresses.country_id', request('country_ids'));
+            })
+            ->when(request('date_from') && request('date_to'), function ($query) {
+                $query->whereBetween('orders.delivery_date', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
+            })
+            ->when(request('delivery_date'), function ($query) {
+                $query->where('orders.delivery_date', date('Y-m-d', strtotime(request('delivery_date'))));
+            })
+            ->when(request('delivery_period_ids'), function ($query) {
+                $query->whereIn('orders.delivery_period_id', request('delivery_period_ids'));
+            })
+            ->when(request('customer_id'), function ($query) {
+                $query->where('orders.customer_id', request('customer_id'));
+            })
+            ->when(request('mobile'), function ($query) {
+                $query->where('customers.mobile', request('mobile'));
+            })
+            ->when(request('user_id'), function ($query) {
+                $query->where('orders.user_id', request('user_id'));
+            })
+            ->when(request('sales_agent_id'), function ($query) {
+                $query->where('orders.user_id', request('sales_agent_id'));
+            })
+            ->when(request('sales_representative_id'), function ($query) {
+                $query->where('orders.sales_representative_id', request('sales_representative_id'));
+            })
+            ->when(request('payment_type_ids'), function ($query) {
+                $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
+                $query->whereIn('orders.payment_type_id', $payment_type_ids ?? []);
+            })
+            ->when(request('ref_no'), function ($query) {
+                $query->where('orders.ref_no', request('ref_no'));
+            })
+            ->groupBy('order_products.size_id')->get();
+
+        // Define CSV file headers
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="export.csv"',
+        ];
+
+        // Generate CSV content
+        $callback = function () use ($data) {
+            $file = fopen('php://output', 'w');
+
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Write CSV headers
+            fputcsv($file, [
+                'الرقم',
+                'الاسم',
+                "الكمية",
+                "المبلغ",
+            ]);
+
+            // Write data rows
+            foreach ($data as $k => $row) {
+
+                fputcsv($file, [
+                    $k+1,
+                    $row->name_ar,
+                    $row->sum,
+                    $row->price,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        // Return CSV as a downloadable file
+        return new StreamedResponse($callback, 200, $headers);
+    }
+
     public function exportCsv($orders)
     {
         $data = $orders->take(50000)

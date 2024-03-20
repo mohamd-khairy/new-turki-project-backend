@@ -180,7 +180,7 @@ Route::prefix("v2")->group(function () {
     });
 
 
-    //
+
 
     /************************************************** auth routes ******************************************************** */
     Route::group(['middleware' => 'auth:sanctum'], function () {
@@ -269,6 +269,7 @@ Route::prefix("v2")->group(function () {
             Route::get('get-customer-wallet/{customer_id}', [OrderController::class, 'getCustomerWallet']); //getCustomerWallet
             Route::get('take-order/{id}', [OrderController::class, 'takeOrder']); //getCustomerWallet
             Route::post('assign-user-order', [OrderController::class, 'assignUserOrder']); //getCustomerWallet
+            Route::get('export-order-products', [OrderController::class, 'exportOrderProducts']); //getCustomerWallet
 
             Route::get('get-orders-v2', [OrderController::class, 'getOrdersV2']);
             Route::get('/{order}', [OrderController::class, 'getOrderByRefNo']);
