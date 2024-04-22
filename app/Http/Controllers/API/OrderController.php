@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use GuzzleHttp\Client;
 
 class OrderController extends Controller
 {
@@ -39,6 +40,78 @@ class OrderController extends Controller
     {
         if (env('PERMISSIONS', false)) {
             $this->middleware('permission:read-order', ['only' => ['getOrdersDashboard']]);
+        }
+    }
+
+    public function SyncOrderToFoodics()
+    {
+        $order = Order::latest()->first();
+        // dd($order->toArray());
+        $order_products = OrderProduct::with('size')->where('order_ref_no', $order->ref_no)->get();
+        $httpClient = new Client();
+
+        // $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5MGQ1YTcxOC1lMzBkLTQ5ODYtODY0Ni0wNjdlZDBkMzdkMGUiLCJqdGkiOiI3ZmZmMjc1MDY2MTg1NjU0NDE4ZmM0NjhlNWYwY2VjOTg1OGI3MzhlMjEzYzdjNjE0M2VmNmFjMzQ0YzZlNzAwM2Q5NmExYmYxMWQ3MDBlMSIsImlhdCI6MTcxMTI4MjkxOC44MDkxMjEsIm5iZiI6MTcxMTI4MjkxOC44MDkxMjEsImV4cCI6MTg2OTA0OTMxOC43ODA4MDgsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6WyJnZW5lcmFsLnJlYWQiLCJvcmRlcnMubGlzdCIsImN1c3RvbWVycy5saXN0IiwiY3VzdG9tZXJzLmFjY291bnRzLnJlYWQiLCJjdXN0b21lcnMubG95YWx0eS5yZWFkIiwib3BlcmF0aW9ucy5yZWFkIiwiaW52ZW50b3J5LnRyYW5zYWN0aW9ucy5yZWFkIiwiaW52ZW50b3J5LnNldHRpbmdzLnJlYWQiLCJtZW51LmluZ3JlZGllbnRzLnJlYWQiXSwiYnVzaW5lc3MiOiI5NjBmYjJhNy0xMmYxLTRlZmEtYjU2Ny1jYWViYjYwNmIwMzEiLCJyZWZlcmVuY2UiOiI5NDk0MzAifQ.iIhu3nkpMm3K9PXvhBXz5N2Ql1PGame9mWL43CmTYUblp7MRzz1Bg7BHt3oPT4UDQVpoAeaSMkVB2uOSVkPFH92bRMZinn2hPgZ7XrCqC2OWS39WBW66yBsVJ6PxSTvt92XxVR4H_sxUsMzJGrM9wpGebYW1nmUALGNFUBOFoS9tK50SHt0rwZtJjanN5ld5Dt8ILlqCxN9oWIHG5J44bHCIg8Y_XaOJ1Oka6ipw31DYuMG5llIeokpCkPvLyaciW2WnpEtVbIHb6_ariSs93NPR1g1y1kQDaYoyA86Z_GKOa6AqgvGaYeX7Sj0R_oJ-zCPaR60jTjuwO4ORxP9VrLtrlSjLst4RXaodjU1W6VV_7LgvxXxVcIBK9Kpdmg6xALh0fuXqd2OInHJp6JO6HvY6dRJ8Ar9tcuAC5P85l3MNoDqgC4X0LXip5-IIpMdcjPx4xfiMEw_CvgS_lU7jJ62zBY1Kqj_Tp4sDfvE1d1Bhs6GsBhVbcMXO0c10m8s09J1iLQeSLp6s9JAMhwh7NqJa7tWSyh2yY8vZVhBfbrzDNu0rQUscaGwwZyfwTFowu9B2LttQPn9bOJulyKrCyUfBFYKtnHMLgQRYQb876_FPIBSAlCBv1YeOAI_dBmyKH0xk_uesbEkhXXj00vZHPZmcXjBcWRP7D23IR5Xo27k";
+
+        // $response = $httpClient->get('https://api.foodics.com/v5/orders', [
+        //     'headers' => [
+        //         'Authorization' => "Bearer $token",
+        //         'Content-Type' => 'application/json',
+        //     ]
+        // ]);
+
+        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI4ZjllYjNmNi02ZWZhLTRmZWYtODk1ZS1kMWJjNDRiYTQ4MWQiLCJqdGkiOiJkZGQ0MjhlYjA1NDUwZDI4NTI5NGI1OTUxZDgyYmJhOGNmMzM1Mzg5NDlhYjMyOWIzZjRkN2JiOTczMDBhNjBiZmFhYzg3NmJmOTYxYzBhZiIsImlhdCI6MTcxMzM1MjM0NS42Nzg5NjksIm5iZiI6MTcxMzM1MjM0NS42Nzg5NjksImV4cCI6MTg3MTExODc0NS42MzcxOSwic3ViIjoiOWJkNDE2NzQtNzU4Yi00OGMwLTlkMjItOGI2YjlkMDI3N2YzIiwic2NvcGVzIjpbImdlbmVyYWwucmVhZCIsIm9yZGVycy5saW1pdGVkLnJlYWQiLCJvcmRlcnMubGltaXRlZC5jcmVhdGUiLCJvcmRlcnMubGltaXRlZC5wYXkiLCJvcmRlcnMubGltaXRlZC5kZWxpdmVyIiwib3JkZXJzLmxpbWl0ZWQuZGVjbGluZSJdLCJidXNpbmVzcyI6IjliZDQxNjc0LTg0NjYtNGVhMy05MWRjLWQwMWU4MGRiOTdlMSIsInJlZmVyZW5jZSI6IjE3MDA1NyJ9.PAs-FOMsYUchrXeUiveDC9vI4pzkXbZgxAiFuSuFl0dnBKoZYulW1CZdyLVuJ9VPqXZZYkFEKHHzMvhZgOj96zK4EjoP_9sw5_Ia20xuCUxVdrRNeUmjPigRYXDMc7Kmry3udyZH-baHzm4iLdA8UevSpAxS-vU-R8l3PTYj8E22Fjj_Zp05PLI1n8o-oMBO4mG6RlOI2KqjvIVjBmfstdGor_mo3mNetVzL3DmO979PuwT4SZwSeoRoS0W-JysDywdpDwAkWp7rmoio1PPwmodkYbYKgncx5sCfigdpkZbfv64_SVbY0LhvCH9Pynfm1bSfv0NkWj6th7xiYjXC73Tfm9d8M278jtXd5Aemhn8ze-2I3qXrLMMhHB3MklHfxdqG40fvyZ0Ts_6YN8k-2aI3-pVn15Eft04ypfVmMljYmebQcmiW5eZgT8cQUyEmgx9daHITFNUgYGgFdJUAcRZq1-69besv54UF477Nk3nSPf-WyyUmKXTp7l9NzuAIfKc-lQ1-WY_TXK16wl9m-VbYvmhfhq8X6lMrGhhY8jeipNQYa-AURUexTlB8YBd7KlhpnjKThXNBC3P7GL7AxQr-uUFolYkq9VVj032yMM17P_vEGhew1XXGcjJehK6AREMX5arSw3YwpcEON61RkfYzKmR1pW106597H8h6iwo";
+
+        $price = 0;
+        $json = [
+            "type" => 2,
+            "status" => 1,
+            "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
+            "discount_amount" => $order->discount_applied ?? 0,
+            'branch_id' => "9bd416a8-f084-49d9-968f-ae938aff391a",
+            "due_at" => date('Y-m-d H:i:s', strtotime($order->delivery_date . "+1 year")),
+            "customer_notes" => $order->comment ?? "",
+            "kitchen_notes" => $order->comment ?? "",
+            "coupon_code" => $order->applied_discount_code ?? "",
+            "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
+            "driver_id" => "9bd8bca9-67c8-4be3-9951-e2ce7db8b2a5"
+        ];
+
+        foreach ($order_products as $pro) {
+
+            $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
+            $json['products'][] = [
+                "product_id" => $pro->size->foodics_integrate_id ?? "9bd84b46-4329-4851-b785-47a48151bc61",
+                "quantity" => $pro->quantity ?? 1,
+                "unit_price" => $pro->size->sale_price,
+                "total_price" => $total_price,
+            ];
+
+            $price += $total_price;
+        }
+
+        $json['subtotal_price'] = $order->order_subtotal ?? $price;
+        $json['total_price'] = $order->total_amount_after_discount ?? $price;
+
+        // dd($json);
+        $response = $httpClient->post('https://api-sandbox.foodics.com/v5/orders', [
+            'headers' => [
+                'Authorization' => "Bearer $token",
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $json,
+        ]);
+
+        $statusCode = $response->getStatusCode();
+        $responseBody = $response->getBody()->getContents();
+
+        // Handle the response accordingly
+        if ($statusCode == 200) {
+            // Successful response
+            return $responseBody;
+        } else {
+
+            // Error handling
+            return response()->json(['error' => 'Failed to create order'], $statusCode);
         }
     }
 
@@ -276,7 +349,7 @@ class OrderController extends Controller
             foreach ($data as $k => $row) {
 
                 fputcsv($file, [
-                    $k+1,
+                    $k + 1,
                     $row->name_ar,
                     $row->sum,
                     $row->price,
@@ -1068,21 +1141,6 @@ class OrderController extends Controller
             'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
         ], 200);
     }
-
-
-
-    public function exportOrder(Request $request)
-    {
-    }
-
-
-
-
-
-
-
-
-
 
 
     /********************************************************************************************************** */
