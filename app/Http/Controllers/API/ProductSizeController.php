@@ -57,7 +57,8 @@ class ProductSizeController extends Controller
             // 'calories' => 'sometimes|max:255',
             'price' => 'required|numeric',
             'sale_price' => 'required|numeric',
-            'is_available_for_use' => 'required|boolean'
+            'is_available_for_use' => 'required|boolean',
+            'foodics_integrate_id' => 'nullable'
         ]);
 
         $validateDate['use_again'] = request('is_available_for_use') ?? false;
@@ -110,7 +111,8 @@ class ProductSizeController extends Controller
             'weight' => 'sometimes',
             // 'calories' => 'sometimes',
             'sale_price' => 'required|numeric',
-            'use_again' => 'nullable|boolean'
+            'use_again' => 'nullable|boolean',
+            'foodics_integrate_id' => 'nullable'
         ]);
 
         if ($productSize->update($validateDate)) {
