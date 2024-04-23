@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Size;
+use App\Models\SizeStore;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,9 +18,9 @@ class ProductSizeController extends Controller
     public function getAll()
     {
         if (request('pageSize')) {
-            $size = Size::where('use_again', true)->get();
+            $size = Size::with('stores')->where('use_again', true)->get();
         } else {
-            $size = Size::get();
+            $size = Size::with('stores')->get();
         }
 
         return response()->json([
@@ -31,7 +32,7 @@ class ProductSizeController extends Controller
     public function getById(Size $size)
     {
         return response()->json([
-            'success' => true, 'data' => $size,
+            'success' => true, 'data' => $size->load('stores'),
             'message' => 'Size retrieved successfully', 'description' => 'Size Details', 'code' => '200'
         ], 200);
     }
@@ -58,12 +59,21 @@ class ProductSizeController extends Controller
             'price' => 'required|numeric',
             'sale_price' => 'required|numeric',
             'is_available_for_use' => 'required|boolean',
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
+
+            'stores' => 'nullable',
+            'stores.*.store_id' => 'required|exists:stores,id',
+            'stores.*.stock_id' => 'nullable|exists:stocks,id',
+            'stores.*.quantity' => 'required',
         ]);
 
         $validateDate['use_again'] = request('is_available_for_use') ?? false;
         $productSize = Size::create($validateDate);
         if ($productSize) {
+
+            if ($request->stores) {
+                $productSize->size_store->createMany($request->stores);
+            }
 
             return response()->json([
                 'success' => true, 'data' => $productSize,
@@ -103,19 +113,35 @@ class ProductSizeController extends Controller
 
     public function update(Request $request, Size $productSize)
     {
-
         $validateDate = $request->validate([
             'price' => 'required|numeric',
             'name_ar' => 'sometimes|max:255',
             'name_en' => 'sometimes|max:255',
             'weight' => 'sometimes',
-            // 'calories' => 'sometimes',
             'sale_price' => 'required|numeric',
             'use_again' => 'nullable|boolean',
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
+
+            'stores' => 'nullable',
+            'stores.*.store_id' => 'required|exists:stores,id',
+            'stores.*.stock_id' => 'nullable|exists:stocks,id',
+            'stores.*.quantity' => 'required',
         ]);
 
         if ($productSize->update($validateDate)) {
+
+            if ($request->stores) {
+                SizeStore::where(['size_id' => $productSize->id])->delete();
+                foreach ($request->stores as $key => $store) {
+                    SizeStore::create([
+                        'size_id' => $productSize->id,
+                        'stock_id' => $store['stock_id'] ?? null,
+                        'product_id' => null,
+                        'store_id' => $store['store_id'] ?? null,
+                        'quantity' => $store['quantity'],
+                    ]);
+                }
+            }
 
             return response()->json([
                 'success' => true, 'data' => $productSize,
