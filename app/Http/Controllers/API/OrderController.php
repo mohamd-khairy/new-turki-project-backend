@@ -43,66 +43,149 @@ class OrderController extends Controller
         }
     }
 
-    public function SyncOrderToFoodics()
+    public function SyncOrderToFoodics($order = null)
     {
-        $order = Order::latest()->first();
+        // $order = $order ?? Order::latest()->first();
         // dd($order->toArray());
-        $order_products = OrderProduct::with('size')->where('order_ref_no', $order->ref_no)->get();
+        $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
         $httpClient = new Client();
 
-        // $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5MGQ1YTcxOC1lMzBkLTQ5ODYtODY0Ni0wNjdlZDBkMzdkMGUiLCJqdGkiOiI3ZmZmMjc1MDY2MTg1NjU0NDE4ZmM0NjhlNWYwY2VjOTg1OGI3MzhlMjEzYzdjNjE0M2VmNmFjMzQ0YzZlNzAwM2Q5NmExYmYxMWQ3MDBlMSIsImlhdCI6MTcxMTI4MjkxOC44MDkxMjEsIm5iZiI6MTcxMTI4MjkxOC44MDkxMjEsImV4cCI6MTg2OTA0OTMxOC43ODA4MDgsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6WyJnZW5lcmFsLnJlYWQiLCJvcmRlcnMubGlzdCIsImN1c3RvbWVycy5saXN0IiwiY3VzdG9tZXJzLmFjY291bnRzLnJlYWQiLCJjdXN0b21lcnMubG95YWx0eS5yZWFkIiwib3BlcmF0aW9ucy5yZWFkIiwiaW52ZW50b3J5LnRyYW5zYWN0aW9ucy5yZWFkIiwiaW52ZW50b3J5LnNldHRpbmdzLnJlYWQiLCJtZW51LmluZ3JlZGllbnRzLnJlYWQiXSwiYnVzaW5lc3MiOiI5NjBmYjJhNy0xMmYxLTRlZmEtYjU2Ny1jYWViYjYwNmIwMzEiLCJyZWZlcmVuY2UiOiI5NDk0MzAifQ.iIhu3nkpMm3K9PXvhBXz5N2Ql1PGame9mWL43CmTYUblp7MRzz1Bg7BHt3oPT4UDQVpoAeaSMkVB2uOSVkPFH92bRMZinn2hPgZ7XrCqC2OWS39WBW66yBsVJ6PxSTvt92XxVR4H_sxUsMzJGrM9wpGebYW1nmUALGNFUBOFoS9tK50SHt0rwZtJjanN5ld5Dt8ILlqCxN9oWIHG5J44bHCIg8Y_XaOJ1Oka6ipw31DYuMG5llIeokpCkPvLyaciW2WnpEtVbIHb6_ariSs93NPR1g1y1kQDaYoyA86Z_GKOa6AqgvGaYeX7Sj0R_oJ-zCPaR60jTjuwO4ORxP9VrLtrlSjLst4RXaodjU1W6VV_7LgvxXxVcIBK9Kpdmg6xALh0fuXqd2OInHJp6JO6HvY6dRJ8Ar9tcuAC5P85l3MNoDqgC4X0LXip5-IIpMdcjPx4xfiMEw_CvgS_lU7jJ62zBY1Kqj_Tp4sDfvE1d1Bhs6GsBhVbcMXO0c10m8s09J1iLQeSLp6s9JAMhwh7NqJa7tWSyh2yY8vZVhBfbrzDNu0rQUscaGwwZyfwTFowu9B2LttQPn9bOJulyKrCyUfBFYKtnHMLgQRYQb876_FPIBSAlCBv1YeOAI_dBmyKH0xk_uesbEkhXXj00vZHPZmcXjBcWRP7D23IR5Xo27k";
 
-        // $response = $httpClient->get('https://api.foodics.com/v5/orders', [
+        // $response = $httpClient->post('https://api-sandbox.foodics.com/v5/orders', [
         //     'headers' => [
         //         'Authorization' => "Bearer $token",
         //         'Content-Type' => 'application/json',
-        //     ]
+        //     ],
+        //     'json' => $json,
         // ]);
 
-        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI4ZjllYjNmNi02ZWZhLTRmZWYtODk1ZS1kMWJjNDRiYTQ4MWQiLCJqdGkiOiJkZGQ0MjhlYjA1NDUwZDI4NTI5NGI1OTUxZDgyYmJhOGNmMzM1Mzg5NDlhYjMyOWIzZjRkN2JiOTczMDBhNjBiZmFhYzg3NmJmOTYxYzBhZiIsImlhdCI6MTcxMzM1MjM0NS42Nzg5NjksIm5iZiI6MTcxMzM1MjM0NS42Nzg5NjksImV4cCI6MTg3MTExODc0NS42MzcxOSwic3ViIjoiOWJkNDE2NzQtNzU4Yi00OGMwLTlkMjItOGI2YjlkMDI3N2YzIiwic2NvcGVzIjpbImdlbmVyYWwucmVhZCIsIm9yZGVycy5saW1pdGVkLnJlYWQiLCJvcmRlcnMubGltaXRlZC5jcmVhdGUiLCJvcmRlcnMubGltaXRlZC5wYXkiLCJvcmRlcnMubGltaXRlZC5kZWxpdmVyIiwib3JkZXJzLmxpbWl0ZWQuZGVjbGluZSJdLCJidXNpbmVzcyI6IjliZDQxNjc0LTg0NjYtNGVhMy05MWRjLWQwMWU4MGRiOTdlMSIsInJlZmVyZW5jZSI6IjE3MDA1NyJ9.PAs-FOMsYUchrXeUiveDC9vI4pzkXbZgxAiFuSuFl0dnBKoZYulW1CZdyLVuJ9VPqXZZYkFEKHHzMvhZgOj96zK4EjoP_9sw5_Ia20xuCUxVdrRNeUmjPigRYXDMc7Kmry3udyZH-baHzm4iLdA8UevSpAxS-vU-R8l3PTYj8E22Fjj_Zp05PLI1n8o-oMBO4mG6RlOI2KqjvIVjBmfstdGor_mo3mNetVzL3DmO979PuwT4SZwSeoRoS0W-JysDywdpDwAkWp7rmoio1PPwmodkYbYKgncx5sCfigdpkZbfv64_SVbY0LhvCH9Pynfm1bSfv0NkWj6th7xiYjXC73Tfm9d8M278jtXd5Aemhn8ze-2I3qXrLMMhHB3MklHfxdqG40fvyZ0Ts_6YN8k-2aI3-pVn15Eft04ypfVmMljYmebQcmiW5eZgT8cQUyEmgx9daHITFNUgYGgFdJUAcRZq1-69besv54UF477Nk3nSPf-WyyUmKXTp7l9NzuAIfKc-lQ1-WY_TXK16wl9m-VbYvmhfhq8X6lMrGhhY8jeipNQYa-AURUexTlB8YBd7KlhpnjKThXNBC3P7GL7AxQr-uUFolYkq9VVj032yMM17P_vEGhew1XXGcjJehK6AREMX5arSw3YwpcEON61RkfYzKmR1pW106597H8h6iwo";
+        // $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI4ZjllYjNmNi02ZWZhLTRmZWYtODk1ZS1kMWJjNDRiYTQ4MWQiLCJqdGkiOiJkZGQ0MjhlYjA1NDUwZDI4NTI5NGI1OTUxZDgyYmJhOGNmMzM1Mzg5NDlhYjMyOWIzZjRkN2JiOTczMDBhNjBiZmFhYzg3NmJmOTYxYzBhZiIsImlhdCI6MTcxMzM1MjM0NS42Nzg5NjksIm5iZiI6MTcxMzM1MjM0NS42Nzg5NjksImV4cCI6MTg3MTExODc0NS42MzcxOSwic3ViIjoiOWJkNDE2NzQtNzU4Yi00OGMwLTlkMjItOGI2YjlkMDI3N2YzIiwic2NvcGVzIjpbImdlbmVyYWwucmVhZCIsIm9yZGVycy5saW1pdGVkLnJlYWQiLCJvcmRlcnMubGltaXRlZC5jcmVhdGUiLCJvcmRlcnMubGltaXRlZC5wYXkiLCJvcmRlcnMubGltaXRlZC5kZWxpdmVyIiwib3JkZXJzLmxpbWl0ZWQuZGVjbGluZSJdLCJidXNpbmVzcyI6IjliZDQxNjc0LTg0NjYtNGVhMy05MWRjLWQwMWU4MGRiOTdlMSIsInJlZmVyZW5jZSI6IjE3MDA1NyJ9.PAs-FOMsYUchrXeUiveDC9vI4pzkXbZgxAiFuSuFl0dnBKoZYulW1CZdyLVuJ9VPqXZZYkFEKHHzMvhZgOj96zK4EjoP_9sw5_Ia20xuCUxVdrRNeUmjPigRYXDMc7Kmry3udyZH-baHzm4iLdA8UevSpAxS-vU-R8l3PTYj8E22Fjj_Zp05PLI1n8o-oMBO4mG6RlOI2KqjvIVjBmfstdGor_mo3mNetVzL3DmO979PuwT4SZwSeoRoS0W-JysDywdpDwAkWp7rmoio1PPwmodkYbYKgncx5sCfigdpkZbfv64_SVbY0LhvCH9Pynfm1bSfv0NkWj6th7xiYjXC73Tfm9d8M278jtXd5Aemhn8ze-2I3qXrLMMhHB3MklHfxdqG40fvyZ0Ts_6YN8k-2aI3-pVn15Eft04ypfVmMljYmebQcmiW5eZgT8cQUyEmgx9daHITFNUgYGgFdJUAcRZq1-69besv54UF477Nk3nSPf-WyyUmKXTp7l9NzuAIfKc-lQ1-WY_TXK16wl9m-VbYvmhfhq8X6lMrGhhY8jeipNQYa-AURUexTlB8YBd7KlhpnjKThXNBC3P7GL7AxQr-uUFolYkq9VVj032yMM17P_vEGhew1XXGcjJehK6AREMX5arSw3YwpcEON61RkfYzKmR1pW106597H8h6iwo";
+
+        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5YmUwN2NjMS1hYjcwLTQzNzQtYTAyOC1lMmNiZjhlYjk4MDMiLCJqdGkiOiJmMDY4MzJiY2E4Y2Q2OWQ2ZTgzMWVjNDZhNWI2ZTdlNDA4ZjE5M2RkZWY3YTliMjVhNDY2YmIyMTk4ZWI2Yjg5NDdjNWIyMzk2MjdhYzRjMiIsImlhdCI6MTcxMzk1NjMyNS4zMDEyMTMsIm5iZiI6MTcxMzk1NjMyNS4zMDEyMTMsImV4cCI6MTg3MTcyMjcyNS4yNjc1MjMsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOTYwZmIyYTctMTJmMS00ZWZhLWI1NjctY2FlYmI2MDZiMDMxIiwicmVmZXJlbmNlIjoiOTQ5NDMwIn0.kJXEXgFsfgSyFU4TH2VU_Y5y1YsHs1ZUw2ndQ4zv7bMo-AxRUiHxN9ZwCO8RceeMWyMr5zyCbg1kwDXtp_okXUYb0BN5ytHw3s3Vz8bNFGuJVYVPwo1InvY_z8yeNT3LmwJMO6xvIgv9LbicH1cS1u0fYRbjegWBNHXDlLkPSj4LhkN3ZPP4XcxjNJXsn2QfGaKtk-TiHY2DUqhf-WSPG6O2YlD-sLXVM3QP8ir6ggYuznQ81YYhsKj6Ha_TnSX8hxdCVDeSYN2HBp91f98jMKf8YBHgiFSfmFm_NBvprNcf7JcCiqubpWPmeeT0lfpuNQvFOQknjMXAMbfMAGN8YOf7d38Z3HSzv5yVjb18bf3ZFat0y3EIOHLHmYC_oceC4OaCQvaz0yuFsdjnG0_Lz2kqtDPGW40aKURYMarW4IqELH8dsUG7F1ZJ5W62WCYfToGzEsRdhZ2d1TA6vPS_62B1Hgu9xg4BAVKb_edhNEYp8xA6nbh3CL8U3MUUSKEJ7AVW3T-vPHjk7C1xqd7oXPlzjplz40i5tSLxlGerEQVRGaiypKzjc3Dpgq4IqqkJHi5Rs1nVTcI7JPs-UtCw9-PYbkviRhpebvtsLh53qfgPjA583U0KiLzN6Nhl4vFRwZ7cLcxNgUffcYqpMt4XKGsXG_pGpc6WEdPu0HP8Le0";
 
         $price = 0;
         $json = [
-            "type" => 2,
+            "type" => 3,
             "status" => 1,
             "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
             "discount_amount" => $order->discount_applied ?? 0,
-            'branch_id' => "9bd416a8-f084-49d9-968f-ae938aff391a",
-            "due_at" => date('Y-m-d H:i:s', strtotime($order->delivery_date . "+1 year")),
+            'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
+            "due_at" => date('Y-m-d H:i:s', strtotime($order->delivery_date)),
             "customer_notes" => $order->comment ?? "",
             "kitchen_notes" => $order->comment ?? "",
             "coupon_code" => $order->applied_discount_code ?? "",
             "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
-            "driver_id" => "9bd8bca9-67c8-4be3-9951-e2ce7db8b2a5"
         ];
 
-        foreach ($order_products as $pro) {
+        foreach ($order_products as $k => $pro) {
 
-            $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
-            $json['products'][] = [
-                "product_id" => $pro->size->foodics_integrate_id ?? "9bd84b46-4329-4851-b785-47a48151bc61",
-                "quantity" => $pro->quantity ?? 1,
-                "unit_price" => $pro->size->sale_price,
-                "total_price" => $total_price,
-            ];
+            if ($pro->size && isset($pro->size->foodics_integrate_id)) {
+                $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
+                $json['products'][$k] = [
+                    "product_id" =>  $pro->size->foodics_integrate_id,
+                    "quantity" => $pro->quantity ?? 1,
+                    "unit_price" => $pro->size->sale_price,
+                    "total_price" => $total_price,
+                ];
 
-            $price += $total_price;
+                if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => $pro->preparation->foodics_integrate_id,
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => $pro->cut->foodics_integrate_id,
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                if (!$pro->is_kwar3) { // with
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9bb26f2b-0ce3-4319-a923-6bf3c380bbf1',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                } else { //without
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                if (!$pro->is_Ras) { // with
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9bb26f4b-1679-44f5-a212-8462ceb1124c',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                } else { //without
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                if (!$pro->is_lyh) { // with
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9bb26f10-b4d4-4ab0-94ba-46431929f0d4',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                } else { //without
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                if (!$pro->is_karashah) { // with
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9bb0ff4a-0db0-46e7-9df8-8c4d8586e993',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                } else { //without
+                    $json['products'][$k]['options'][] = [
+                        "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
+                        "quantity" => 1,
+                        "unit_price" => 0
+                    ];
+                }
+
+                $price += $total_price;
+            }
         }
 
         $json['subtotal_price'] = $order->order_subtotal ?? $price;
         $json['total_price'] = $order->total_amount_after_discount ?? $price;
 
         // dd($json);
-        $response = $httpClient->post('https://api-sandbox.foodics.com/v5/orders', [
-            'headers' => [
-                'Authorization' => "Bearer $token",
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $json,
-        ]);
 
-        $statusCode = $response->getStatusCode();
-        $responseBody = $response->getBody()->getContents();
+        try {
+
+            $response = $httpClient->post('https://api.foodics.com/v5/orders', [
+                'headers' => [
+                    'Authorization' => "Bearer $token",
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $json,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $responseBody = $response->getBody()->getContents();
+        } catch (\Throwable $th) {
+            //throw $th;
+            return $json;
+        }
+
 
         // Handle the response accordingly
         if ($statusCode == 200) {
@@ -822,6 +905,11 @@ class OrderController extends Controller
 
             $this->storeOrderProducts($request->products, $order);
 
+            if (request('country_id') == 1) {
+
+                // $order = $this->SyncOrderToFoodics($order);
+            }
+
             return response()->json([
                 'success' => true, 'data' => $order,
                 'message' => '', 'description' => '', 'code' => '200'
@@ -1404,6 +1492,11 @@ class OrderController extends Controller
         }
 
         $paymentType = PaymentType::find($validated['payment_type_id']);
+
+        if ($country->id == 1) {
+
+            //     $this->SyncOrderToFoodics($createdOrder);
+        }
 
         if ($paymentType->code === "COD" || $TotalAmountAfterDiscount == 0) { // cod
 
