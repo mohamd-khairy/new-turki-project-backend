@@ -41,14 +41,15 @@ class ProductPreparationController extends Controller
         $validateDate = $request->validate([
             'price' => 'required|numeric',
             'name_ar' => 'required|max:255',
-            'name_en' => 'required|max:255'
+            'name_en' => 'required|max:255',
+            'foodics_integrate_id' => 'nullable',
         ]);
 
         $productPreparation = Preparation::create($validateDate);
         if ($productPreparation) {
-            
+
                 return response()->json(['success' => 'true','data'=> $productPreparation,
-                'message'=> 'Successfully Added!', 'description'=> 'Add Preparations', 'code'=>'200'],200);    
+                'message'=> 'Successfully Added!', 'description'=> 'Add Preparations', 'code'=>'200'],200);
         }
 
         return response()->json(['message' => 'Something went wrong!'], 500);
@@ -78,7 +79,7 @@ class ProductPreparationController extends Controller
     {
             $productPreparation->is_active = !$productPreparation->is_active;
             if ($productPreparation->update()) {
-             
+
                 return response()->json(['message' => 'Successfully updated!', 'data' => $productPreparation], 200);
             }
         return response()->json(['message' => 'Something went wrong!'], 500);
@@ -91,7 +92,8 @@ class ProductPreparationController extends Controller
         $validateDate = $request->validate([
             'price' => 'nullable|numeric',
             'name_ar' => 'nullable|max:255',
-            'name_en' => 'nullable|max:255'
+            'name_en' => 'nullable|max:255',
+            'foodics_integrate_id' => 'nullable',
         ]);
 
         if ($productPreparation->update($validateDate)) {

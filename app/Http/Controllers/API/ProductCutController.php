@@ -46,6 +46,7 @@ class ProductCutController extends Controller
             'name_ar' => 'required|max:255',
             'name_en' => 'required|max:255',
             'price' => 'required|numeric',
+            'foodics_integrate_id' => 'nullable',
         ]);
 
         $productCut = Cut::create($validateDate);
@@ -93,7 +94,8 @@ class ProductCutController extends Controller
         $validateDate = $request->validate([
             'price' => 'nullable|numeric',
             'name_ar' => 'nullable|max:255',
-            'name_en' => 'nullable|max:255'
+            'name_en' => 'nullable|max:255',
+            'foodics_integrate_id' => 'nullable',
         ]);
 
         if ($productCut->update($validateDate)) {
