@@ -65,16 +65,19 @@ class OrderController extends Controller
 
         $price = 0;
         $json = [
-            "type" => 3,
-            "status" => 1,
+            "type" => 2,
+            "status" => true,
             "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
             "discount_amount" => $order->discount_applied ?? 0,
             'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
             "due_at" => date('Y-m-d H:i:s', strtotime($order->delivery_date)),
             "customer_notes" => $order->comment ?? "",
-            "kitchen_notes" => $order->comment ?? "",
+            "kitchen_notes" => $order->ref_no ?? "",
             "coupon_code" => $order->applied_discount_code ?? "",
             "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
+            "meta" => [
+                "3rd_party_order_number" => $order->ref_no ?? "111"
+            ],
         ];
 
         foreach ($order_products as $k => $pro) {
@@ -104,61 +107,65 @@ class OrderController extends Controller
                     ];
                 }
 
-                if (!$pro->is_kwar3) { // with
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9bb26f2b-0ce3-4319-a923-6bf3c380bbf1',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                } else { //without
+                if ($pro->is_kwar3) { //  without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
                         "quantity" => 1,
                         "unit_price" => 0
                     ];
                 }
+                // else { //with
+                //     $json['products'][$k]['options'][] = [
+                //         "modifier_option_id" => '9bb26f2b-0ce3-4319-a923-6bf3c380bbf1',
+                //         "quantity" => 1,
+                //         "unit_price" => 0
+                //     ];
+                // }
 
-                if (!$pro->is_Ras) { // with
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9bb26f4b-1679-44f5-a212-8462ceb1124c',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                } else { //without
+                if ($pro->is_Ras) { // without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
                         "quantity" => 1,
                         "unit_price" => 0
                     ];
                 }
+                // else { // with
+                //     $json['products'][$k]['options'][] = [
+                //         "modifier_option_id" => '9bb26f4b-1679-44f5-a212-8462ceb1124c',
+                //         "quantity" => 1,
+                //         "unit_price" => 0
+                //     ];
+                // }
 
-                if (!$pro->is_lyh) { // with
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9bb26f10-b4d4-4ab0-94ba-46431929f0d4',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                } else { //without
+                if ($pro->is_lyh) { //  without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
                         "quantity" => 1,
                         "unit_price" => 0
                     ];
                 }
+                //  else { // with
+                //     $json['products'][$k]['options'][] = [
+                //         "modifier_option_id" => '9bb26f10-b4d4-4ab0-94ba-46431929f0d4',
+                //         "quantity" => 1,
+                //         "unit_price" => 0
+                //     ];
+                // }
 
-                if (!$pro->is_karashah) { // with
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9bb0ff4a-0db0-46e7-9df8-8c4d8586e993',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                } else { //without
+                if ($pro->is_karashah) { //  without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
                         "quantity" => 1,
                         "unit_price" => 0
                     ];
                 }
+                //  else { //with
+                //     $json['products'][$k]['options'][] = [
+                //         "modifier_option_id" => '9bb0ff4a-0db0-46e7-9df8-8c4d8586e993',
+                //         "quantity" => 1,
+                //         "unit_price" => 0
+                //     ];
+                // }
 
                 $price += $total_price;
             }
@@ -169,33 +176,23 @@ class OrderController extends Controller
 
         // dd($json);
 
-        try {
 
-            $response = $httpClient->post('https://api.foodics.com/v5/orders', [
-                'headers' => [
-                    'Authorization' => "Bearer $token",
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $json,
-            ]);
+        $response = $httpClient->post('https://api.foodics.com/v5/orders', [
+            'headers' => [
+                'Authorization' => "Bearer $token",
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $json,
+        ]);
 
-            $statusCode = $response->getStatusCode();
-            $responseBody = $response->getBody()->getContents();
-        } catch (\Throwable $th) {
-            //throw $th;
-            return $json;
-        }
+        $statusCode = $response->getStatusCode();
+        $responseBody = $response->getBody()->getContents();
 
-
-        // Handle the response accordingly
         if ($statusCode == 200) {
             // Successful response
-            return $responseBody;
-        } else {
-
-            // Error handling
-            return response()->json(['error' => 'Failed to create order'], $statusCode);
+            return  $responseBody;
         }
+        return [];
     }
 
     public function assignUserOrder(Request $request)
@@ -905,9 +902,18 @@ class OrderController extends Controller
 
             $this->storeOrderProducts($request->products, $order);
 
-            if (request('country_id') == 1) {
+            try {
 
-                // $order = $this->SyncOrderToFoodics($order);
+                if (request('country_id') == 1) {
+
+                    $x = $this->SyncOrderToFoodics($order);
+                    if (isset(json_decode($x, true)['data']['id'])) {
+                        $order->update(['foodics_integrate_id' => json_decode($x, true)['data']['id']]);
+                    }
+                }
+                //code...
+            } catch (\Throwable $th) {
+                //throw $th;
             }
 
             return response()->json([
@@ -1493,9 +1499,19 @@ class OrderController extends Controller
 
         $paymentType = PaymentType::find($validated['payment_type_id']);
 
-        if ($country->id == 1) {
+        try {
 
-            //     $this->SyncOrderToFoodics($createdOrder);
+            if ($country->id == 1) {
+
+                $x = $this->SyncOrderToFoodics($createdOrder);
+
+                if (isset(json_decode($x, true)['data']['id'])) {
+                    $createdOrder->update(['foodics_integrate_id' => json_decode($x, true)['data']['id']]);
+                }
+            }
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
         }
 
         if ($paymentType->code === "COD" || $TotalAmountAfterDiscount == 0) { // cod
