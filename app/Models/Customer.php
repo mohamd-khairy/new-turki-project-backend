@@ -40,7 +40,8 @@ class Customer extends Authenticatable
         'wallet',
         'integrate_id',
         'deleted_at',
-        'loyalty_points'
+        'loyalty_points',
+        'foodics_integrate_id'
     ];
 
     protected $hidden = [
@@ -56,6 +57,16 @@ class Customer extends Authenticatable
     protected $casts = [
         'disabledDate' => 'datetime'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($model) {
+            // This code will be executed when a new record is being created
+            $res = foodics_create_customer($model);
+        });
+    }
 
     public function getNameMobileAttribute()
     {

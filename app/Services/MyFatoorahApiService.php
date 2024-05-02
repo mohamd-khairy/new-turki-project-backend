@@ -184,7 +184,7 @@ class MyFatoorahApiService
             //     }
 
             //  }
-            TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
+            // TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
             //   $order = $this->orderRepository->update(['order_status_id' => '14'], $CustomerReference);
             // background-color: #e7c05d;
             //
@@ -282,6 +282,10 @@ class MyFatoorahApiService
                         "paid" => 1,
                     ]);
 
+                    if ($order->selectedAddress->country_id == 1) {
+                        OrderToFoodics($order->ref_no);
+                    }
+
                     $objOrder = $order;
                     $order = $order->toArray();
 
@@ -356,7 +360,7 @@ class MyFatoorahApiService
 
     public function Get_Payment_Status(Request $request)
     {
-        TraceError::create(['class_name' => "MyFatoorahApiService", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($request->all())]);
+        // TraceError::create(['class_name' => "MyFatoorahApiService", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($request->all())]);
 
         $input = $request->all();
         $paymentId = $input['paymentId'];
@@ -409,10 +413,11 @@ class MyFatoorahApiService
             return 'Please check your myfatoora API-KEY';
             return $this->sendError($err);
         } else {
+
             $res_arr = json_decode($res, true);
 
-            $InvoiceStatus = $res_arr['Data']['InvoiceStatus'];
-            $CustomerReference = $res_arr['Data']['CustomerReference'];
+            $InvoiceStatus = $res_arr['Data']['InvoiceStatus'] ?? null;
+            $CustomerReference = $res_arr['Data']['CustomerReference'] ?? null;
 
             //  if ($InvoiceStatus == 'Pending') {
 
@@ -430,7 +435,7 @@ class MyFatoorahApiService
             //     }
 
             //  }
-            TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
+            // TraceError::create(['class_name' => "MyFatoorahApiService 151", 'method_name' => $request->query('Get_Payment_Status'), 'error_desc' => json_encode($res_arr)]);
             //   $order = $this->orderRepository->update(['order_status_id' => '14'], $CustomerReference);
 
             // background-color: #e7c05d;
@@ -523,6 +528,11 @@ class MyFatoorahApiService
                     $order->update([
                         "paid" => 1,
                     ]);
+
+
+                    if ($order->selectedAddress->country_id == 1) {
+                        OrderToFoodics($order->ref_no);
+                    }
 
                     $objOrder = $order;
                     $order = $order->toArray();

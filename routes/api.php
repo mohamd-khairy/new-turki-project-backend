@@ -46,7 +46,6 @@ use App\Services\TabbyApiService;
 |
 */
 
-Route::get('foodics', [OrderController::class, 'SyncOrderToFoodics']);
 Route::prefix("v2")->group(function () {
 
     /************************************************** public routes ******************************************************** */

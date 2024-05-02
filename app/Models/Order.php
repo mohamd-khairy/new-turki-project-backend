@@ -70,14 +70,14 @@ class Order extends Model
 
     public function getRemainAmountAttribute()
     {
-        return  ($this->payment && $this->payment->status == 'Paid' ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
+        return ($this->payment && $this->payment->status == 'Paid' ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
     }
 
     public function getTotalAmountAfterTaxAttribute()
     {
         $per = 1.15;
         if (isset($this->selectedAddress->country_id) && $this->selectedAddress->country_id == 4) {
-            $per = 1;//1.05;
+            $per = 1; //1.05;
         }
         return  $this->total_amount_after_discount ? round($this->total_amount_after_discount / $per, 2) : 0;
     }
@@ -134,7 +134,7 @@ class Order extends Model
 
     public function selectedAddress()
     {
-        return $this->belongsTo(Address::class, 'address_id')->select(['id', 'address', 'comment', 'label', 'long', 'lat', 'country_id']);
+        return $this->belongsTo(Address::class, 'address_id')->with('customer')->select(['id', 'address', 'comment', 'label', 'long', 'lat', 'country_id', 'foodics_integrate_id', 'customer_id']);
     }
 
     public function deliveryPeriod()
@@ -144,7 +144,7 @@ class Order extends Model
 
     public function paidpayment()
     {
-        return $this->belongsTo(Payment::class, 'payment_id')->where('status' , 'Paid')->latest();
+        return $this->belongsTo(Payment::class, 'payment_id')->where('status', 'Paid')->latest();
     }
 
     public function payment()

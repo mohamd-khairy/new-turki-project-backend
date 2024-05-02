@@ -16,15 +16,19 @@ class AddFoodicsIntegrateIdToTables extends Migration
         Schema::table('sizes', function (Blueprint $table) {
             $table->string('foodics_integrate_id')->nullable();
         });
-
         Schema::table('cuts', function (Blueprint $table) {
             $table->string('foodics_integrate_id')->nullable();
         });
-
         Schema::table('preparations', function (Blueprint $table) {
             $table->string('foodics_integrate_id')->nullable();
         });
         Schema::table('orders', function (Blueprint $table) {
+            $table->string('foodics_integrate_id')->nullable();
+        });
+        Schema::table('customers', function (Blueprint $table) {
+            $table->string('foodics_integrate_id')->nullable();
+        });
+        Schema::table('addresses', function (Blueprint $table) {
             $table->string('foodics_integrate_id')->nullable();
         });
     }
@@ -39,16 +43,19 @@ class AddFoodicsIntegrateIdToTables extends Migration
         Schema::table('sizes', function (Blueprint $table) {
             $table->dropColumn('foodics_integrate_id');
         });
-
         Schema::table('cuts', function (Blueprint $table) {
             $table->dropColumn('foodics_integrate_id');
         });
-
         Schema::table('preparations', function (Blueprint $table) {
             $table->dropColumn('foodics_integrate_id');
         });
-
         Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn('foodics_integrate_id');
+        });
+        Schema::table('customers', function (Blueprint $table) {
+            $table->dropColumn('foodics_integrate_id');
+        });
+        Schema::table('addresses', function (Blueprint $table) {
             $table->dropColumn('foodics_integrate_id');
         });
     }

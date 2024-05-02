@@ -43,158 +43,6 @@ class OrderController extends Controller
         }
     }
 
-    public function SyncOrderToFoodics($order = null)
-    {
-        // $order = $order ?? Order::latest()->first();
-        // dd($order->toArray());
-        $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
-        $httpClient = new Client();
-
-
-        // $response = $httpClient->post('https://api-sandbox.foodics.com/v5/orders', [
-        //     'headers' => [
-        //         'Authorization' => "Bearer $token",
-        //         'Content-Type' => 'application/json',
-        //     ],
-        //     'json' => $json,
-        // ]);
-
-        // $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI4ZjllYjNmNi02ZWZhLTRmZWYtODk1ZS1kMWJjNDRiYTQ4MWQiLCJqdGkiOiJkZGQ0MjhlYjA1NDUwZDI4NTI5NGI1OTUxZDgyYmJhOGNmMzM1Mzg5NDlhYjMyOWIzZjRkN2JiOTczMDBhNjBiZmFhYzg3NmJmOTYxYzBhZiIsImlhdCI6MTcxMzM1MjM0NS42Nzg5NjksIm5iZiI6MTcxMzM1MjM0NS42Nzg5NjksImV4cCI6MTg3MTExODc0NS42MzcxOSwic3ViIjoiOWJkNDE2NzQtNzU4Yi00OGMwLTlkMjItOGI2YjlkMDI3N2YzIiwic2NvcGVzIjpbImdlbmVyYWwucmVhZCIsIm9yZGVycy5saW1pdGVkLnJlYWQiLCJvcmRlcnMubGltaXRlZC5jcmVhdGUiLCJvcmRlcnMubGltaXRlZC5wYXkiLCJvcmRlcnMubGltaXRlZC5kZWxpdmVyIiwib3JkZXJzLmxpbWl0ZWQuZGVjbGluZSJdLCJidXNpbmVzcyI6IjliZDQxNjc0LTg0NjYtNGVhMy05MWRjLWQwMWU4MGRiOTdlMSIsInJlZmVyZW5jZSI6IjE3MDA1NyJ9.PAs-FOMsYUchrXeUiveDC9vI4pzkXbZgxAiFuSuFl0dnBKoZYulW1CZdyLVuJ9VPqXZZYkFEKHHzMvhZgOj96zK4EjoP_9sw5_Ia20xuCUxVdrRNeUmjPigRYXDMc7Kmry3udyZH-baHzm4iLdA8UevSpAxS-vU-R8l3PTYj8E22Fjj_Zp05PLI1n8o-oMBO4mG6RlOI2KqjvIVjBmfstdGor_mo3mNetVzL3DmO979PuwT4SZwSeoRoS0W-JysDywdpDwAkWp7rmoio1PPwmodkYbYKgncx5sCfigdpkZbfv64_SVbY0LhvCH9Pynfm1bSfv0NkWj6th7xiYjXC73Tfm9d8M278jtXd5Aemhn8ze-2I3qXrLMMhHB3MklHfxdqG40fvyZ0Ts_6YN8k-2aI3-pVn15Eft04ypfVmMljYmebQcmiW5eZgT8cQUyEmgx9daHITFNUgYGgFdJUAcRZq1-69besv54UF477Nk3nSPf-WyyUmKXTp7l9NzuAIfKc-lQ1-WY_TXK16wl9m-VbYvmhfhq8X6lMrGhhY8jeipNQYa-AURUexTlB8YBd7KlhpnjKThXNBC3P7GL7AxQr-uUFolYkq9VVj032yMM17P_vEGhew1XXGcjJehK6AREMX5arSw3YwpcEON61RkfYzKmR1pW106597H8h6iwo";
-
-        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5YmUwN2NjMS1hYjcwLTQzNzQtYTAyOC1lMmNiZjhlYjk4MDMiLCJqdGkiOiJmMDY4MzJiY2E4Y2Q2OWQ2ZTgzMWVjNDZhNWI2ZTdlNDA4ZjE5M2RkZWY3YTliMjVhNDY2YmIyMTk4ZWI2Yjg5NDdjNWIyMzk2MjdhYzRjMiIsImlhdCI6MTcxMzk1NjMyNS4zMDEyMTMsIm5iZiI6MTcxMzk1NjMyNS4zMDEyMTMsImV4cCI6MTg3MTcyMjcyNS4yNjc1MjMsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOTYwZmIyYTctMTJmMS00ZWZhLWI1NjctY2FlYmI2MDZiMDMxIiwicmVmZXJlbmNlIjoiOTQ5NDMwIn0.kJXEXgFsfgSyFU4TH2VU_Y5y1YsHs1ZUw2ndQ4zv7bMo-AxRUiHxN9ZwCO8RceeMWyMr5zyCbg1kwDXtp_okXUYb0BN5ytHw3s3Vz8bNFGuJVYVPwo1InvY_z8yeNT3LmwJMO6xvIgv9LbicH1cS1u0fYRbjegWBNHXDlLkPSj4LhkN3ZPP4XcxjNJXsn2QfGaKtk-TiHY2DUqhf-WSPG6O2YlD-sLXVM3QP8ir6ggYuznQ81YYhsKj6Ha_TnSX8hxdCVDeSYN2HBp91f98jMKf8YBHgiFSfmFm_NBvprNcf7JcCiqubpWPmeeT0lfpuNQvFOQknjMXAMbfMAGN8YOf7d38Z3HSzv5yVjb18bf3ZFat0y3EIOHLHmYC_oceC4OaCQvaz0yuFsdjnG0_Lz2kqtDPGW40aKURYMarW4IqELH8dsUG7F1ZJ5W62WCYfToGzEsRdhZ2d1TA6vPS_62B1Hgu9xg4BAVKb_edhNEYp8xA6nbh3CL8U3MUUSKEJ7AVW3T-vPHjk7C1xqd7oXPlzjplz40i5tSLxlGerEQVRGaiypKzjc3Dpgq4IqqkJHi5Rs1nVTcI7JPs-UtCw9-PYbkviRhpebvtsLh53qfgPjA583U0KiLzN6Nhl4vFRwZ7cLcxNgUffcYqpMt4XKGsXG_pGpc6WEdPu0HP8Le0";
-
-        $price = 0;
-        $json = [
-            "type" => 2,
-            "status" => true,
-            "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
-            "discount_amount" => $order->discount_applied ?? 0,
-            'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
-            "due_at" => date('Y-m-d H:i:s', strtotime($order->delivery_date)),
-            "customer_notes" => $order->comment ?? "",
-            "kitchen_notes" => $order->ref_no ?? "",
-            "coupon_code" => $order->applied_discount_code ?? "",
-            "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
-            "meta" => [
-                "3rd_party_order_number" => $order->ref_no ?? "111"
-            ],
-        ];
-
-        foreach ($order_products as $k => $pro) {
-
-            if ($pro->size && isset($pro->size->foodics_integrate_id)) {
-                $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
-                $json['products'][$k] = [
-                    "product_id" =>  $pro->size->foodics_integrate_id,
-                    "quantity" => $pro->quantity ?? 1,
-                    "unit_price" => $pro->size->sale_price,
-                    "total_price" => $total_price,
-                ];
-
-                if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => $pro->preparation->foodics_integrate_id,
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-
-                if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => $pro->cut->foodics_integrate_id,
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-
-                if ($pro->is_kwar3) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-                // else { //with
-                //     $json['products'][$k]['options'][] = [
-                //         "modifier_option_id" => '9bb26f2b-0ce3-4319-a923-6bf3c380bbf1',
-                //         "quantity" => 1,
-                //         "unit_price" => 0
-                //     ];
-                // }
-
-                if ($pro->is_Ras) { // without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-                // else { // with
-                //     $json['products'][$k]['options'][] = [
-                //         "modifier_option_id" => '9bb26f4b-1679-44f5-a212-8462ceb1124c',
-                //         "quantity" => 1,
-                //         "unit_price" => 0
-                //     ];
-                // }
-
-                if ($pro->is_lyh) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-                //  else { // with
-                //     $json['products'][$k]['options'][] = [
-                //         "modifier_option_id" => '9bb26f10-b4d4-4ab0-94ba-46431929f0d4',
-                //         "quantity" => 1,
-                //         "unit_price" => 0
-                //     ];
-                // }
-
-                if ($pro->is_karashah) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
-                        "quantity" => 1,
-                        "unit_price" => 0
-                    ];
-                }
-                //  else { //with
-                //     $json['products'][$k]['options'][] = [
-                //         "modifier_option_id" => '9bb0ff4a-0db0-46e7-9df8-8c4d8586e993',
-                //         "quantity" => 1,
-                //         "unit_price" => 0
-                //     ];
-                // }
-
-                $price += $total_price;
-            }
-        }
-
-        $json['subtotal_price'] = $order->order_subtotal ?? $price;
-        $json['total_price'] = $order->total_amount_after_discount ?? $price;
-
-        // dd($json);
-
-
-        $response = $httpClient->post('https://api.foodics.com/v5/orders', [
-            'headers' => [
-                'Authorization' => "Bearer $token",
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $json,
-        ]);
-
-        $statusCode = $response->getStatusCode();
-        $responseBody = $response->getBody()->getContents();
-
-        if ($statusCode == 200) {
-            // Successful response
-            return  $responseBody;
-        }
-        return [];
-    }
-
     public function assignUserOrder(Request $request)
     {
         $request->validate([
@@ -248,6 +96,7 @@ class OrderController extends Controller
                 'shalwatas.name_ar as shalwata_name',
                 'shalwatas.price as shalwata_price',
                 'payment_types.name_ar as payment_type_name',
+                'payment_types.code as payment_type_code',
                 'delivery_periods.name_ar as delivery_period_name',
                 'delivery_periods.time_hhmm as delivery_period_time',
                 'payments.price as payment_price',
@@ -563,6 +412,7 @@ class OrderController extends Controller
             $order->remain_amount = ($order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0) + $order->wallet_amount_used;
 
             if (!$order->paid && $order->remain_amount <= 0) {
+
                 Order::where('id', $order->id)->update(['paid' => 1]);
             }
         } else {
@@ -902,19 +752,7 @@ class OrderController extends Controller
 
             $this->storeOrderProducts($request->products, $order);
 
-            try {
-
-                if (request('country_id') == 1) {
-
-                    $x = $this->SyncOrderToFoodics($order);
-                    if (isset(json_decode($x, true)['data']['id'])) {
-                        $order->update(['foodics_integrate_id' => json_decode($x, true)['data']['id']]);
-                    }
-                }
-                //code...
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
+            OrderToFoodics($order->ref_no);
 
             return response()->json([
                 'success' => true, 'data' => $order,
@@ -1499,20 +1337,6 @@ class OrderController extends Controller
 
         $paymentType = PaymentType::find($validated['payment_type_id']);
 
-        try {
-
-            if ($country->id == 1) {
-
-                $x = $this->SyncOrderToFoodics($createdOrder);
-
-                if (isset(json_decode($x, true)['data']['id'])) {
-                    $createdOrder->update(['foodics_integrate_id' => json_decode($x, true)['data']['id']]);
-                }
-            }
-            //code...
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
 
         if ($paymentType->code === "COD" || $TotalAmountAfterDiscount == 0) { // cod
 
@@ -1549,6 +1373,8 @@ class OrderController extends Controller
                 //throw $th;
             }
 
+            OrderToFoodics($createdOrder->ref_no);
+
             // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
             // $res2 = $res->custrecord_trk_order_saleorder->internalid;
@@ -1573,6 +1399,7 @@ class OrderController extends Controller
 
                 if ($paymentType->active === 1) {
                     $paymentRes = app(MyFatoorahApiService::class)->Set_Payment_myfatoora($customer, $createdOrder, $paymentType, $country, 'KSA');
+
                 } else {
                     return response()->json([
                         'success' => true, 'data' => $createdOrder,
@@ -1591,6 +1418,8 @@ class OrderController extends Controller
 
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
+
+
 
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
@@ -1653,7 +1482,6 @@ class OrderController extends Controller
                     $paymentRes = app(TamaraApiService::class)->checkoutTamara($customer, $address, $createdOrder, $validated['tamara_payment_name'], $country);
                 }
 
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
                     'message' => '', 'description' => '', 'code' => '200'
@@ -1681,7 +1509,6 @@ class OrderController extends Controller
                     $paymentRes = app(TamaraApiServiceV2::class)->checkoutTamara($customer, $address, $createdOrder, $validated['tamara_payment_name'], $country);
                 }
 
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
                     'message' => '', 'description' => '', 'code' => '200'
@@ -1708,6 +1535,7 @@ class OrderController extends Controller
 
                 $paymentRes = app(MyFatoorahApiService::class)->Set_Payment_myfatoora($customer, $createdOrder, $paymentType, $country);
 
+
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
                 // $res2 = $res->custrecord_trk_order_saleorder->internalid;
@@ -1720,6 +1548,8 @@ class OrderController extends Controller
 
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
+
+
 
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
@@ -1729,6 +1559,7 @@ class OrderController extends Controller
 
                 $paymentRes = app(TabbyApiService::class)->createManualPayment($customer, $address, $createdOrder, $country);
 
+
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
                 // $res2 = $res->custrecord_trk_order_saleorder->internalid;
@@ -1742,6 +1573,7 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
+
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
                     'message' => '', 'description' => '', 'code' => '200'
@@ -1749,7 +1581,7 @@ class OrderController extends Controller
             } elseif ($paymentType->code === "Ngenius") {
 
                 $paymentRes = app(NgeniusPaymentService::class)->createNgeniusPayment($customer, $createdOrder, $paymentType, $country);
-                TraceError::create(['class_name' => "OrderController", 'method_name' => 'create ngenius payment', 'error_desc' => '-' . $order['ref_no'] . '- sending order to Netsuite :' . json_encode($createdOrder)]);
+                //TraceError::create(['class_name' => "OrderController", 'method_name' => 'create ngenius payment', 'error_desc' => '-' . $order['ref_no'] . '- sending order to Netsuite :' . json_encode($createdOrder)]);
 
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
                 // TraceError::create(['class_name' => "OrderController", 'method_name' => 'create ngenius payment', 'error_desc' => '-' . $order['ref_no'] . '- sent order to Netsuite :' . json_encode($res)]);
@@ -1764,6 +1596,7 @@ class OrderController extends Controller
 
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
+
 
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
@@ -1804,7 +1637,9 @@ class OrderController extends Controller
                     //throw $th;
                 }
 
-                TraceError::create(['class_name' => "create order 351", 'method_name' => "Get_Payment_Status", 'error_desc' => json_encode($createdOrder)]);
+                OrderToFoodics($createdOrder->ref_no);
+
+                // TraceError::create(['class_name' => "create order 351", 'method_name' => "Get_Payment_Status", 'error_desc' => json_encode($createdOrder)]);
                 return response()->json([
                     'success' => false, 'data' => $createdOrder,
                     'message' => 'Please, contact support with ref: ' . $createdOrder->ref_no, 'description' => '', 'code' => '400'
@@ -1832,14 +1667,14 @@ class OrderController extends Controller
 
     public function calculateProductsAmount($cart, $discountCode, $shalwata, $totalAddonsAmount, $totalItemsAmount, array $orderProducts): array
     {
-        TraceError::create(['class_name' => "orderController::consumer sent data360", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
+        // TraceError::create(['class_name' => "orderController::consumer sent data360", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
         foreach ($cart as $cartProduct) {
             $product = $cartProduct->product;
             $itemsAmount = 0.0;
             $addonsAmount = 0.0;
             //   $discountCode = $cartProduct->applied_discount_code;
             $comment = $cartProduct->comment;
-            TraceError::create(['class_name' => "orderController::consumer sent data368", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
+            // TraceError::create(['class_name' => "orderController::consumer sent data368", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
             if ($cartProduct->preparation_id != null && $product->productPreparations()->find($cartProduct->preparation_id) != null) {
                 $addonsAmount = $addonsAmount + ($cartProduct->quantity * $cartProduct->preparation->price);
             }

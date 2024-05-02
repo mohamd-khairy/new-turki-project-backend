@@ -280,6 +280,8 @@ class TabbyApiService
 
             $order->update(['paid' => 1]);
 
+            OrderToFoodics($order->ref_no);
+
             return $html_head . '
 
 
@@ -371,6 +373,10 @@ class TabbyApiService
             "status" => $validData['paid'] == 1 ? "Paid" : "Unpaid",
             'manual' => 1
         ]);
+
+        if ($validData['paid'] == 1) {
+            OrderToFoodics($validData['order_ref']);
+        }
 
         return response()->json([
             'success' => true, 'message' => 'success', 'description' => "", "code" => "200",

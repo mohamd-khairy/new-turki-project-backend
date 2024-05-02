@@ -334,6 +334,10 @@ class TamaraApiService
                 "status" => $paymentResult == 'approved' ? 'Paid' : "Client's payment process has " . $paymentResult,
                 "price" => (float)$order->total_amount_after_discount,
             ]);
+
+            if ($paymentResult == 'approved') {
+                OrderToFoodics($payment->order_ref_no);
+            }
         }
 
         // background-color: #e7c05d;
@@ -728,7 +732,7 @@ class TamaraApiService
                 // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
                 // $resNetsuiteApi = $callPaymentNetsuiteApi->sendUpdatePaymentToNS($orderArray, $request);
 
-                TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
+                // TraceError::create(['class_name' => "TamaraApiService", 'method_name' => "authoriseOrder:562", 'error_desc' =>  json_encode($res)]);
 
 
                 if (isset($res->status) && $res->status == "authorised") {
@@ -743,6 +747,9 @@ class TamaraApiService
                     ]);
 
                     $order->update(['paid' => 1]);
+
+                    OrderToFoodics($order->ref_no);
+
 
                     //   $orderArray = $order->toArray();
                     //   $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
