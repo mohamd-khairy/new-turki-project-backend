@@ -2,6 +2,7 @@
 
 
 namespace App\Http\Controllers\API;
+
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\City;
@@ -26,30 +27,30 @@ use geoPHP;
 class DiscoverController extends Controller
 {
 
-    public function list(Request $request){
+    public function list(Request $request)
+    {
 
         $active = $request->query('active');
 
-          if($active == "1")
-         {
-             $data = Discover::where('is_active', '1')->get();
+        if ($active == "1") {
+            $data = Discover::where('is_active', '1')->get();
 
-               $data = DiscoverDashboardResource::Collection($data);
+            $data = DiscoverDashboardResource::Collection($data);
 
-              return response()->json(['success' => true,  "data" => $data, 'message' => '', 'description' => "", "code" => "200",
-           ], 200);
-         }
-         elseif($active == "0"){
-
-             $data = Discover::get();
-
-               $data = DiscoverDashboardResource::Collection($data);
-
-              return response()->json(['success' => true, "data" => $data , 'message' => '', 'description' => "", "code" => "200",
+            return response()->json([
+                'success' => true,  "data" => $data, 'message' => '', 'description' => "", "code" => "200",
             ], 200);
-         }
+        } elseif ($active == "0") {
 
-      }
+            $data = Discover::get();
+
+            $data = DiscoverDashboardResource::Collection($data);
+
+            return response()->json([
+                'success' => true, "data" => $data, 'message' => '', 'description' => "", "code" => "200",
+            ], 200);
+        }
+    }
 
 
 
@@ -82,50 +83,55 @@ class DiscoverController extends Controller
 
     // }
 
-     public function listDiscover(Category $category , Request $request){
+    public function listDiscover(Category $category, Request $request)
+    {
 
-         $active = $request->query('active');
+        $active = $request->query('active');
 
-          //  if (Discover::where('category_id', $category->id)->get()->isEmpty())
-          //   return response()->json([],200);
-              //get by location
-    $point = $request->query('longitude') . " " . $request->query('latitude');
-    $countryId = $request->query('countryId');
-    $country = Country::where('code', $countryId)->get()->first();
+        //  if (Discover::where('category_id', $category->id)->get()->isEmpty())
+        //   return response()->json([],200);
+        //get by location
+        $point = $request->query('longitude') . " " . $request->query('latitude');
+        $countryId = $request->query('countryId');
+        $country = Country::where('code', $countryId)->get()->first();
 
-    if ($country === null)
-        return response()->json(['data'=> [],
-            'success' => true, 'message'=> 'success', 'description'=>'this service not available in your country!', 'code'=>'200'],200);
+        if ($country === null)
+            return response()->json([
+                'data' => [],
+                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+            ], 200);
 
-    $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
+        $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
 
-    if ($currentCity != null){
+        if ($currentCity != null) {
 
-        $discoverIds = DiscoverCity::where('city_id', $currentCity->id)->distinct()->pluck('discover_id');
-        $discovers = Discover::whereIn('id', $discoverIds)->where('category_id', $category->id)->where('is_active', '1')->orderBy('id', 'DESC')->get();
-
-    }
-    else
-    $discovers = [];
+            $discoverIds = DiscoverCity::where('city_id', $currentCity->id)->distinct()->pluck('discover_id');
+            $discovers = Discover::whereIn('id', $discoverIds)->where('category_id', $category->id)->where('is_active', '1')->orderBy('id', 'DESC')->get();
+        } else
+            $discovers = [];
 
         $data =  DiscoverListResource::collection($discovers);
-        return response()->json(['success' => true ,'data'=> $data,
-        'message'=> 'Categories retrieved successfully', 'description'=> 'list Of Categories', 'code'=>'200'],200);
-
+        return response()->json([
+            'success' => true, 'data' => $data,
+            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+        ], 200);
     }
 
 
 
 
-       public function getById(Discover $discover)
+    public function getById(Discover $discover)
 
     {
-        return response()->json(['data' => new DiscoverDetailsResource($discover), 'message' => "success",
-            'description' => "", 'code' => "200"], 200);
+        return response()->json([
+            'data' => new DiscoverDetailsResource($discover), 'message' => "success",
+            'description' => "", 'code' => "200"
+        ], 200);
     }
 
 
-    public function create(Request $request){
+    public function create(Request $request)
+    {
 
         $validatedData = $request->validate([
             'category_id' => 'required|exists:categories,id',
@@ -136,8 +142,8 @@ class DiscoverController extends Controller
             'description_ar' => 'string',
             'description_en' => 'string',
             'is_active' => 'required|bool',
-            'image'=> 'required|mimes:png,jpeg,jpg',
-            'sub_image'=> 'required|mimes:png,jpeg,jpg',
+            'image' => 'required|mimes:png,jpeg,jpg',
+            'sub_image' => 'required|mimes:png,jpeg,jpg',
             'product_ids' => array('required', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
             'city_ids' => array('required', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
 
@@ -163,16 +169,19 @@ class DiscoverController extends Controller
         $request->file('sub_image')->storeAs('app/public/discover_sub_image/', $imageName);
 
 
-        if(!$hasCreated->update($hasUploaded))
+        if (!$hasCreated->update($hasUploaded))
             return response()->json(['message' => 'has not created or image not uploaded,
-             contact support please'],500);
+             contact support please'], 500);
 
-             return response()->json(['success' => true ,'data'=> $hasCreated,
-             'message'=> 'Successfully Added!', 'description'=> '', 'code'=>'200'],200);
+        return response()->json([
+            'success' => true, 'data' => $hasCreated,
+            'message' => 'Successfully Added!', 'description' => '', 'code' => '200'
+        ], 200);
         //return response()->json($hasCreated,201);
     }
 
-       public function update(Request $request , Discover $discover){
+    public function update(Request $request, Discover $discover)
+    {
 
         $validatedData = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
@@ -183,16 +192,15 @@ class DiscoverController extends Controller
             'description_ar' => 'sometimes|string',
             'description_en' => 'sometimes|string',
             'is_active' => 'sometimes|bool',
-            'image'=> 'sometimes|mimes:png,jpeg,jpg',
-            'sub_image'=> 'sometimes|mimes:png,jpeg,jpg',
+            'image' => 'sometimes|mimes:png,jpeg,jpg',
+            'sub_image' => 'sometimes|mimes:png,jpeg,jpg',
             'product_ids' => array('sometimes', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
             'city_ids' => array('sometimes', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
-
         ]);
 
-         if ($request->has('sub_image')){
+        if ($request->has('sub_image')) {
             $imageName = $request->file('sub_image')->hashName();
-             $validatedData['sub_image'] = $imageName;
+            $validatedData['sub_image'] = $imageName;
         }
 
         $product_ids = explode(',', $validatedData['product_ids']);
@@ -204,47 +212,46 @@ class DiscoverController extends Controller
         $discover->products()->sync($product);
         $discover->discoverCities()->sync($cities);
 
-       if(isset($validatedData['sub_image'])){
+        if (isset($validatedData['sub_image'])) {
 
             Storage::delete('discover_sub_image/', $imageName);
         }
 
 
-        if(isset($validatedData['image'])){
+        if (isset($validatedData['image'])) {
 
-              $validatedData = Discover::uploadImage($request, $discover, $validatedData);
+            $validatedData = Discover::uploadImage($request, $discover, $validatedData);
         }
 
 
 
-       if($discover->update($validatedData)){
+        if ($discover->update($validatedData)) {
 
-        if ($request->file('sub_image')){
-            $imageName = $request->file('sub_image')->storeAs('app/public/discover_sub_image/', $imageName);
-            $validatedData['sub_image'] = $imageName;
+            if ($request->file('sub_image')) {
+                $imageName = $request->file('sub_image')->storeAs('app/public/discover_sub_image/', $imageName);
+                $validatedData['sub_image'] = $imageName;
+            }
         }
-       }
-        if(!$discover->update($validatedData))
+        if (!$discover->update($validatedData))
             return response()->json(['message' => 'has not created or image not uploaded,
-             contact support please'],500);
+             contact support please'], 500);
 
-             return response()->json(['success' => true ,'data'=> $discover,
-             'message'=> 'Successfully Added!', 'description'=> '', 'code'=>'200'],200);
+        return response()->json([
+            'success' => true, 'data' => $discover,
+            'message' => 'Successfully Added!', 'description' => '', 'code' => '200'
+        ], 200);
         //return response()->json($hasCreated,201);
     }
 
-     public function delete(Discover $discover)
+    public function delete(Discover $discover)
     {
         $id = $discover->id;
 
-        if($discover->delete()){
+        if ($discover->delete()) {
 
-            return response()->json(['massage'=>'deleted successfully'],200);
-        }
-        else{
+            return response()->json(['massage' => 'deleted successfully'], 200);
+        } else {
             return response()->json(['message' => 'ERROR PLEASE TRY AGAIN LATER'], 500);
         }
-
     }
-
 }

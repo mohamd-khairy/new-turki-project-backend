@@ -62,7 +62,6 @@ class Order extends Model
     public $incrementing = false;
 
     public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount', 'discount_code', 'is_printed'];
-
     public function getIsPrintedAttribute()
     {
         return  $this->printed_at ?  true : false;

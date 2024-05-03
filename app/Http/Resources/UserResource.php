@@ -39,7 +39,8 @@ class UserResource extends JsonResource
             "timezone" => $this->timezone,
             "api_token" => $this->api_token,
             'roles' => $this->roles->pluck('name'),
-            'permissions' => $permissions ?? null
+            'permissions' => $permissions ?? null,
+            'foodics_integrate_id' => $this->foodics_integrate_id ?? null
         ];
     }
 }

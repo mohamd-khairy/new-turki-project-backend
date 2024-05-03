@@ -153,6 +153,7 @@ class CouponController extends Controller
             'country_ids.*' => array('required_with:country_ids', 'exists:countries,id'),
             // 'client_ids' => array('array'),
             'client_ids.*' => array('required_with:client_ids', 'exists:customers,id'),
+            'foodics_integrate_id' => 'nullable'
         ]);
 
 
@@ -218,6 +219,7 @@ class CouponController extends Controller
             'country_ids.*' => array('required_with:country_ids', 'exists:countries,id'),
             // 'client_ids' => array('nullable', 'array'),
             'client_ids.*' => array('required_with:client_ids', 'exists:customers,id'),
+            'foodics_integrate_id' => 'nullable'
         ]);
 
         $product_ids = isset($request->product_ids) && is_array($request->product_ids) ? $request->product_ids : json_decode($request->product_ids);

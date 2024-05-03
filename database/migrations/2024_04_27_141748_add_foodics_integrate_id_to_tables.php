@@ -31,6 +31,12 @@ class AddFoodicsIntegrateIdToTables extends Migration
         Schema::table('addresses', function (Blueprint $table) {
             $table->string('foodics_integrate_id')->nullable();
         });
+        Schema::table('discounts', function (Blueprint $table) {
+            $table->string('foodics_integrate_id')->nullable();
+        });
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('foodics_integrate_id')->nullable();
+        });
     }
 
     /**
@@ -56,6 +62,12 @@ class AddFoodicsIntegrateIdToTables extends Migration
             $table->dropColumn('foodics_integrate_id');
         });
         Schema::table('addresses', function (Blueprint $table) {
+            $table->dropColumn('foodics_integrate_id');
+        });
+        Schema::table('discounts', function (Blueprint $table) {
+            $table->dropColumn('foodics_integrate_id');
+        });
+        Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('foodics_integrate_id');
         });
     }

@@ -44,7 +44,8 @@ class Discount extends Model
         'is_by_product',
         // new field
         'client_ids',
-        'for_clients_only'
+        'for_clients_only',
+        'foodics_integrate_id'
     ];
 
 

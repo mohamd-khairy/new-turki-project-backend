@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
@@ -41,8 +42,12 @@ function OrderToFoodics($ref_no)
             ],
         ];
 
-        info($json);
-
+        if ($order->applied_discount_code) {
+            $coupon = Discount::where('code', $order->applied_discount_code)->first();
+            if ($coupon && $coupon->foodics_integrate_id) {
+                $json['coupon_id'] = $coupon->foodics_integrate_id ?? null;
+            }
+        }
 
         foreach ($order_products as $k => $pro) {
 
@@ -136,11 +141,11 @@ function OrderToFoodics($ref_no)
             }
         }
 
-        $id = httpCurl('orders', $json);
+        $res = httpCurl('post', 'orders', $json);
 
-        if ($id) {
-            $order->update(['foodics_integrate_id' => $id]);
-            return $id;
+        if (isset($res['id'])) {
+            $order->update(['foodics_integrate_id' => $res['id']]);
+            return $res['id'];
         }
         return null;
     }
@@ -152,26 +157,38 @@ function foodics_create_customer($item)
 {
     $customer = \App\Models\Customer::find($item->id);
 
-    $data = [
-        "name" => $customer->name ?? '',
-        "dial_code" => 966,
-        "phone" => substr($customer->mobile, -9)  ?? '',
-        "email" => $customer->email ?? '',
-        "gender" => 1,
-        "birth_date" => "1996-09-17",
-        "tags" => [],
-        "is_blacklisted" => false,
-        "is_house_account_enabled" => false,
-        "house_account_limit" => 1000,
-        "is_loyalty_enabled" => false
-    ];
+    if ($customer->foodics_integrate_id) {
+        return $item->foodics_integrate_id;
+    } else {
+        $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
+        if (isset($res[0]['id'])) {
+            $customer->update(['foodics_integrate_id' => $res[0]['id']]);
+            return $res[0]['id'];
+        } else {
 
-    $id = httpCurl('customers', $data);
+            $data = [
+                "name" => $customer->name ?? '',
+                "dial_code" => 966,
+                "phone" => substr($customer->mobile, -9)  ?? '',
+                "email" => $customer->email ?? '',
+                "gender" => 1,
+                "birth_date" => "1996-09-17",
+                "tags" => [],
+                "is_blacklisted" => false,
+                "is_house_account_enabled" => false,
+                "house_account_limit" => 1000,
+                "is_loyalty_enabled" => false
+            ];
 
-    if ($id) {
-        $customer->update(['foodics_integrate_id' => $id]);
-        return $id;
+            $res = httpCurl('post', 'customers', $data);
+
+            if (isset($res['id'])) {
+                $customer->update(['foodics_integrate_id' => $res['id']]);
+                return $res['id'];
+            }
+        }
     }
+
     return null;
 }
 
@@ -192,31 +209,35 @@ function foodics_create_customer_address($item)
         $data['customer_id'] = $customer_id;
     }
 
-    $id = httpCurl('addresses', $data);
+    $res = httpCurl('post', 'addresses', $data);
 
-    if ($id) {
-        $address->update(['foodics_integrate_id' => $id]);
-        return $id;
+    if (isset($res['id'])) {
+        $address->update(['foodics_integrate_id' => $res['id']]);
+        return $res['id'];
     }
     return null;
 }
 
-
-
-function httpCurl($route, $json)
+function httpCurl($method, $route, $json = [])
 {
     try {
         $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5YmUwN2NjMS1hYjcwLTQzNzQtYTAyOC1lMmNiZjhlYjk4MDMiLCJqdGkiOiJmMDY4MzJiY2E4Y2Q2OWQ2ZTgzMWVjNDZhNWI2ZTdlNDA4ZjE5M2RkZWY3YTliMjVhNDY2YmIyMTk4ZWI2Yjg5NDdjNWIyMzk2MjdhYzRjMiIsImlhdCI6MTcxMzk1NjMyNS4zMDEyMTMsIm5iZiI6MTcxMzk1NjMyNS4zMDEyMTMsImV4cCI6MTg3MTcyMjcyNS4yNjc1MjMsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOTYwZmIyYTctMTJmMS00ZWZhLWI1NjctY2FlYmI2MDZiMDMxIiwicmVmZXJlbmNlIjoiOTQ5NDMwIn0.kJXEXgFsfgSyFU4TH2VU_Y5y1YsHs1ZUw2ndQ4zv7bMo-AxRUiHxN9ZwCO8RceeMWyMr5zyCbg1kwDXtp_okXUYb0BN5ytHw3s3Vz8bNFGuJVYVPwo1InvY_z8yeNT3LmwJMO6xvIgv9LbicH1cS1u0fYRbjegWBNHXDlLkPSj4LhkN3ZPP4XcxjNJXsn2QfGaKtk-TiHY2DUqhf-WSPG6O2YlD-sLXVM3QP8ir6ggYuznQ81YYhsKj6Ha_TnSX8hxdCVDeSYN2HBp91f98jMKf8YBHgiFSfmFm_NBvprNcf7JcCiqubpWPmeeT0lfpuNQvFOQknjMXAMbfMAGN8YOf7d38Z3HSzv5yVjb18bf3ZFat0y3EIOHLHmYC_oceC4OaCQvaz0yuFsdjnG0_Lz2kqtDPGW40aKURYMarW4IqELH8dsUG7F1ZJ5W62WCYfToGzEsRdhZ2d1TA6vPS_62B1Hgu9xg4BAVKb_edhNEYp8xA6nbh3CL8U3MUUSKEJ7AVW3T-vPHjk7C1xqd7oXPlzjplz40i5tSLxlGerEQVRGaiypKzjc3Dpgq4IqqkJHi5Rs1nVTcI7JPs-UtCw9-PYbkviRhpebvtsLh53qfgPjA583U0KiLzN6Nhl4vFRwZ7cLcxNgUffcYqpMt4XKGsXG_pGpc6WEdPu0HP8Le0";
 
         $httpClient = new Client();
 
-        $response = $httpClient->post('https://api.foodics.com/v5/' . $route, [
+        $data = [
             'headers' => [
                 'Authorization' => "Bearer $token",
                 'Content-Type' => 'application/json',
-            ],
-            'json' => $json,
-        ]);
+            ]
+        ];
+
+        if ($method == 'post' && $json) {
+            $data['json'] = $json;
+            $response = $httpClient->post('https://api.foodics.com/v5/' . $route, $data);
+        } elseif ($method == 'get') {
+            $response = $httpClient->get('https://api.foodics.com/v5/' . $route, $data);
+        }
 
         $statusCode = $response->getStatusCode();
         $responseBody = $response->getBody()->getContents();
@@ -224,8 +245,8 @@ function httpCurl($route, $json)
         if ($statusCode == 200) {
             // Successful response
             $res =  is_array($responseBody) ? $responseBody : json_decode($responseBody, true);
-            if (isset($res['data']['id'])) {
-                return $res['data']['id'];
+            if (isset($res['data'])) {
+                return $res['data'];
             }
         }
         return null;
