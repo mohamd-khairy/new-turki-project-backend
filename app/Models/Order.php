@@ -133,7 +133,7 @@ class Order extends Model
 
     public function selectedAddress()
     {
-        return $this->belongsTo(Address::class, 'address_id')->with('customer')->select(['id', 'address', 'comment', 'label', 'long', 'lat', 'country_id', 'foodics_integrate_id', 'customer_id']);
+        return $this->belongsTo(Address::class, 'address_id')->with('city')->select(['id', 'address', 'comment', 'label', 'long', 'lat', 'country_id', 'foodics_integrate_id', 'city_id']);
     }
 
     public function deliveryPeriod()

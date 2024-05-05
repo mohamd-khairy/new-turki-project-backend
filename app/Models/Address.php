@@ -44,6 +44,6 @@ class Address extends Model
 
     public function city()
     {
-        return $this->belongsTo(City::class, 'city_id')->select(['name_en', 'name_ar']);
+        return $this->belongsTo(City::class);
     }
 }

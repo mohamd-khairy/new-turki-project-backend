@@ -26,6 +26,9 @@ function OrderToFoodics($ref_no)
         $deliveryPeriod = $to . ':00:00';
         $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
 
+        $notes =  ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - "  : '') .
+            (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - "  : '') .
+            ($order->comment ?? "");
         $json = [
             "type" => 2,
             "status" => true,
@@ -34,7 +37,7 @@ function OrderToFoodics($ref_no)
             'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
             "due_at" => $delivery_date,
             "customer_notes" => $order->ref_no ?? "",
-            "kitchen_notes" => $order->comment ?? "",
+            "kitchen_notes" => $notes ?? '',
             "coupon_code" => $order->applied_discount_code ?? "",
             "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
             "meta" => [
@@ -167,7 +170,7 @@ function foodics_create_customer($item)
         } else {
 
             $data = [
-                "name" => $customer->name ?? '',
+                "name" => $customer->name ?? $customer->mobile ?? "new",
                 "dial_code" => 966,
                 "phone" => substr($customer->mobile, -9)  ?? '',
                 "email" => $customer->email ?? '',
@@ -258,7 +261,6 @@ function httpCurl($method, $route, $json = [])
         return null;
     }
 }
-
 
 function foodics_payment_methods($type)
 {
