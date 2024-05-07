@@ -109,9 +109,9 @@ class TabbyApiService
             "lang" => "en",
             "merchant_code" => $merchantCode,
             "merchant_urls" => [
-                "success" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/success",
-                "cancel" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/cancel",
-                "failure" => config("app.payment_url", "https://turki.almaraacompany.com/admin") . "/api/v2/tabby/checkout/failure"
+                "success" => config("app.payment_url", "https://almaraacompany.com/admin") . "/api/v2/tabby/checkout/success",
+                "cancel" => config("app.payment_url", "https://almaraacompany.com/admin") . "/api/v2/tabby/checkout/cancel",
+                "failure" => config("app.payment_url", "https://almaraacompany.com/admin") . "/api/v2/tabby/checkout/failure"
             ]
         ];
 
@@ -280,7 +280,7 @@ class TabbyApiService
 
             $order->update(['paid' => 1]);
 
-            OrderToFoodics($order->ref_no);
+            OrderToFoodics($payment->order_ref_no);
 
             return $html_head . '
 
@@ -461,7 +461,12 @@ class TabbyApiService
             "payment_status" => $payment->status
         ]);
 
+        if ($validData['paid'] == 1) {
+            OrderToFoodics($validData['order_ref']);
+        }
+
         $order = $order->toArray();
+
 
         // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
         // $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);
