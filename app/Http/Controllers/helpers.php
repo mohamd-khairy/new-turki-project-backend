@@ -5,12 +5,12 @@ use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
-use GuzzleHttp\Client;
+use Illuminate\Support\Str;
 
 function OrderToFoodics($ref_no)
 {
@@ -26,8 +26,8 @@ function OrderToFoodics($ref_no)
         $deliveryPeriod = $to . ':00:00';
         $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
 
-        $notes =  ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - "  : '') .
-            (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - "  : '') .
+        $notes = ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - " : '') .
+            (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - " : '') .
             ($order->comment ?? "");
         $json = [
             "type" => 2,
@@ -41,7 +41,7 @@ function OrderToFoodics($ref_no)
             "coupon_code" => $order->applied_discount_code ?? "",
             "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
             "meta" => [
-                "3rd_party_order_number" => $order->ref_no ?? "111"
+                "3rd_party_order_number" => $order->ref_no ?? "111",
             ],
         ];
 
@@ -57,7 +57,7 @@ function OrderToFoodics($ref_no)
             if ($pro->size && isset($pro->size->foodics_integrate_id)) {
                 $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
                 $json['products'][$k] = [
-                    "product_id" =>  $pro->size->foodics_integrate_id,
+                    "product_id" => $pro->size->foodics_integrate_id,
                     "quantity" => $pro->quantity ?? 1,
                     "unit_price" => $pro->size->sale_price,
                     "total_price" => $total_price,
@@ -67,7 +67,7 @@ function OrderToFoodics($ref_no)
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => $pro->preparation->foodics_integrate_id,
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
 
@@ -75,7 +75,7 @@ function OrderToFoodics($ref_no)
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => $pro->cut->foodics_integrate_id,
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
 
@@ -83,25 +83,23 @@ function OrderToFoodics($ref_no)
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
-
 
                 if ($pro->is_Ras) { // without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
-
 
                 if ($pro->is_lyh) { //  without
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
 
@@ -109,10 +107,9 @@ function OrderToFoodics($ref_no)
                     $json['products'][$k]['options'][] = [
                         "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
                         "quantity" => 1,
-                        "unit_price" => 0
+                        "unit_price" => 0,
                     ];
                 }
-
 
                 $price += $total_price;
             }
@@ -124,13 +121,13 @@ function OrderToFoodics($ref_no)
         if (foodics_payment_methods($order->paymentType->code)) {
             $json['payments'][] = [
                 'payment_method_id' => foodics_payment_methods($order->paymentType->code),
-                'amount' => $order->total_amount_after_discount
+                'amount' => $order->total_amount_after_discount,
             ];
         }
 
         if ($order->customer->foodics_integrate_id) {
             $json['customer_id'] = $order->customer->foodics_integrate_id;
-        } else if ($customer_id = foodics_create_customer($order->customer)) {
+        } else if ($customer_id = foodics_create_or_update_customer($order->customer)) {
             $json['customer_id'] = $customer_id;
         }
 
@@ -138,7 +135,7 @@ function OrderToFoodics($ref_no)
             if ($order->selectedAddress->foodics_integrate_id) {
                 $json['customer_address_id'] = $order->selectedAddress->foodics_integrate_id;
                 $json['type'] = 3;
-            } else if ($customer_address_id = foodics_create_customer_address($order->selectedAddress)) {
+            } else if ($customer_address_id = foodics_create_or_update_customer_address($order->selectedAddress)) {
                 $json['customer_address_id'] = $customer_address_id;
                 $json['type'] = 3;
             }
@@ -156,32 +153,43 @@ function OrderToFoodics($ref_no)
     //code...
 }
 
-function foodics_create_customer($item)
+function foodics_create_or_update_customer($item)
 {
     $customer = \App\Models\Customer::find($item->id);
+    
+    if (!isset($customer->id)) {
+        return null;
+    }
 
-    if ($customer->foodics_integrate_id) {
+    $data = [
+        "name" => $customer->name ?? $customer->mobile ?? "new",
+        "dial_code" => 966,
+        "phone" => substr($customer->mobile, -9) ?? '',
+        "email" => $customer->email ?? '',
+        "gender" => 1,
+        "birth_date" => "1996-09-17",
+        "tags" => [],
+        "is_blacklisted" => false,
+        "is_house_account_enabled" => false,
+        "house_account_limit" => 1000,
+        "is_loyalty_enabled" => false,
+    ];
+
+    if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
+
+        // $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name']]);
+
         return $item->foodics_integrate_id;
     } else {
         $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
         if (isset($res[0]['id'])) {
-            $customer->update(['foodics_integrate_id' => $res[0]['id']]);
-            return $res[0]['id'];
-        } else {
+            $id = $res[0]['id'];
+            $customer->update(['foodics_integrate_id' => $id]);
 
-            $data = [
-                "name" => $customer->name ?? $customer->mobile ?? "new",
-                "dial_code" => 966,
-                "phone" => substr($customer->mobile, -9)  ?? '',
-                "email" => $customer->email ?? '',
-                "gender" => 1,
-                "birth_date" => "1996-09-17",
-                "tags" => [],
-                "is_blacklisted" => false,
-                "is_house_account_enabled" => false,
-                "house_account_limit" => 1000,
-                "is_loyalty_enabled" => false
-            ];
+            // $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name']]);
+
+            return $id;
+        } else {
 
             $res = httpCurl('post', 'customers', $data);
 
@@ -195,7 +203,7 @@ function foodics_create_customer($item)
     return null;
 }
 
-function foodics_create_customer_address($item)
+function foodics_create_or_update_customer_address($item)
 {
     $address = \App\Models\Address::with('customer')->find($item->id);
 
@@ -204,11 +212,11 @@ function foodics_create_customer_address($item)
         "description" => $address->address . ' ' . $address->comment,
         "latitude" => $address->lat ?? '',
         "longitude" => $address->long ?? '',
-        "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653"
+        "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653",
     ];
     if ($address->customer->foodics_integrate_id) {
         $data["customer_id"] = $address->customer->foodics_integrate_id;
-    } else if ($customer_id = foodics_create_customer($address->customer)) {
+    } else if ($customer_id = foodics_create_or_update_customer($address->customer)) {
         $data['customer_id'] = $customer_id;
     }
 
@@ -232,7 +240,7 @@ function httpCurl($method, $route, $json = [])
             'headers' => [
                 'Authorization' => "Bearer $token",
                 'Content-Type' => 'application/json',
-            ]
+            ],
         ];
 
         if ($method == 'post' && $json) {
@@ -240,6 +248,9 @@ function httpCurl($method, $route, $json = [])
             $response = $httpClient->post('https://api.foodics.com/v5/' . $route, $data);
         } elseif ($method == 'get') {
             $response = $httpClient->get('https://api.foodics.com/v5/' . $route, $data);
+        } elseif ($method == 'put') {
+            $data['json'] = $json;
+            $response = $httpClient->put('https://api.foodics.com/v5/' . $route, $data);
         }
 
         $statusCode = $response->getStatusCode();
@@ -247,7 +258,7 @@ function httpCurl($method, $route, $json = [])
 
         if ($statusCode == 200) {
             // Successful response
-            $res =  is_array($responseBody) ? $responseBody : json_decode($responseBody, true);
+            $res = is_array($responseBody) ? $responseBody : json_decode($responseBody, true);
             if (isset($res['data'])) {
                 return $res['data'];
             }
@@ -280,7 +291,7 @@ function foodics_payment_methods($type)
         "Tabby" => [
             "id" => "9bf0d677-e7aa-4b7b-a0d4-49db0c1d3495",
             "name" => "تابي",
-        ]
+        ],
     ];
 
     if (isset($data[$type]['id'])) {
@@ -301,10 +312,10 @@ function generateQrInvoice($order)
 
     return base64_encode(
         ConvertHex("01") . ConvertHex(toHex(strlen("تركي للذبائح"))) . "تركي للذبائح"
-            . ConvertHex("02") . ConvertHex(toHex(strlen("310841577800003"))) . "310841577800003"
-            . ConvertHex("03") . ConvertHex(toHex(strlen($date))) . $date
-            . ConvertHex("04") . ConvertHex(toHex(strlen($total))) . $total
-            . ConvertHex("05") . ConvertHex(toHex(strlen($vat))) . $vat
+        . ConvertHex("02") . ConvertHex(toHex(strlen("310841577800003"))) . "310841577800003"
+        . ConvertHex("03") . ConvertHex(toHex(strlen($date))) . $date
+        . ConvertHex("04") . ConvertHex(toHex(strlen($total))) . $total
+        . ConvertHex("05") . ConvertHex(toHex(strlen($vat))) . $vat
     );
 }
 
@@ -335,26 +346,25 @@ if (!function_exists('HexadecimalToDecimal')) {
         for ($i = 0; $i < $hexLength; $i++) {
             $b = ord($hex[$i]);
 
-            if ($b >= 48 && $b <= 57)
+            if ($b >= 48 && $b <= 57) {
                 $b -= 48;
-            else if ($b >= 65 && $b <= 70)
+            } else if ($b >= 65 && $b <= 70) {
                 $b -= 55;
+            }
 
             $dec += $b * pow(16, (($hexLength - $i) - 1));
         }
 
-        return (int)$dec;
+        return (int) $dec;
     }
 }
-
-
 
 if (!function_exists('toHex')) {
     function toHex($number)
     {
         $hexvalues = array(
             '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
         );
         $hexval = '';
         while ($number != '0') {
@@ -404,47 +414,47 @@ if (!function_exists('handleRoleOrderState')) {
 
         if (in_array('admin', $roles)) { // 'admin' => 'مدير النظام',
             $data = [
-                'status' =>  ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
-                'orders' =>    ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
+                'status' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
             ];
         }
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             $data = [
                 'status' => ['104', '105'],
-                'orders' => ['101', '104', '105', '106', '200']
+                'orders' => ['101', '104', '105', '106', '200'],
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
             $data = [
                 'status' => ['104', '105'],
-                'orders' => ['101', '104', '105', '106', '200']
+                'orders' => ['101', '104', '105', '106', '200'],
             ];
         }
 
         if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',///////////////////
             $data = [
-                'status' =>  ['103', '106', '200'],
-                'orders' =>   ['101', '104', '105', '106', '109', '200']
+                'status' => ['103', '106', '200'],
+                'orders' => ['101', '104', '105', '106', '109', '200'],
             ];
         }
         if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
             $data = [
-                'status' =>  ['101', '102', '103', '106', '109', '200'],
-                'orders' =>  ['100', '101', '102', '103', '104', '105', '106', '109', '200']
+                'status' => ['101', '102', '103', '106', '109', '200'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '109', '200'],
             ];
         }
         if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
             $data = [
-                'status' =>  ['101', '102', '103', '106', '109', '200'],
-                'orders' =>   ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
+                'status' => ['101', '102', '103', '106', '109', '200'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
             ];
         }
         if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////
             $data = [
                 'status' => ['103', '109', '200'],
-                'orders' => ['106', '109']
+                'orders' => ['106', '109'],
             ];
         }
 
@@ -452,15 +462,15 @@ if (!function_exists('handleRoleOrderState')) {
             if (Schema::hasColumn('order_states', 'new_code')) {
                 $data = [
                     'status' => OrderState::whereIn('new_code', $data['status'])->pluck('code')->toArray(),
-                    'orders' => OrderState::whereIn('new_code', $data['orders'])->pluck('code')->toArray()
+                    'orders' => OrderState::whereIn('new_code', $data['orders'])->pluck('code')->toArray(),
                 ];
             }
 
             return $data;
         } else {
             return [
-                'status' =>  ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
-                'orders' =>    ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200']
+                'status' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
             ];
         }
     }
@@ -495,7 +505,7 @@ if (!function_exists('Paginator')) {
             'data' => $data,
             'message' => $msg,
             'description' => $msg,
-            'code' => '200'
+            'code' => '200',
         ], 200);
     }
 }
@@ -509,7 +519,7 @@ if (!function_exists('Paginator')) {
             'data' => $data,
             'message' => $msg,
             'description' => $msg,
-            'code' => $code
+            'code' => $code,
         ], $code);
     }
 }
@@ -553,11 +563,14 @@ if (!function_exists('PerPage')) {
     function PerPage(Request $request)
     {
         $perPage = 6;
-        if ($request->has('per_page'))
+        if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
+        }
 
-        if ($perPage == 0)
+        if ($perPage == 0) {
             $perPage = 6;
+        }
+
         return $perPage;
     }
 }
@@ -583,7 +596,6 @@ if (!function_exists('GetNextPaymentRefNo')) {
         return $countryCode . 'P' . $genId;
     }
 }
-
 
 if (!function_exists('trackingIdGenerator')) {
     /**
@@ -619,7 +631,7 @@ if (!function_exists('UIDGenerator')) {
      */
     function UIDGenerator()
     {
-        return (string)Str::orderedUuid();
+        return (string) Str::orderedUuid();
     }
 }
 

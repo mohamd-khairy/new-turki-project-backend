@@ -3,22 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
 class Customer extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
 
-    use  LogsActivity;
+    use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
@@ -41,21 +40,21 @@ class Customer extends Authenticatable
         'integrate_id',
         'deleted_at',
         'loyalty_points',
-        'foodics_integrate_id'
+        'foodics_integrate_id',
     ];
 
     protected $hidden = [
         'avatar',
-        'avatar_thumb'
+        'avatar_thumb',
     ];
 
     protected $appends = [
         'avatarUrl',
         'avatarThumbUrl',
-        'name_mobile'
+        'name_mobile',
     ];
     protected $casts = [
-        'disabledDate' => 'datetime'
+        'disabledDate' => 'datetime',
     ];
 
     protected static function boot()
@@ -64,7 +63,11 @@ class Customer extends Authenticatable
 
         static::created(function ($model) {
             // This code will be executed when a new record is being created
-            $res = foodics_create_customer($model);
+            foodics_create_or_update_customer($model);
+        });
+
+        static::updated(function ($model) {
+            foodics_create_or_update_customer($model);
         });
     }
 
@@ -82,7 +85,6 @@ class Customer extends Authenticatable
     {
         return $this->hasMany(Order::class)->where('using_wallet', 1);
     }
-
 
     public function favorites()
     {

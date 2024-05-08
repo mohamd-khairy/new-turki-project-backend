@@ -28,7 +28,7 @@ class Address extends Model
 
         static::created(function ($model) {
             // This code will be executed when a new record is being created
-            $res = foodics_create_customer_address($model);
+            $res = foodics_create_or_update_customer_address($model);
         });
     }
 

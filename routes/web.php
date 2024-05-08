@@ -21,7 +21,7 @@ Route::get('/customers', function () {
     $customers = Customer::whereNull('foodics_integrate_id')->get();
 
     foreach ($customers as $key => $value) {
-        foodics_create_customer($value);
+        foodics_create_or_update_customer($value);
         sleep(3);
     }
 });
