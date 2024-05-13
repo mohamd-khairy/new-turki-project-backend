@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Exports\DataExport;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Cart;
-use App\Models\TraceError;
 use App\Models\Country;
 use App\Models\Customer;
 use App\Models\DeliveryDate;
@@ -21,18 +19,15 @@ use App\Models\Product;
 use App\Models\Shalwata;
 use App\Models\Size;
 use App\Models\TempCouponProducts;
+use App\Services\MyFatoorahApiService;
+use App\Services\NgeniusPaymentService;
+use App\Services\PointLocation;
+use App\Services\TabbyApiService;
 use App\Services\TamaraApiService;
 use App\Services\TamaraApiServiceV2;
-use App\Services\NgeniusPaymentService;
-use App\Services\MyFatoorahApiService;
-use App\Services\TabbyApiService;
-use App\Services\PointLocation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use GuzzleHttp\Client;
 
 class OrderController extends Controller
 {
@@ -197,7 +192,7 @@ class OrderController extends Controller
             'total' => $total,
             'message' => 'Retrieved successfully',
             'description' => $orderStates,
-            'code' => '200'
+            'code' => '200',
         ], 200);
     }
 
@@ -370,7 +365,7 @@ class OrderController extends Controller
                     $row->p_name_ar,
                     $payment_price,
                     $row->payment_status,
-                    $remain_amount
+                    $remain_amount,
                 ]);
             }
 
@@ -396,7 +391,7 @@ class OrderController extends Controller
 
                 // Perform the common calculations
                 $i->total_amount_after_tax = round($i->total_amount_after_discount ? $i->total_amount_after_discount / $per : 0, 2);
-                $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+                $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax ?? 0), 2);
                 $i->orderProducts = $this->loadOrderProducts($i->ref_no);
             }
 
@@ -428,7 +423,6 @@ class OrderController extends Controller
             ->get();
     }
 
-
     public function getOrderDashboard($order)
     {
         $order = Order::where('ref_no', $order)
@@ -446,7 +440,7 @@ class OrderController extends Controller
 
         $data['order'] = $order;
 
-        $data['products'] = OrderProduct::with('preparation', 'size', 'cut',  'product.productImages')->where('order_ref_no', $order->ref_no)->get()->map(function ($i) {
+        $data['products'] = OrderProduct::with('preparation', 'size', 'cut', 'product.productImages')->where('order_ref_no', $order->ref_no)->get()->map(function ($i) {
             $i->shalwata = $i->shalwata ? true : false;
             return $i;
         });
@@ -514,7 +508,6 @@ class OrderController extends Controller
                 $data['total_amount'] = $order->total_amount - $discount;
             }
 
-
             if (isset($request->paid)) {
                 $data['paid'] = $request->paid ?? 0;
 
@@ -527,7 +520,7 @@ class OrderController extends Controller
                                 'payment_type_id' => $order->payment_type_id,
                                 'price' => $order->total_amount_after_discount ?? 0,
                                 'status' => 'Paid',
-                                'manual' => 1
+                                'manual' => 1,
                             ]
                         );
                     }
@@ -554,7 +547,7 @@ class OrderController extends Controller
                     }
                 } else if (!$request->paid) {
                     $payment = Payment::where('order_ref_no', $order->ref_no)->latest()->first();
-                    if ($payment  && $order->using_wallet) {
+                    if ($payment && $order->using_wallet) {
 
                         $customer = Customer::where('id', $order->customer_id)->first();
 
@@ -564,7 +557,7 @@ class OrderController extends Controller
                     if ($payment) {
                         $payment->update([
                             'status' => 'Waiting for Client',
-                            'price' => 0
+                            'price' => 0,
                         ]);
                     }
                 }
@@ -573,12 +566,12 @@ class OrderController extends Controller
             if ($request->is_printed) {
                 $data['printed_at'] = now();
             }
-            // if (request('delivery_period')) {
-            //     $data['delivery_period_id'] = request('delivery_period');
+
+            // if ($order->order_state_id == "200") {
+            //     OrderToFoodics($order->ref_no);
             // }
 
             $order->update($data);
-
 
             return successResponse($order->refresh(), 'order updated successfully');
         } catch (\Throwable $th) {
@@ -611,7 +604,7 @@ class OrderController extends Controller
                 "customer_id" => 'required|exists:customers,id',
                 "country_id" => 'required|exists:countries,id',
                 "city_id" => 'required|exists:cities,id',
-                "comment"  => 'nullable|string',
+                "comment" => 'nullable|string',
                 "delivery_date" => array('required', 'date'), //'regex:(^(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])+$)' // 01-29 or 12-29
                 "delivery_period_id" => array('required', 'exists:delivery_periods,id'),
                 "using_wallet" => 'required|boolean',
@@ -634,8 +627,8 @@ class OrderController extends Controller
             $totalItemsAmount = $this->handleOrderProducts($request->products) ?? 0.0;
             $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount ?? 0.0;
             $discountAmount = $this->handleDiscountAmount($request->discount_code ?? null, $TotalAmountBeforeDiscount);
-            $TotalAmountAfterDiscount =  round($TotalAmountBeforeDiscount - $discountAmount, 2) ??   0.0;
-            $finalTotal = $TotalAmountAfterDiscount +  $delivery;
+            $TotalAmountAfterDiscount = round($TotalAmountBeforeDiscount - $discountAmount, 2) ?? 0.0;
+            $finalTotal = $TotalAmountAfterDiscount + $delivery;
             $discountCode = $request->discount_code ?? null;
             $walletAmountUsed = 0;
             $customer = Customer::find($request->customer_id);
@@ -646,7 +639,7 @@ class OrderController extends Controller
             if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
                 return response()->json([
                     'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400'
+                    'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400',
                 ], 400);
             }
 
@@ -654,7 +647,7 @@ class OrderController extends Controller
             if ($address === null) {
                 return response()->json([
                     'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'invalid address', 'code' => '400'
+                    'message' => 'failed', 'description' => 'invalid address', 'code' => '400',
                 ], 400);
             }
 
@@ -664,7 +657,7 @@ class OrderController extends Controller
                 'order_subtotal' => $TotalAmountBeforeDiscount,
                 'total_amount' => $finalTotal,
                 'total_amount_after_discount' => $TotalAmountAfterDiscount,
-                'total_amount_before_discount' => $TotalAmountBeforeDiscount +  $delivery,
+                'total_amount_before_discount' => $TotalAmountBeforeDiscount + $delivery,
                 'discount_applied' => $discountAmount,
                 'delivery_date' => $validated["delivery_date"],
                 'delivery_period_id' => $validated["delivery_period_id"],
@@ -683,7 +676,6 @@ class OrderController extends Controller
                 'sales_representative_id' => in_array('store_manager', auth()->user()->roles->pluck('name')->toArray()) ? auth()->user()->id : null,
             ];
 
-
             if ($validated["using_wallet"] == 1 && $wallet) {
 
                 if ($TotalAmountAfterDiscount >= $wallet) {
@@ -700,7 +692,6 @@ class OrderController extends Controller
                     $order['paid'] = 1;
                 }
             }
-
 
             $order = Order::create($order);
 
@@ -723,7 +714,7 @@ class OrderController extends Controller
 
                 if ($payment) {
 
-                    $order->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 8]);
+                    $order->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 8]);
                 }
             }
 
@@ -746,7 +737,7 @@ class OrderController extends Controller
 
                 if ($payment) {
 
-                    $order->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                    $order->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 1]);
                 }
             }
 
@@ -756,7 +747,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true, 'data' => $order,
-                'message' => '', 'description' => '', 'code' => '200'
+                'message' => '', 'description' => '', 'code' => '200',
             ], 200);
         });
     }
@@ -772,9 +763,9 @@ class OrderController extends Controller
                 'preparation_ids' => 'nullable|exists:preparations,id',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
-                'is_kwar3' =>  'nullable|in:1,0',
-                'is_Ras' =>  'nullable|in:1,0',
-                'is_lyh' =>  'nullable|in:1,0',
+                'is_kwar3' => 'nullable|in:1,0',
+                'is_Ras' => 'nullable|in:1,0',
+                'is_lyh' => 'nullable|in:1,0',
                 'is_karashah' => 'nullable|in:1,0',
                 'shalwata' => 'nullable|in:1,0',
             ]);
@@ -788,12 +779,12 @@ class OrderController extends Controller
                     'preparation_id' => $request->preparation_ids,
                     'size_id' => $request->size_ids,
                     'cut_id' => $request->cut_ids,
-                    'is_kwar3' =>  $request->is_kwar3 ?? false,
-                    'is_Ras' =>  $request->is_Ras ?? false,
-                    'is_lyh' =>  $request->is_lyh ?? false,
+                    'is_kwar3' => $request->is_kwar3 ?? false,
+                    'is_Ras' => $request->is_Ras ?? false,
+                    'is_lyh' => $request->is_lyh ?? false,
                     'is_karashah' => $request->is_karashah ?? false,
                     'shalwata' => $request->shalwata ?? false,
-                ]
+                ],
             ];
 
             if ($request->shalwata) {
@@ -822,16 +813,16 @@ class OrderController extends Controller
 
                     array_push($orderProducts, [
                         'order_ref_no' => $order->ref_no,
-                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price :  $product_size->price)  * $quantity : 0) + (isset($item['shalwata']) && $item['shalwata'] ? Shalwata::first()->price : 0),
+                        'total_price' => ($product_size ? ($product_size->sale_price ? $product_size->sale_price : $product_size->price) * $quantity : 0) + (isset($item['shalwata']) && $item['shalwata'] ? Shalwata::first()->price : 0),
                         'quantity' => $quantity,
                         'product_id' => $product->id,
                         'preparation_id' => $item['preparation_id'] ?? null,
-                        'size_id' =>  $item['size_id'] ?? null,
-                        'cut_id' =>  $item['cut_id'] ?? null,
-                        'is_kwar3' =>   $item['is_kwar3'] ??  false,
-                        'is_Ras' =>  $item['is_Ras'] ??  false,
-                        'is_lyh' =>  $item['is_lyh'] ??  false,
-                        'is_karashah' => $item['is_karashah'] ??  false,
+                        'size_id' => $item['size_id'] ?? null,
+                        'cut_id' => $item['cut_id'] ?? null,
+                        'is_kwar3' => $item['is_kwar3'] ?? false,
+                        'is_Ras' => $item['is_Ras'] ?? false,
+                        'is_lyh' => $item['is_lyh'] ?? false,
+                        'is_karashah' => $item['is_karashah'] ?? false,
                         'shalwata_id' => isset($item['shalwata']) && $item['shalwata'] ? 1 : null,
                     ]);
 
@@ -857,9 +848,9 @@ class OrderController extends Controller
                 'preparation_ids' => 'nullable',
                 'size_ids' => 'required|exists:sizes,id',
                 'cut_ids' => 'nullable|exists:cuts,id',
-                'is_kwar3' =>  'nullable|in:1,0',
-                'is_Ras' =>  'nullable|in:1,0',
-                'is_lyh' =>  'nullable|in:1,0',
+                'is_kwar3' => 'nullable|in:1,0',
+                'is_Ras' => 'nullable|in:1,0',
+                'is_lyh' => 'nullable|in:1,0',
                 'is_karashah' => 'nullable|in:1,0',
                 'shalwata' => 'nullable|in:1,0',
             ]);
@@ -868,9 +859,9 @@ class OrderController extends Controller
             if ($OrderProduct) {
                 $product_size = Size::find($validated['size_ids']);
 
-                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0));
+                $product_price = (isset($product_size->sale_price) && $product_size->sale_price > 0 ? $product_size->sale_price : ($product_size->price ?? 0));
 
-                $OrderProduct->total_price = (($product_price ?? 0) * ($request->quantity ?? 1) +  + ($request->shalwata ? Shalwata::first()->price : 0));
+                $OrderProduct->total_price = (($product_price ?? 0) * ($request->quantity ?? 1) + ($request->shalwata ? Shalwata::first()->price : 0));
                 $OrderProduct->quantity = $request->quantity ?? 1;
                 $OrderProduct->preparation_id = $request->preparation_ids ?? null;
                 $OrderProduct->size_id = $request->size_ids ?? null;
@@ -880,7 +871,7 @@ class OrderController extends Controller
                 $OrderProduct->is_Ras = $request->is_Ras ?? false;
                 $OrderProduct->is_lyh = $request->is_lyh ?? false;
                 $OrderProduct->is_karashah = $request->is_karashah ?? false;
-                $OrderProduct->shalwata_id = $request->shalwata ?  1  : null;
+                $OrderProduct->shalwata_id = $request->shalwata ? 1 : null;
 
                 $OrderProduct->save();
 
@@ -941,8 +932,8 @@ class OrderController extends Controller
 
             if ($product) {
                 $quantity = $item['quantity'] ? $item['quantity'] : 1;
-                $product_price = ($product_size->sale_price > 0 ? $product_size->sale_price  : ($product_size->price ?? 0));
-                $sum += ($product ? ($product_price ?? 0)  * $quantity : 0);
+                $product_price = ($product_size->sale_price > 0 ? $product_size->sale_price : ($product_size->price ?? 0));
+                $sum += ($product ? ($product_price ?? 0) * $quantity : 0);
             }
         }
 
@@ -979,11 +970,13 @@ class OrderController extends Controller
         }
 
         $perPage = 6000000;
-        if ($request->has('per_page'))
+        if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
+        }
 
-        if ($perPage == 0)
+        if ($perPage == 0) {
             $perPage = 6000000;
+        }
 
         $orders = DB::table('orders')
             ->select(
@@ -1052,7 +1045,7 @@ class OrderController extends Controller
 
         $orders = $orders->orderBy('id', 'desc')->paginate($perPage);
 
-        $items =  $orders->toArray()['data'];
+        $items = $orders->toArray()['data'];
         $items = collect($items)->map(function ($i) {
 
             $per = 1.15;
@@ -1061,7 +1054,7 @@ class OrderController extends Controller
             }
 
             $i->total_amount_after_tax = $i->total_amount_after_discount ? round($i->total_amount_after_discount / $per, 2) : 0;
-            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax  ?? 0), 2);
+            $i->tax_fees = round(($i->total_amount_after_discount ?? 0) - ($i->total_amount_after_tax ?? 0), 2);
             $i->remain_amount = ($i->payment_price ? ($i->total_amount_after_discount - $i->payment_price) : $i->total_amount_after_discount ?? 0) + $i->wallet_amount_used;
             return $i;
         });
@@ -1070,10 +1063,9 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true, 'data' => $orders,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
         ], 200);
     }
-
 
     /********************************************************************************************************** */
     public function getOrders(Request $request)
@@ -1084,18 +1076,20 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true, 'data' => $orders,
-            'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200'
+            'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200',
         ], 200);
     }
 
     public function getOrdersV2(Request $request)
     {
         $perPage = 6;
-        if ($request->has('per_page'))
+        if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
+        }
 
-        if ($perPage == 0)
+        if ($perPage == 0) {
             $perPage = 6;
+        }
 
         $orders = Order::where('customer_id', auth()->user()->id)
             ->with('orderProducts', 'orderState', 'deliveryPeriod', 'selectedAddress')
@@ -1104,7 +1098,7 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true, 'data' => $orders,
-            'message' => 'Products retrieved successfully', 'description' => "", 'code' => '200'
+            'message' => 'Products retrieved successfully', 'description' => "", 'code' => '200',
         ], 200);
     }
 
@@ -1113,16 +1107,18 @@ class OrderController extends Controller
         $order = Order::where(['customer_id' => auth()->user()->id, 'ref_no' => $order])
             ->with('orderProducts', 'orderState', 'deliveryPeriod', 'selectedAddress')->get()->first();
 
-        if ($order != null)
+        if ($order != null) {
             return response()->json([
                 'success' => true, 'data' => $order,
-                'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200'
+                'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200',
             ], 200);
-        else
+        } else {
             return response()->json([
                 'success' => false, 'data' => null,
-                'message' => 'order not found!', 'description' => '', 'code' => '404'
+                'message' => 'order not found!', 'description' => '', 'code' => '404',
             ], 404);
+        }
+
     }
 
     public function createOrder(Request $request)
@@ -1137,28 +1133,29 @@ class OrderController extends Controller
         //     TraceError::create(['class_name' => "CallOrderNetsuiteApi::responce", 'method_name' => "sendOrderToNS 2", 'error_desc' => json_encode($customer)]);
         // }
 
-
         $app = ($request->query('app') == 1 ? 1 : 0);
         $point = $request->query('longitude') . " " . $request->query('latitude');
         $countryId = $request->query('countryId');
         $country = Country::where('code', $countryId)->get()->first();
 
-        if ($country === null)
+        if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
             ], 200);
+        }
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
 
-        if ($currentCity === null)
+        if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200'
+                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
             ], 200);
+        }
 
         $validated = $request->validate([
-            "comment"  => 'nullable|string',
+            "comment" => 'nullable|string',
             "delivery_date" => 'required|date',
             // "delivery_date" => array('required', 'regex:(^(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])+$)'), // 01-29 or 12-29
             "delivery_period_id" => array('required', 'exists:delivery_periods,id'),
@@ -1166,7 +1163,7 @@ class OrderController extends Controller
             "using_wallet" => 'required|boolean',
             'address_id' => 'required|exists:addresses,id',
             'tamara_payment_name' => array('required_if:payment_type_id,==,4', 'in:PAY_BY_INSTALMENTS,PAY_BY_LATER'), // add 'tamara in payment_types table with id 4
-            'no_instalments' => array('required_if:tamara_payment_name,==,PAY_BY_INSTALMENTS', 'numeric')
+            'no_instalments' => array('required_if:tamara_payment_name,==,PAY_BY_INSTALMENTS', 'numeric'),
         ]);
 
         if (!isset($validated["comment"])) {
@@ -1176,7 +1173,7 @@ class OrderController extends Controller
         if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400'
+                'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400',
             ], 400);
         }
 
@@ -1187,40 +1184,41 @@ class OrderController extends Controller
             $deliveryPeriodCity = DeliveryDateCity::where([
                 ['city_id', $currentCity->id],
                 ['delivery_date', $deliveryDate],
-                ['delivery_period_id', $validated['delivery_period_id']]
+                ['delivery_period_id', $validated['delivery_period_id']],
             ])->get()->first();
 
-            if ($deliveryPeriodCity != null)
+            if ($deliveryPeriodCity != null) {
                 return response()->json([
                     'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'select valid delivery date/period!', 'code' => '400'
+                    'message' => 'failed', 'description' => 'select valid delivery date/period!', 'code' => '400',
                 ], 400);
-        }
+            }
 
+        }
 
         $cart = Cart::where([['customer_id', auth()->user()->id], ['city_id', $currentCity->id]])->get();
 
         if (count($cart) == 0) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400'
+                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400',
             ], 400);
         }
 
         $address = Address::where([['customer_id', auth()->user()->id], ['id', $validated["address_id"]]])->get()->first();
-        if ($address === null)
+        if ($address === null) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'invalid address', 'code' => '400'
+                'message' => 'failed', 'description' => 'invalid address', 'code' => '400',
             ], 400);
+        }
 
         if ($address->city_id != $currentCity->id) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'invalid address, your location does not match with your selected address!', 'code' => '400'
+                'message' => 'failed', 'description' => 'invalid address, your location does not match with your selected address!', 'code' => '400',
             ], 400);
         }
-
 
         $shalwata = Shalwata::first();
         $totalItemsAmount = 0.0;
@@ -1241,17 +1239,19 @@ class OrderController extends Controller
 
         $minOrderPerCity = MinOrder::where('city_id', $currentCity->id)->first();
 
-        if ($miniOrderValue != null && $miniOrderValue->min_order > $TotalAmountBeforeDiscount)
+        if ($miniOrderValue != null && $miniOrderValue->min_order > $TotalAmountBeforeDiscount) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400'
+                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
             ], 400);
+        }
 
-        if ($minOrderPerCity != null && $minOrderPerCity->min_order > $TotalAmountBeforeDiscount)
+        if ($minOrderPerCity != null && $minOrderPerCity->min_order > $TotalAmountBeforeDiscount) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400'
+                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
             ], 400);
+        }
 
         // TraceError::create(['class_name' => "Create Order", 'method_name' => "before coupon 1", 'error_desc' => json_encode($customer)]);
         $applicableProductIds = [];
@@ -1260,7 +1260,7 @@ class OrderController extends Controller
             if ($couponValid == null) {
                 return response()->json([
                     'success' => false, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1], 'description' => 'invalid coupon used', 'code' => '400'
+                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1], 'description' => 'invalid coupon used', 'code' => '400',
                 ], 400);
             }
         } else {
@@ -1308,7 +1308,7 @@ class OrderController extends Controller
             'customer_id' => auth()->user()->id,
             'payment_type_id' => $validated['payment_type_id'],
             'applied_discount_code' => $discountCode,
-            'version_app' => $app
+            'version_app' => $app,
             // "integrate_id" => 0
         ];
 
@@ -1323,20 +1323,17 @@ class OrderController extends Controller
             $saled->update();
         }
 
-
-
         Cart::where([['customer_id', auth()->user()->id], ['city_id', $currentCity->id]])->delete();
 
         if ($discountCode != null) {
             TempCouponProducts::create([
                 "order_id" => $createdOrder->ref_no,
                 "coupon_code" => $discountCode,
-                "product_ids" => json_encode($applicableProductIds)
+                "product_ids" => json_encode($applicableProductIds),
             ]);
         }
 
         $paymentType = PaymentType::find($validated['payment_type_id']);
-
 
         if ($paymentType->code === "COD" || $TotalAmountAfterDiscount == 0) { // cod
 
@@ -1366,7 +1363,7 @@ class OrderController extends Controller
 
                 if ($payment) {
 
-                    $createdOrder->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                    $createdOrder->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 1]);
                 }
                 //code...
             } catch (\Throwable $th) {
@@ -1389,7 +1386,7 @@ class OrderController extends Controller
             // }
             return response()->json([
                 'success' => true, 'data' => $createdOrder,
-                'message' => '', 'description' => '', 'code' => '200'
+                'message' => '', 'description' => '', 'code' => '200',
             ], 200);
         } else {
 
@@ -1403,7 +1400,7 @@ class OrderController extends Controller
                 } else {
                     return response()->json([
                         'success' => true, 'data' => $createdOrder,
-                        'message' => '', 'description' => '', 'code' => '200'
+                        'message' => '', 'description' => '', 'code' => '200',
                     ], 200);
                 }
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
@@ -1419,11 +1416,9 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
-
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
 
                 // $paymentRes = app(AlRajhiPaymentService::class)->createARBpayment($customer, $createdOrder, $paymentType, $country);
@@ -1467,7 +1462,6 @@ class OrderController extends Controller
 
                     // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
-
                     // $res2 = $res->custrecord_trk_order_saleorder->internalid;
 
                     // if ($res != null && $res2 != null && !isset($res->status)) {
@@ -1484,7 +1478,7 @@ class OrderController extends Controller
 
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "tamara-v2") {
 
@@ -1492,7 +1486,6 @@ class OrderController extends Controller
                     $paymentRes = app(TamaraApiServiceV2::class)->checkoutTamara($customer, $address, $createdOrder, $validated['tamara_payment_name'], $country, $validated['no_instalments']);
 
                     //   $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order , $request);
-
 
                     // $res2 = $res->custrecord_trk_order_saleorder->internalid;
 
@@ -1511,7 +1504,7 @@ class OrderController extends Controller
 
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
             } elseif ($country->code == 'AE' && $paymentType->code === "ARB") {
 
@@ -1535,7 +1528,6 @@ class OrderController extends Controller
 
                 $paymentRes = app(MyFatoorahApiService::class)->Set_Payment_myfatoora($customer, $createdOrder, $paymentType, $country);
 
-
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
                 // $res2 = $res->custrecord_trk_order_saleorder->internalid;
@@ -1549,17 +1541,14 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
-
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "Tabby") {
 
                 $paymentRes = app(TabbyApiService::class)->createManualPayment($customer, $address, $createdOrder, $country);
 
-
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
                 // $res2 = $res->custrecord_trk_order_saleorder->internalid;
@@ -1573,10 +1562,9 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "Ngenius") {
 
@@ -1597,10 +1585,9 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
-
                 return response()->json([
                     'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200'
+                    'message' => '', 'description' => '', 'code' => '200',
                 ], 200);
             } else {
 
@@ -1630,7 +1617,7 @@ class OrderController extends Controller
 
                     if ($payment) {
 
-                        $createdOrder->update(['payment_id' =>  $payment->id ?? null, 'payment_type_id' => 1]);
+                        $createdOrder->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 1]);
                     }
                     //code...
                 } catch (\Throwable $th) {
@@ -1642,7 +1629,7 @@ class OrderController extends Controller
                 // TraceError::create(['class_name' => "create order 351", 'method_name' => "Get_Payment_Status", 'error_desc' => json_encode($createdOrder)]);
                 return response()->json([
                     'success' => false, 'data' => $createdOrder,
-                    'message' => 'Please, contact support with ref: ' . $createdOrder->ref_no, 'description' => '', 'code' => '400'
+                    'message' => 'Please, contact support with ref: ' . $createdOrder->ref_no, 'description' => '', 'code' => '400',
                 ], 400);
             }
         }
@@ -1705,7 +1692,7 @@ class OrderController extends Controller
                 'is_Ras' => $cartProduct->is_Ras,
                 'is_lyh' => $cartProduct->is_lyh,
                 'is_karashah' => $cartProduct->is_karashah,
-                'shalwata_id' => $cartProduct->is_shalwata == 1 && $product->is_shalwata == 1 ? $shalwata->id : null
+                'shalwata_id' => $cartProduct->is_shalwata == 1 && $product->is_shalwata == 1 ? $shalwata->id : null,
             ]);
         }
         return array($cart, $discountCode, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
@@ -1743,7 +1730,7 @@ class OrderController extends Controller
         TempCouponProducts::create([
             "order_id" => $orderId,
             "coupon_code" => $discountCode,
-            "product_ids" => json_encode($applicableProductIds)
+            "product_ids" => json_encode($applicableProductIds),
         ]);
     }
 }
