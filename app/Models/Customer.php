@@ -67,7 +67,11 @@ class Customer extends Authenticatable
         });
 
         static::updated(function ($model) {
-            foodics_create_or_update_customer($model);
+
+            $id = foodics_create_or_update_customer($model);
+            if ($model->foodics_integrate_id == 'null' || !$model->foodics_integrate_id) {
+                $model->update(['foodics_integrate_id' => $id]);
+            }
         });
     }
 

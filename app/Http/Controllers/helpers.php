@@ -145,6 +145,9 @@ function OrderToFoodics($ref_no)
 
         if (isset($res['id'])) {
             $order->update(['foodics_integrate_id' => $res['id']]);
+
+            foodics_create_or_update_customer($order->customer); //
+
             return $res['id'];
         }
         return null;
@@ -177,7 +180,7 @@ function foodics_create_or_update_customer($item)
 
     if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
 
-        $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'] , 'email' => $data['email']]);
+        $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'], 'email' => $data['email']]);
 
         return $item->foodics_integrate_id;
     } else {
@@ -186,7 +189,7 @@ function foodics_create_or_update_customer($item)
             $id = $res[0]['id'];
             $customer->update(['foodics_integrate_id' => $id]);
 
-            $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'] , 'email' => $data['email']]);
+            $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'], 'email' => $data['email']]);
 
             return $id;
         } else {
