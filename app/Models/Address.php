@@ -13,7 +13,7 @@ class Address extends Model
 
     protected $fillable = [
         'customer_id', 'country_iso_code', 'country_id', 'city_id', 'address', 'comment', 'label', 'is_default', 'long', 'lat',
-        'foodics_integrate_id'
+        'foodics_integrate_id',
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
@@ -28,7 +28,12 @@ class Address extends Model
 
         static::created(function ($model) {
             // This code will be executed when a new record is being created
-            $res = foodics_create_or_update_customer_address($model);
+            try {
+                //code...
+                $res = foodics_create_or_update_customer_address($model);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         });
     }
 

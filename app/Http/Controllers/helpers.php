@@ -14,222 +14,246 @@ use Illuminate\Support\Str;
 
 function OrderToFoodics($ref_no)
 {
-    $order = Order::with('deliveryPeriod', 'customer', 'selectedAddress', 'paymentType')->where('ref_no', $ref_no)->first();
+    try {
 
-    if ($order->selectedAddress->country_id == 1) {
+        $order = Order::with('deliveryPeriod', 'customer', 'selectedAddress', 'paymentType')->where('ref_no', $ref_no)->first();
 
-        $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
+        if ($order->selectedAddress->country_id == 1) {
 
-        $price = 0;
+            $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
 
-        $to = strlen($order->deliveryPeriod->to) < 2 ? '0' . $order->deliveryPeriod->to : $order->deliveryPeriod->to;
-        $deliveryPeriod = $to . ':00:00';
-        $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
+            $price = 0;
 
-        $notes = ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - " : '') .
-            (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - " : '') .
-            ($order->comment ?? "");
-        $json = [
-            "type" => 2,
-            "status" => true,
-            "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
-            "discount_amount" => $order->discount_applied ?? 0,
-            'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
-            "due_at" => $delivery_date,
-            "customer_notes" => $order->ref_no ?? "",
-            "kitchen_notes" => $notes ?? '',
-            "coupon_code" => $order->applied_discount_code ?? "",
-            "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
-            "meta" => [
-                "3rd_party_order_number" => $order->ref_no ?? "111",
-            ],
-        ];
+            $to = strlen($order->deliveryPeriod->to) < 2 ? '0' . $order->deliveryPeriod->to : $order->deliveryPeriod->to;
+            $deliveryPeriod = $to . ':00:00';
+            $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
 
-        if ($order->applied_discount_code) {
-            $coupon = Discount::where('code', $order->applied_discount_code)->first();
-            if ($coupon && $coupon->foodics_integrate_id) {
-                $json['coupon_id'] = $coupon->foodics_integrate_id ?? null;
-            }
-        }
-
-        foreach ($order_products as $k => $pro) {
-
-            if ($pro->size && isset($pro->size->foodics_integrate_id)) {
-                $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
-                $json['products'][$k] = [
-                    "product_id" => $pro->size->foodics_integrate_id,
-                    "quantity" => $pro->quantity ?? 1,
-                    "unit_price" => $pro->size->sale_price,
-                    "total_price" => $total_price,
-                ];
-
-                if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => $pro->preparation->foodics_integrate_id,
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => $pro->cut->foodics_integrate_id,
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                if ($pro->is_kwar3) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                if ($pro->is_Ras) { // without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                if ($pro->is_lyh) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                if ($pro->is_karashah) { //  without
-                    $json['products'][$k]['options'][] = [
-                        "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
-                        "quantity" => 1,
-                        "unit_price" => 0,
-                    ];
-                }
-
-                $price += $total_price;
-            }
-        }
-
-        $json['subtotal_price'] = $order->order_subtotal ?? $price;
-        $json['total_price'] = $order->total_amount_after_discount ?? $price;
-
-        if (foodics_payment_methods($order->paymentType->code)) {
-            $json['payments'][] = [
-                'payment_method_id' => foodics_payment_methods($order->paymentType->code),
-                'amount' => $order->total_amount_after_discount,
+            $notes = ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - " : '') .
+                (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - " : '') .
+                ($order->comment ?? "");
+            $json = [
+                "type" => 2,
+                "status" => true,
+                "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
+                "discount_amount" => $order->discount_applied ?? 0,
+                'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
+                "due_at" => $delivery_date,
+                "customer_notes" => $order->ref_no ?? "",
+                "kitchen_notes" => $notes ?? '',
+                "coupon_code" => $order->applied_discount_code ?? "",
+                "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
+                "meta" => [
+                    "3rd_party_order_number" => $order->ref_no ?? "111",
+                ],
             ];
-        }
 
-        if ($order->customer->foodics_integrate_id) {
-            $json['customer_id'] = $order->customer->foodics_integrate_id;
-        } else if ($customer_id = foodics_create_or_update_customer($order->customer)) {
-            $json['customer_id'] = $customer_id;
-        }
-
-        if (isset($json['customer_id']) && $json['customer_id']) {
-            if ($order->selectedAddress->foodics_integrate_id) {
-                $json['customer_address_id'] = $order->selectedAddress->foodics_integrate_id;
-                $json['type'] = 3;
-            } else if ($customer_address_id = foodics_create_or_update_customer_address($order->selectedAddress)) {
-                $json['customer_address_id'] = $customer_address_id;
-                $json['type'] = 3;
+            if ($order->applied_discount_code) {
+                $coupon = Discount::where('code', $order->applied_discount_code)->first();
+                if ($coupon && $coupon->foodics_integrate_id) {
+                    $json['coupon_id'] = $coupon->foodics_integrate_id ?? null;
+                }
             }
-        }
 
-        $res = httpCurl('post', 'orders', $json);
+            foreach ($order_products as $k => $pro) {
 
-        if (isset($res['id'])) {
-            $order->update(['foodics_integrate_id' => $res['id']]);
+                if ($pro->size && isset($pro->size->foodics_integrate_id)) {
+                    $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
+                    $json['products'][$k] = [
+                        "product_id" => $pro->size->foodics_integrate_id,
+                        "quantity" => $pro->quantity ?? 1,
+                        "unit_price" => $pro->size->sale_price,
+                        "total_price" => $total_price,
+                    ];
 
-            foodics_create_or_update_customer($order->customer); //
+                    if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => $pro->preparation->foodics_integrate_id,
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
 
-            return $res['id'];
+                    if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => $pro->cut->foodics_integrate_id,
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
+
+                    if ($pro->is_kwar3) { //  without
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
+
+                    if ($pro->is_Ras) { // without
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
+
+                    if ($pro->is_lyh) { //  without
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
+
+                    if ($pro->is_karashah) { //  without
+                        $json['products'][$k]['options'][] = [
+                            "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
+                            "quantity" => 1,
+                            "unit_price" => 0,
+                        ];
+                    }
+
+                    $price += $total_price;
+                }
+            }
+
+            $json['subtotal_price'] = $order->order_subtotal ?? $price;
+            $json['total_price'] = $order->total_amount_after_discount ?? $price;
+
+            if (foodics_payment_methods($order->paymentType->code)) {
+                $json['payments'][] = [
+                    'payment_method_id' => foodics_payment_methods($order->paymentType->code),
+                    'amount' => $order->total_amount_after_discount,
+                ];
+            }
+
+            if ($order->customer->foodics_integrate_id) {
+                $json['customer_id'] = $order->customer->foodics_integrate_id;
+            } else if ($customer_id = foodics_create_or_update_customer($order->customer)) {
+                $json['customer_id'] = $customer_id;
+            }
+
+            if (isset($json['customer_id']) && $json['customer_id']) {
+                if ($order->selectedAddress->foodics_integrate_id) {
+                    $json['customer_address_id'] = $order->selectedAddress->foodics_integrate_id;
+                    $json['type'] = 3;
+                } else if ($customer_address_id = foodics_create_or_update_customer_address($order->selectedAddress)) {
+                    $json['customer_address_id'] = $customer_address_id;
+                    $json['type'] = 3;
+                }
+            }
+
+            $res = httpCurl('post', 'orders', $json);
+
+            if (isset($res['id'])) {
+                $order->update(['foodics_integrate_id' => $res['id']]);
+
+                foodics_create_or_update_customer($order->customer); //
+
+                return $res['id'];
+            }
+            return null;
         }
         return null;
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+        return null;
+
     }
-    return null;
     //code...
 }
 
 function foodics_create_or_update_customer($item)
 {
-    $customer = \App\Models\Customer::find($item->id);
+    try {
 
-    if (!isset($customer->id)) {
-        return null;
-    }
+        $customer = \App\Models\Customer::find($item->id);
 
-    $data = [
-        "name" => $customer->name ?? $customer->mobile ?? "new",
-        "dial_code" => 966,
-        "phone" => substr($customer->mobile, -9) ?? '',
-        "email" => $customer->email ?? '',
-        "gender" => 1,
-        "birth_date" => "1996-09-17",
-        "tags" => [],
-        "is_blacklisted" => false,
-        "is_house_account_enabled" => false,
-        "house_account_limit" => 1000,
-        "is_loyalty_enabled" => false,
-    ];
+        if (!isset($customer->id)) {
+            return null;
+        }
 
-    if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
+        $data = [
+            "name" => $customer->name ?? $customer->mobile ?? "new",
+            "dial_code" => 966,
+            "phone" => substr($customer->mobile, -9) ?? '',
+            "email" => $customer->email ?? '',
+            "gender" => 1,
+            "birth_date" => "1996-09-17",
+            "tags" => [],
+            "is_blacklisted" => false,
+            "is_house_account_enabled" => false,
+            "house_account_limit" => 1000,
+            "is_loyalty_enabled" => false,
+        ];
 
-        $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'], 'email' => $data['email']]);
+        if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
 
-        return $item->foodics_integrate_id;
-    } else {
-        $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
-        if (isset($res[0]['id'])) {
-            $id = $res[0]['id'];
-            $customer->update(['foodics_integrate_id' => $id]);
+            $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'], 'email' => $data['email']]);
 
-            $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'], 'email' => $data['email']]);
-
-            return $id;
+            return $item->foodics_integrate_id;
         } else {
+            $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
+            if (isset($res[0]['id'])) {
+                $id = $res[0]['id'];
+                $customer->update(['foodics_integrate_id' => $id]);
 
-            $res = httpCurl('post', 'customers', $data);
+                $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'], 'email' => $data['email']]);
 
-            if (isset($res['id'])) {
-                $customer->update(['foodics_integrate_id' => $res['id']]);
-                return $res['id'];
+                return $id;
+            } else {
+
+                $res = httpCurl('post', 'customers', $data);
+
+                if (isset($res['id'])) {
+                    $customer->update(['foodics_integrate_id' => $res['id']]);
+                    return $res['id'];
+                }
             }
         }
-    }
 
-    return null;
+        return null;
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+        return null;
+
+    }
 }
 
 function foodics_create_or_update_customer_address($item)
 {
-    $address = \App\Models\Address::with('customer')->find($item->id);
+    try {
 
-    $data = [
-        "name" => $address->label ?? '',
-        "description" => $address->address . ' ' . $address->comment,
-        "latitude" => $address->lat ?? '',
-        "longitude" => $address->long ?? '',
-        "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653",
-    ];
-    if ($address->customer->foodics_integrate_id) {
-        $data["customer_id"] = $address->customer->foodics_integrate_id;
-    } else if ($customer_id = foodics_create_or_update_customer($address->customer)) {
-        $data['customer_id'] = $customer_id;
+        $address = \App\Models\Address::with('customer')->find($item->id);
+
+        $data = [
+            "name" => $address->label ?? '',
+            "description" => $address->address . ' ' . $address->comment,
+            "latitude" => $address->lat ?? '',
+            "longitude" => $address->long ?? '',
+            "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653",
+        ];
+        if ($address->customer->foodics_integrate_id) {
+            $data["customer_id"] = $address->customer->foodics_integrate_id;
+        } else if ($customer_id = foodics_create_or_update_customer($address->customer)) {
+            $data['customer_id'] = $customer_id;
+        }
+
+        $res = httpCurl('post', 'addresses', $data);
+
+        if (isset($res['id'])) {
+            $address->update(['foodics_integrate_id' => $res['id']]);
+            return $res['id'];
+        }
+        return null;
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+        return null;
+
     }
-
-    $res = httpCurl('post', 'addresses', $data);
-
-    if (isset($res['id'])) {
-        $address->update(['foodics_integrate_id' => $res['id']]);
-        return $res['id'];
-    }
-    return null;
 }
 
 function httpCurl($method, $route, $json = [])
