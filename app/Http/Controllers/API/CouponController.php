@@ -3,21 +3,21 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
-use App\Models\Country;
-use App\Models\Customer;
-use App\Models\Shalwata;
-use App\Models\Discount;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\TraceError;
-use App\Models\TempCouponProducts;
-use App\Models\SubCategory;
 use App\Http\Resources\CategoryAppListRecource;
 use App\Http\Resources\ProductCouponResource;
+use App\Models\Cart;
+use App\Models\Category;
+use App\Models\Country;
+use App\Models\Customer;
+use App\Models\Discount;
+use App\Models\Product;
+use App\Models\Shalwata;
+use App\Models\SubCategory;
+use App\Models\TempCouponProducts;
+use App\Models\TraceError;
+use App\Services\PointLocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Services\PointLocation;
 
 class CouponController extends Controller
 {
@@ -25,11 +25,13 @@ class CouponController extends Controller
     public function getAll(Request $request)
     {
         $perPage = 15;
-        if ($request->has('per_page'))
+        if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
+        }
 
-        if ($perPage == 0)
+        if ($perPage == 0) {
             $perPage = 6;
+        }
 
         $data = Discount::latest();
 
@@ -43,7 +45,7 @@ class CouponController extends Controller
 
         return response()->json([
             'success' => 'true', 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
         ], 200);
     }
 
@@ -51,20 +53,21 @@ class CouponController extends Controller
     {
         return response()->json([
             'success' => true, 'message' => '', 'description' => "", "code" => "200",
-            "data" => $discount
+            "data" => $discount,
         ], 200);
     }
 
     public function listCategories(Request $request)
     {
 
-        if (Category::all()->isEmpty())
+        if (Category::all()->isEmpty()) {
             return response()->json(['data' => []], 200);
+        }
 
         $data = CategoryAppListRecource::collection(Category::orderBy('sort', 'ASC')->get());
         return response()->json([
             'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200',
         ], 200);
     }
 
@@ -75,10 +78,9 @@ class CouponController extends Controller
 
         return response()->json([
             'success' => true, 'data' => $data,
-            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200'
+            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200',
         ], 200);
     }
-
 
     public function listProduct(Request $request)
     {
@@ -87,36 +89,37 @@ class CouponController extends Controller
         $data = ProductCouponResource::collection($data);
         return response()->json([
             'success' => true, 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
         ], 200);
     }
 
     public function listCustomer(Request $request)
     {
         $perPage = 6;
-        if ($request->has('per_page'))
+        if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
+        }
 
-        if ($perPage == 0)
+        if ($perPage == 0) {
             $perPage = 6;
+        }
+
         $validatedData = $request->validate([
             'mobile' => 'required',
 
         ]);
-
 
         $data = Customer::where([['wallet', '>', 0], ['mobile', 'like', '%' . $validatedData['mobile'] . '%']])->get();
 
         //  $data = Customer::paginate($perPage);
         return response()->json([
             'success' => true, 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200'
+            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
         ], 200);
 
         //       }
 
         // }
-
 
     }
 
@@ -153,9 +156,8 @@ class CouponController extends Controller
             'country_ids.*' => array('required_with:country_ids', 'exists:countries,id'),
             // 'client_ids' => array('array'),
             'client_ids.*' => array('required_with:client_ids', 'exists:customers,id'),
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
         ]);
-
 
         $product_ids = isset($request->product_ids) && is_array($request->product_ids) ? $request->product_ids : json_decode($request->product_ids);
         $validatedData['product_ids'] = $product_ids ? implode(",", $product_ids) : null;
@@ -165,7 +167,6 @@ class CouponController extends Controller
 
         $client_ids = isset($request->client_ids) && is_array($request->client_ids) ? $request->client_ids : json_decode($request->client_ids);
         $validatedData['client_ids'] = $client_ids ? implode(",", $client_ids) : null;
-
 
         $country_ids = isset($request->country_ids) && is_array($request->country_ids) ? $request->country_ids : json_decode($request->country_ids);
         $validatedData['country_ids'] = $country_ids ? implode(",", $country_ids) : null;
@@ -178,19 +179,16 @@ class CouponController extends Controller
 
         $discount = Discount::create($validatedData);
 
-
         return response()->json([
             'success' => true, 'data' => $discount,
-            'message' => 'Successfully Added!', 'description' => 'Add Coupon', 'code' => '200'
+            'message' => 'Successfully Added!', 'description' => 'Add Coupon', 'code' => '200',
         ], 200);
     }
-
 
     public function updateCoupon(Request $request, Discount $discount)
     {
 
         $validatedData = $request->validate([
-
 
             'discount_amount_percent' => 'sometimes|numeric',
             'min_applied_amount' => 'nullable|numeric',
@@ -219,7 +217,7 @@ class CouponController extends Controller
             'country_ids.*' => array('required_with:country_ids', 'exists:countries,id'),
             // 'client_ids' => array('nullable', 'array'),
             'client_ids.*' => array('required_with:client_ids', 'exists:customers,id'),
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
         ]);
 
         $product_ids = isset($request->product_ids) && is_array($request->product_ids) ? $request->product_ids : json_decode($request->product_ids);
@@ -231,7 +229,6 @@ class CouponController extends Controller
         $client_ids = isset($request->client_ids) && is_array($request->client_ids) ? $request->client_ids : json_decode($request->client_ids);
         $validatedData['client_ids'] = $client_ids ? implode(",", $client_ids) : null;
 
-
         $country_ids = isset($request->country_ids) && is_array($request->country_ids) ? $request->country_ids : json_decode($request->country_ids);
         $validatedData['country_ids'] = $country_ids ? implode(",", $country_ids) : null;
 
@@ -241,12 +238,11 @@ class CouponController extends Controller
         $category_child_ids = isset($request->category_child_ids) && is_array($request->category_child_ids) ? $request->category_child_ids : json_decode($request->category_child_ids);
         $validatedData['category_child_ids'] = $category_child_ids ? implode(",", $category_child_ids) : null;
 
-
         $discount->update($validatedData);
 
         return response()->json([
             'success' => true, 'data' => $validatedData,
-            'message' => 'Successfully updated!', 'description' => '', 'code' => '200'
+            'message' => 'Successfully updated!', 'description' => '', 'code' => '200',
         ], 200);
     }
 
@@ -262,8 +258,7 @@ class CouponController extends Controller
         }
     }
 
-
-    function checkValidation(Request $request)
+    public function checkValidation(Request $request)
     {
 
         $validate = $request->validate([
@@ -276,30 +271,30 @@ class CouponController extends Controller
         $countryId = $request->query('countryId');
         $country = Country::where('code', $countryId)->get()->first();
 
-        if ($country === null)
+        if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
             ], 200);
+        }
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
 
-        if ($currentCity === null)
+        if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200'
+                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
             ], 200);
-
+        }
 
         $cart = Cart::where([['customer_id', auth()->user()->id], ['city_id', $currentCity->id]])->get();
 
         if (count($cart) == 0) {
             return response()->json([
                 'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400'
+                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400',
             ], 400);
         }
-
 
         $shalwata = Shalwata::first();
         $totalItemsAmount = 0.0;
@@ -311,7 +306,7 @@ class CouponController extends Controller
         $discountAmount = 0;
 
         list($cartProduct, $discountCode, $totalAddonsAmount, $totalItemsAmount, $orderProducts)
-            = app(OrderController::class)->calculateProductsAmount($cart, $validate['code'], $shalwata, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
+        = app(OrderController::class)->calculateProductsAmount($cart, $validate['code'], $shalwata, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
         TraceError::create(['class_name' => "CouponController::consumer sent data239", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
 
         $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount;
@@ -320,7 +315,7 @@ class CouponController extends Controller
         if ($couponValid == null) {
             return response()->json([
                 'success' => false, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1], 'description' => 'invalid coupon used', 'code' => '400'
+                'message' => 'invalid coupon used', 'description' => 'invalid coupon used', 'code' => '400',
             ], 400);
         }
 
@@ -328,7 +323,7 @@ class CouponController extends Controller
 
         return response()->json([
             'success' => true, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-            'message' => 'valid', 'description' => 'valid coupon used', 'code' => '200'
+            'message' => 'valid', 'description' => 'valid coupon used', 'code' => '200',
         ], 200);
     }
 
@@ -385,8 +380,10 @@ class CouponController extends Controller
 
             $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount - $discountAmount;
 
-            if ($TotalAmountAfterDiscount < 0)
+            if ($TotalAmountAfterDiscount < 0) {
                 $TotalAmountAfterDiscount = 0;
+            }
+
         } else if ($couponValid->is_percent == false && $TotalAmountBeforeDiscount != 0.0 && $couponValid->discount_amount_percent != 0) {
 
             $discountAmount = $couponValid->discount_amount_percent;
@@ -394,13 +391,16 @@ class CouponController extends Controller
             // // if ($discountAmount > $couponValid->max_discount)
             // //     $discountAmount = $couponValid->max_discount;
 
-            if (($totalApplicableAmountBeforeDiscount - $discountAmount) < 0)
+            if (($totalApplicableAmountBeforeDiscount - $discountAmount) < 0) {
                 $totalApplicableAmountBeforeDiscount = 0;
+            }
 
             $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount - $totalApplicableAmountBeforeDiscount;
 
-            if ($TotalAmountAfterDiscount < 0)
+            if ($TotalAmountAfterDiscount < 0) {
                 $TotalAmountAfterDiscount = 0;
+            }
+
         }
 
         $this->saveCouponForOrder($discountCode);
@@ -428,7 +428,7 @@ class CouponController extends Controller
         TempCouponProducts::create([
             "order_id" => $orderId,
             "coupon_code" => $discountCode,
-            "product_ids" => json_encode($applicableProductIds)
+            "product_ids" => json_encode($applicableProductIds),
         ]);
     }
 }

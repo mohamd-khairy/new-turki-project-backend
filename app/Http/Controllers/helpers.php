@@ -309,7 +309,11 @@ function foodics_payment_methods($type)
         ],
         "ARB" => [
             "id" => "9bf0d637-0193-44fd-accc-49d1d68a613a",
-            "name" => "Gift Card",
+            "name" => "MyFatoorah",
+        ],
+        "MyFatoorah" => [
+            "id" => "9bf0d637-0193-44fd-accc-49d1d68a613a",
+            "name" => "MyFatoorah",
         ],
         "tamara" => [
             "id" => "9bf0d65a-b6b1-4c4f-97ff-67c86e456afb",
