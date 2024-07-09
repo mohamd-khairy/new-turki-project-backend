@@ -25,7 +25,9 @@ class City extends Model
         'is_active',
         'integrate_id',
         'is_available_for_delivery',
-        'polygon'
+        'polygon',
+        'allow_cash',
+        'min_price'
     ];
 
     protected $appends = ['polygons'];
@@ -54,7 +56,7 @@ class City extends Model
 
     public function getPolygonAttribute()
     {
-        if ($this->attributes['polygon']) {
+        if (isset($this->attributes['polygon'])) {
             return json_decode($this->attributes['polygon']);
         }
         return [];
@@ -63,7 +65,7 @@ class City extends Model
 
     public function getPolygonsAttribute()
     {
-        if ($this->attributes['polygon']) {
+        if (isset($this->attributes['polygon'])) {
             $polygon = json_decode($this->attributes['polygon']);
             return collect($polygon)->map(function ($i) {
                 $v = explode(' ', $i);
@@ -74,5 +76,15 @@ class City extends Model
             });
         }
         return ['lat' => 0, 'long' => 0];
+    }
+
+    public function days()
+    {
+        return $this->hasMany(CityDay::class);
+    }
+
+    public function periods()
+    {
+        return $this->hasMany(CityDeliveryPeriod::class);
     }
 }

@@ -120,4 +120,24 @@ class PointLocation
         }
         return $currentCity ?? null;
     }
+
+    function getPolygonOfCity($country, string $point)
+    {
+        $polygonList = json_decode(City::where('country_id', $country->id)->pluck('polygon'));
+        $pointLocation = new PointLocation();
+        $currentCity = null;
+        // dd($polygonList);
+        if ($polygonList) {
+            foreach ($polygonList as $polygon) {
+
+                $polygon = is_string($polygon) ? json_decode($polygon) : $polygon;
+
+
+                if ($polygon && $pointLocation->pointInPolygon($point, $polygon)) {
+                    return json_encode($polygon);
+                }
+            }
+        }
+        return null;
+    }
 }

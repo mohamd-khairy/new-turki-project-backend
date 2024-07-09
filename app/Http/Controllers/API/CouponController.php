@@ -24,7 +24,7 @@ class CouponController extends Controller
 
     public function getAll(Request $request)
     {
-        $perPage = 15;
+        $perPage = 100;
         if ($request->has('per_page')) {
             $perPage = $request->get('per_page');
         }
@@ -35,9 +35,10 @@ class CouponController extends Controller
 
         $data = Discount::latest();
 
-        if (request('code')) {
+        if (request('search')) {
             $data = $data->where(function ($q) {
-                $q->where('code', 'like', '%' . request('code') . '%');
+                $q->where('code', 'like', '%' . request('search') . '%')
+                    ->orWhere('name', 'like', '%' . request('search') . '%');
             });
         }
 
@@ -306,7 +307,7 @@ class CouponController extends Controller
         $discountAmount = 0;
 
         list($cartProduct, $discountCode, $totalAddonsAmount, $totalItemsAmount, $orderProducts)
-        = app(OrderController::class)->calculateProductsAmount($cart, $validate['code'], $shalwata, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
+            = app(OrderController::class)->calculateProductsAmount($cart, $validate['code'], $shalwata, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
         TraceError::create(['class_name' => "CouponController::consumer sent data239", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
 
         $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount;
@@ -383,7 +384,6 @@ class CouponController extends Controller
             if ($TotalAmountAfterDiscount < 0) {
                 $TotalAmountAfterDiscount = 0;
             }
-
         } else if ($couponValid->is_percent == false && $TotalAmountBeforeDiscount != 0.0 && $couponValid->discount_amount_percent != 0) {
 
             $discountAmount = $couponValid->discount_amount_percent;
@@ -400,7 +400,6 @@ class CouponController extends Controller
             if ($TotalAmountAfterDiscount < 0) {
                 $TotalAmountAfterDiscount = 0;
             }
-
         }
 
         $this->saveCouponForOrder($discountCode);
