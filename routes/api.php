@@ -22,6 +22,8 @@ use App\Http\Controllers\API\ProductSizeController;
 use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Store\BankController;
+use App\Http\Controllers\API\Store\CityDayController;
+use App\Http\Controllers\API\Store\CityDeliveryPeriodController;
 use App\Http\Controllers\API\Store\InvoiceController;
 use App\Http\Controllers\API\Store\MoneySafeController;
 use App\Http\Controllers\API\Store\StockController;
@@ -219,6 +221,8 @@ Route::prefix("v2")->group(function () {
 
         /*********************NotDeliveryDatePeriodController***************** */
         Route::apiResource('not-delivery-date', NotDeliveryDatePeriodController::class);
+        Route::apiResource('city-days', CityDayController::class);
+        Route::apiResource('city-delivery-periods', CityDeliveryPeriodController::class);
 
         /***********************PermissionController******************* */
         Route::get('permissions', [PermissionController::class, 'permissions']);
