@@ -32,18 +32,16 @@ class AppendToAllResponses
             $country = Country::where('code', $countryId)->get()->first();
             $polygon = app(PointLocation::class)->getPolygonOfCity($country, $point);
 
-            $currentCity = City::select('id', 'name_en')
-                ->with('days', 'periods')
+            $currentCity = City::select('id', 'name_en','name_ar', 'allow_cash', 'min_price')
+                ->with('days', 'periods.delivery_period')
                 ->where('polygon', $polygon)
                 ->first();
 
             // Get the original data
             $originalData = $response->getData(true);
 
-            // Append additional data
             $additionalData = [
-                'currentCity' => $currentCity,
-                'day' => $this->getNextFourdates($currentCity->days->pluck('day')->toArray())
+                'currentCity' => $this->getNextFourdates($currentCity)
             ];
 
             // Merge the additional data with the original data
@@ -58,8 +56,10 @@ class AppendToAllResponses
 
 
 
-    function getNextFourdates($days)
+    function getNextFourdates($currentCity)
     {
+        $days = $currentCity->days; //->pluck('day')->toArray();
+
         $all_days = [
             'saturday' =>  Carbon::SATURDAY,
             'sunday' =>  Carbon::SUNDAY,
@@ -71,7 +71,8 @@ class AppendToAllResponses
         ];
 
         $dates = [];
-        foreach ($days as $day) {
+        foreach ($days as $item) {
+            $day = $item->day;
             $date = Carbon::now();
 
             // Find the next Saturday
@@ -83,12 +84,24 @@ class AppendToAllResponses
             for ($i = 0; $i < 3; $i++) {
                 $d = $date->copy()->toDateString();
                 if (!NotDeliveryDateCity::where('delivery_date', $d)->first()) {
-                    $dates[$day][] = $d;
+                    $dates[] = $d;
                 }
                 $date->addWeek();
             }
         }
 
-        return $dates;
+        sort($dates);
+
+        // $currentCity->dates = $dates;
+
+        return [
+            "id" => $currentCity->id,
+            "name_en" => $currentCity->name_en,
+            "name_ar" => $currentCity->name_ar,
+            "allow_cash" => $currentCity->allow_cash,
+            "min_price" => $currentCity->min_price,
+            "dates" => $dates,
+            "delivery_period" => isset($currentCity->periods) ? $currentCity->periods->pluck('delivery_period') : null,
+        ];
     }
 }

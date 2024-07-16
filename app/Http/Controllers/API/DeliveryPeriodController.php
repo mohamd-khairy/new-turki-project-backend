@@ -14,9 +14,14 @@ class DeliveryPeriodController extends Controller
      */
     public function getAll()
     {
-        if(request()->header('Type') == 'dashboard'){
-            $data = DeliveryPeriod::get();
-        }else{
+        if (request()->header('Type') == 'dashboard') {
+            $data = DeliveryPeriod::query();
+
+            if (request('is_active')) {
+                $data = $data->where('is_active', 1);
+            }
+            $data = $data->get();
+        } else {
             $data = DeliveryPeriod::where('is_active', '1')->get();
         }
         return response()->json([

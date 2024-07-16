@@ -1235,23 +1235,23 @@ class OrderController extends Controller
 
         $TotalAmountBeforeDiscount = $totalAddonsAmount + $totalItemsAmount;
 
-        $miniOrderValue = MinOrder::where("country_id", $country->id)->get()->first();
+        // $miniOrderValue = MinOrder::where("country_id", $country->id)->get()->first();
 
-        $minOrderPerCity = MinOrder::where('city_id', $currentCity->id)->first();
+        // $minOrderPerCity = MinOrder::where('city_id', $currentCity->id)->first();
 
-        if ($miniOrderValue != null && $miniOrderValue->min_order > $TotalAmountBeforeDiscount) {
-            return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
-            ], 400);
-        }
+        // if ($miniOrderValue != null && $miniOrderValue->min_order > $TotalAmountBeforeDiscount) {
+        //     return response()->json([
+        //         'success' => false, 'data' => [],
+        //         'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
+        //     ], 400);
+        // }
 
-        if ($minOrderPerCity != null && $minOrderPerCity->min_order > $TotalAmountBeforeDiscount) {
-            return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
-            ], 400);
-        }
+        // if ($minOrderPerCity != null && $minOrderPerCity->min_order > $TotalAmountBeforeDiscount) {
+        //     return response()->json([
+        //         'success' => false, 'data' => [],
+        //         'message' => 'failed', 'description' => "minimum order value should be more that or equal $miniOrderValue->min_order $country->currency_en!", 'code' => '400',
+        //     ], 400);
+        // }
 
         // TraceError::create(['class_name' => "Create Order", 'method_name' => "before coupon 1", 'error_desc' => json_encode($customer)]);
         $applicableProductIds = [];

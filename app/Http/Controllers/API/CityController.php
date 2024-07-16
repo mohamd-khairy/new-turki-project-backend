@@ -73,7 +73,9 @@ class CityController extends Controller
             'name_en' => 'required|max:150',
             'integrate_id' => 'sometimes|numeric',
             'is_available_for_delivery' => 'required',
-            'polygon' => 'required' // need regex here
+            'polygon' => 'required', // need regex here
+            'min_price' => 'nullable',
+            'allow_cash' => 'nullable',
         ]);
 
         $polygonList = is_array($validateData['polygon']) ? $validateData['polygon'] : json_decode($validateData['polygon']);
@@ -139,9 +141,12 @@ class CityController extends Controller
             'name_en' => 'sometimes|max:150',
             'integrate_id' => 'sometimes|numeric',
             'is_available_for_delivery' => 'sometimes',
-            'polygon' => 'sometimes' // need regex here
+            'polygon' => 'sometimes', // need regex here
+            'min_price' => 'nullable',
+            'allow_cash' => 'nullable',
         ]);
 
+        $validateData['allow_cash'] = request('allow_cash', false);
         $polygonList = is_array($validateData['polygon']) ? $validateData['polygon'] : json_decode($validateData['polygon']);
 
         if ($polygonList) {

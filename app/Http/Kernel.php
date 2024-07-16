@@ -48,7 +48,6 @@ class Kernel extends HttpKernel
             // 'throttle:api',
             'throttle:500,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\AppendToAllResponses::class,
         ],
     ];
 
@@ -70,6 +69,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'coordinates' => Coordinates::class,
+        'current_city' => \App\Http\Middleware\AppendToAllResponses::class,
 
         'role' => RoleMiddleware::class,
         'permission' => PermissionMiddleware::class,

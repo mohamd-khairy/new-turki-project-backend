@@ -22,8 +22,8 @@ use App\Http\Controllers\API\ProductSizeController;
 use App\Http\Controllers\API\ProductTagController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Store\BankController;
-use App\Http\Controllers\API\Store\CityDayController;
-use App\Http\Controllers\API\Store\CityDeliveryPeriodController;
+use App\Http\Controllers\API\CityDayController;
+use App\Http\Controllers\API\CityDeliveryPeriodController;
 use App\Http\Controllers\API\Store\InvoiceController;
 use App\Http\Controllers\API\Store\MoneySafeController;
 use App\Http\Controllers\API\Store\StockController;
@@ -504,10 +504,7 @@ Route::prefix("v2")->group(function () {
         });
 
 
-
-
-
-        Route::prefix('carts')->middleware('auth:sanctum')->group(function () {
+        Route::prefix('carts')->middleware(['current_city', 'auth:sanctum'])->group(function () {
             Route::get('/', [\App\Http\Controllers\API\CartController::class, 'getCart']);
             Route::post('add-to-cart', [\App\Http\Controllers\API\CartController::class, 'addToCart']);
             Route::post('add-to-cart-v2', [\App\Http\Controllers\API\CartController::class, 'addToCartV2']);

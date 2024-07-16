@@ -35,6 +35,7 @@ class City extends Model
     protected $hidden = ['created_at', 'updated_at', 'pivot'];
 
     protected $casts = [
+        'allow_cash' => 'boolean',
         'is_active' => 'boolean',
         'is_available_for_delivery' => 'boolean',
     ];
