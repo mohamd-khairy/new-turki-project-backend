@@ -40,7 +40,7 @@ class CityDayController extends BaseController
             ->join('city_days', 'cities.id', '=', 'city_days.city_id')
             ->orderBy('id', 'desc')
             ->groupBy('cities.id')
-            ->paginate(request("per_page", 10));
+            ->paginate(request("per_page", 100));
 
         return successResponse($items);
     }
