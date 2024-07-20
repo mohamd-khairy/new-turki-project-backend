@@ -49,7 +49,7 @@ class CityDeliveryPeriodController extends BaseController
             ->join('delivery_periods', 'delivery_periods.id', '=', 'city_delivery_periods.delivery_period_id')
             ->orderBy('id', 'desc')
             ->groupBy('cities.id')
-            ->paginate(request("per_page", 10));
+            ->paginate(request("per_page", 1000000));
 
         return successResponse($items);
     }
