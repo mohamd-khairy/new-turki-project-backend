@@ -76,6 +76,9 @@ class CityController extends Controller
             'polygon' => 'required', // need regex here
             'min_price' => 'nullable',
             'allow_cash' => 'nullable',
+            'cash_back_amount' => 'nullable',
+            'cash_back_start_date' => 'nullable',
+            'cash_back_end_date' => 'nullable',
         ]);
 
         $polygonList = is_array($validateData['polygon']) ? $validateData['polygon'] : json_decode($validateData['polygon']);
@@ -144,6 +147,9 @@ class CityController extends Controller
             'polygon' => 'sometimes', // need regex here
             'min_price' => 'nullable',
             'allow_cash' => 'nullable',
+            'cash_back_amount' => 'nullable',
+            'cash_back_start_date' => 'nullable',
+            'cash_back_end_date' => 'nullable',
         ]);
 
         $validateData['allow_cash'] = request('allow_cash', false);

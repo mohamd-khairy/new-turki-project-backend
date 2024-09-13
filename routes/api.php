@@ -63,8 +63,6 @@ Route::prefix("v2")->group(function () {
             Route::post('/edit-address/{address}', [\App\Http\Controllers\API\AuthenticationController::class, 'editAddressCustomer']);
             Route::post('/edit-profile', [\App\Http\Controllers\API\AuthenticationController::class, 'editProfile']);
             Route::get('/show-profile', [\App\Http\Controllers\API\AuthenticationController::class, 'showProfile']);
-            Route::post('/charge-wallet', [\App\Http\Controllers\API\WalletController::class, 'chargeWallet']);
-            Route::get('/wallet-logs', [\App\Http\Controllers\API\WalletController::class, 'customerWalletLog']);
             Route::post('/tabby-manual-payment/create', [TabbyApiService::class, 'createManualPayment']);
             Route::post('/tabby-manual-payment/update', [TabbyApiService::class, 'manualResponseUpdate']);
             Route::post('/tabby-manual-payment/updatev2', [TabbyApiService::class, 'manualResponseUpdateV2']);
@@ -202,7 +200,7 @@ Route::prefix("v2")->group(function () {
 
         Route::get('order-status', [HomeController::class, 'GetOrderStatus']);
 
-        Route::get('all-order-status', fn () => successResponse(OrderState::whereIn('code', handleRoleOrderState(['admin'])['status'])->get()));
+        Route::get('all-order-status', fn() => successResponse(OrderState::whereIn('code', handleRoleOrderState(['admin'])['status'])->get()));
 
         /***********************HomeController******************* */
         Route::get('dashboard', [HomeController::class, 'dashboard']);
@@ -270,7 +268,6 @@ Route::prefix("v2")->group(function () {
             Route::get('get-order', [OrderController::class, 'getOrdersDashboard']); //getOrderDashboard
             Route::get('get-user-order', [OrderController::class, 'getUserOrdersDashboard']); //getOrderDashboard
             Route::get('get-one-order/{order}', [OrderController::class, 'getOrderDashboard']); //
-            Route::get('get-customer-wallet/{customer_id}', [OrderController::class, 'getCustomerWallet']); //getCustomerWallet
             Route::get('take-order/{id}', [OrderController::class, 'takeOrder']); //getCustomerWallet
             Route::post('assign-user-order', [OrderController::class, 'assignUserOrder']); //getCustomerWallet
             Route::get('export-order-products', [OrderController::class, 'exportOrderProducts']); //getCustomerWallet
@@ -284,6 +281,13 @@ Route::prefix("v2")->group(function () {
                 Route::post('add-order', [OrderController::class, 'createOrder']);
                 Route::post('add-test-order', [OrderTest2Controller::class, 'createOrder']);
             });
+        });
+
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('/get-customer-wallet', [\App\Http\Controllers\API\WalletController::class, 'getWalletCustomerId']); /////
+            Route::get('/get-customer-wallet-logs', [\App\Http\Controllers\API\WalletController::class, 'customerWalletLog']); ////
+            Route::get('/wallet-log/{wallet}', [\App\Http\Controllers\API\WalletController::class, 'getWalletLogById']); ////
+            Route::get('/wallet-logs', [\App\Http\Controllers\API\WalletController::class, 'getWalletLog']); ////
         });
 
         /*********************CouponController***************** */
@@ -350,6 +354,7 @@ Route::prefix("v2")->group(function () {
             Route::post('/{product}/rating', [ProductController::class, 'ratingProduct']);
         });
     });
+
 
     /************************************************** old routes ******************************************************** */
     Route::namespace("API")->group(function () {
@@ -498,6 +503,7 @@ Route::prefix("v2")->group(function () {
         //Products - ex. api/v2/products/add-product
 
         Route::middleware('auth:sanctum')->prefix('wishlists')->group(function () {
+            Route::post('/customers-list', [\App\Http\Controllers\API\CouponController::class, 'listCustomer']);
             Route::get('/', [\App\Http\Controllers\API\ProductController::class, 'getFavoriteProduct']);
             Route::get('/add-to-wishlist/{product}', [\App\Http\Controllers\API\ProductController::class, 'addFavoriteProduct']);
             Route::delete('/remove-from-wishlist/{favorite}', [\App\Http\Controllers\API\ProductController::class, 'removeFavoriteProduct']);
@@ -523,14 +529,7 @@ Route::prefix("v2")->group(function () {
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/customers-list', [\App\Http\Controllers\API\CouponController::class, 'listCustomer']);
-            Route::post('/wallet', [\App\Http\Controllers\API\WalletController::class, 'updateCustomerWallet']);
-            Route::get('/get-wallet', [\App\Http\Controllers\API\WalletController::class, 'getWalletLog']);
-            Route::get('/wallet-by-id/{wallet}', [\App\Http\Controllers\API\WalletController::class, 'getWalletLogById']);
-
-            Route::get('/wallet-by-customer/{id}', [\App\Http\Controllers\API\WalletController::class, 'getWalletLogByCustomerId']);
         });
-
-
 
 
 

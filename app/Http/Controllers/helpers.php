@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -159,7 +160,6 @@ function OrderToFoodics($ref_no)
     } catch (\Throwable $th) {
         //throw $th;
         return null;
-
     }
     //code...
 }
@@ -218,7 +218,6 @@ function foodics_create_or_update_customer($item)
     } catch (\Throwable $th) {
         //throw $th;
         return null;
-
     }
 }
 
@@ -252,7 +251,6 @@ function foodics_create_or_update_customer_address($item)
     } catch (\Throwable $th) {
         //throw $th;
         return null;
-
     }
 }
 
@@ -300,6 +298,49 @@ function httpCurl($method, $route, $json = [])
     }
 }
 
+function streamOrder($number) // solution 2 for server
+{
+    $sse = DB::table('orders')
+        ->select(
+            'orders.*',
+            'customers.name as customer_name',
+            'customers.mobile as customer_mobile',
+            'order_states.state_ar as order_state_ar',
+            'order_states.state_en as order_state_en',
+            'shalwatas.name_ar as shalwata_name',
+            'shalwatas.price as shalwata_price',
+            'payment_types.name_ar as payment_type_name',
+            'payment_types.code as payment_type_code',
+            'delivery_periods.name_ar as delivery_period_name',
+            'delivery_periods.time_hhmm as delivery_period_time',
+            'payments.price as payment_price',
+            'payments.status as payment_status',
+            'addresses.address as address_address',
+            'addresses.lat as address_lat',
+            'addresses.long as address_long',
+            'addresses.country_id as address_country_id',
+            'addresses.city_id as address_city_id',
+            'cities.name_ar as city_name',
+            'users.username as sales_officer_name',
+            'u.username as driver_name',
+            'u.id as driver_id'
+        )
+        ->where('orders.ref_no', $number)
+        ->join('customers', 'customers.id', '=', 'orders.customer_id')
+        ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
+        ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
+        ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
+        ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
+        ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
+        ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
+        ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+        ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
+        ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
+        ->first();
+
+    sse_notify(json_encode($sse));
+}
+
 function foodics_payment_methods($type)
 {
     $data = [
@@ -343,10 +384,10 @@ function generateQrInvoice($order)
 
     return base64_encode(
         ConvertHex("01") . ConvertHex(toHex(strlen("تركي للذبائح"))) . "تركي للذبائح"
-        . ConvertHex("02") . ConvertHex(toHex(strlen("310841577800003"))) . "310841577800003"
-        . ConvertHex("03") . ConvertHex(toHex(strlen($date))) . $date
-        . ConvertHex("04") . ConvertHex(toHex(strlen($total))) . $total
-        . ConvertHex("05") . ConvertHex(toHex(strlen($vat))) . $vat
+            . ConvertHex("02") . ConvertHex(toHex(strlen("310841577800003"))) . "310841577800003"
+            . ConvertHex("03") . ConvertHex(toHex(strlen($date))) . $date
+            . ConvertHex("04") . ConvertHex(toHex(strlen($total))) . $total
+            . ConvertHex("05") . ConvertHex(toHex(strlen($vat))) . $vat
     );
 }
 
@@ -394,8 +435,22 @@ if (!function_exists('toHex')) {
     function toHex($number)
     {
         $hexvalues = array(
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
         );
         $hexval = '';
         while ($number != '0') {

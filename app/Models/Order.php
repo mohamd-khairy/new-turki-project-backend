@@ -61,6 +61,41 @@ class Order extends Model
     protected $primaryKey = 'ref_no';
     public $incrementing = false;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($model) {
+            // This code will be executed when a new record is being created
+
+            try {
+                streamOrder($model->ref_no);
+
+                if ($model->using_wallet && isset($model->selectedAddress->city->cash_back_amount)) {
+
+                    $cash_back_amount = $model->selectedAddress->city->cash_back_amount;
+                    $cash_back_start_date = $model->selectedAddress->city->cash_back_start_date ?? null;
+                    $cash_back_end_date = $model->selectedAddress->city->cash_back_end_date ?? null;
+                    if ($model->created_at->between($cash_back_start_date, $cash_back_end_date)) {
+
+                        WalletLog::create([
+                            'user_id' => null,
+                            'customer_id' => $model->customer_id,
+                            'last_amount' => $model->customer->wallet,
+                            'new_amount' => ($model->customer->wallet + (($model->total_amount * $cash_back_amount) / 100)),
+                            'action_id' =>  $model->ref_no,
+                            'action' => 'cash_back',
+                        ]);
+                    }
+                }
+
+                OrderToFoodics($model->ref_no);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        });
+    }
+
     public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount', 'discount_code', 'is_printed'];
     public function getIsPrintedAttribute()
     {

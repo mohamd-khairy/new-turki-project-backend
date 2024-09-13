@@ -40,9 +40,9 @@ class AppendToAllResponses
             // Get the original data
             $originalData = $response->getData(true);
 
-            $additionalData = [
+            $additionalData = $currentCity ? [
                 'currentCity' => $this->getNextFourdates($currentCity)
-            ];
+            ] : [];
 
             // Merge the additional data with the original data
             $newData = array_merge($originalData, $additionalData);
@@ -58,7 +58,7 @@ class AppendToAllResponses
 
     function getNextFourdates($currentCity)
     {
-        $days = $currentCity->days; //->pluck('day')->toArray();
+        $days = isset($currentCity->days) ? $currentCity->days : []; //->pluck('day')->toArray();
 
         $all_days = [
             'saturday' =>  Carbon::SATURDAY,

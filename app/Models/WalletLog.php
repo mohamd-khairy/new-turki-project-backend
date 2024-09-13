@@ -9,5 +9,10 @@ class WalletLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['customer_id', 'last_amount', 'new_amount', 'action'];
+    protected $fillable = ['customer_id', 'last_amount', 'new_amount', 'action', 'user_id', 'action_id'];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'action_id', 'ref_no');
+    }
 }

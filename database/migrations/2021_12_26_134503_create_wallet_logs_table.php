@@ -15,10 +15,12 @@ class CreateWalletLogsTable extends Migration
     {
         Schema::create('wallet_logs', function (Blueprint $table) {
             $table->id();
-            $table->decimal('last_amount',18,2);
-            $table->decimal('new_amount',18,2);
+            $table->decimal('last_amount', 18, 2);
+            $table->decimal('new_amount', 18, 2);
             $table->string('action');
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('action_id')->nullable();
             $table->timestamps();
         });
     }

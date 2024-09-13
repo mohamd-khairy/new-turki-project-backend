@@ -27,7 +27,10 @@ class City extends Model
         'is_available_for_delivery',
         'polygon',
         'allow_cash',
-        'min_price'
+        'min_price',
+        'cash_back_amount',
+        'cash_back_start_date',
+        'cash_back_end_date'
     ];
 
     protected $appends = ['polygons'];

@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\Shalwata;
 use App\Models\Size;
 use App\Models\TempCouponProducts;
+use App\Models\WalletLog;
 use App\Services\MyFatoorahApiService;
 use App\Services\NgeniusPaymentService;
 use App\Services\PointLocation;
@@ -61,16 +62,6 @@ class OrderController extends Controller
         }
 
         return successResponse($order);
-    }
-
-    public function getCustomerWallet($id)
-    {
-        $customer = Customer::with('wallet_orders.payment')->where('id', $id)->first();
-        if (!$customer) {
-            return failResponse([], 'لا يوجد عميل بهذا الرقم');
-        }
-
-        return successResponse($customer);
     }
 
     public function getOrdersDashboard(Request $request)
@@ -375,6 +366,7 @@ class OrderController extends Controller
         // Return CSV as a downloadable file
         return new StreamedResponse($callback, 200, $headers);
     }
+
     private function transformOrderData($items)
     {
         return collect($items)->map(function ($i) {
@@ -401,6 +393,7 @@ class OrderController extends Controller
             return $i;
         });
     }
+
     private function handlePaymentStatus($order)
     {
         if ($order->payment_status == 'Paid') {
@@ -638,16 +631,22 @@ class OrderController extends Controller
 
             if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
                 return response()->json([
-                    'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400',
+                    'success' => false,
+                    'data' => [],
+                    'message' => 'failed',
+                    'description' => 'your wallet is empty!',
+                    'code' => '400',
                 ], 400);
             }
 
             $address = Address::where(['customer_id' => $request->customer_id, 'id' => $validated["address_id"]])->first();
             if ($address === null) {
                 return response()->json([
-                    'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'invalid address', 'code' => '400',
+                    'success' => false,
+                    'data' => [],
+                    'message' => 'failed',
+                    'description' => 'invalid address',
+                    'code' => '400',
                 ], 400);
             }
 
@@ -667,7 +666,7 @@ class OrderController extends Controller
                 "address_id" => $validated["address_id"],
                 "address" => '',
                 'customer_id' => $request->customer_id,
-                'payment_type_id' => 1,
+                'payment_type_id' => $validated["using_wallet"] ? 8 : 1,
                 'applied_discount_code' => $discountCode,
                 'version_app' => $app,
                 'comment' => $validated['notes'] ?? null,
@@ -676,7 +675,7 @@ class OrderController extends Controller
                 'sales_representative_id' => in_array('store_manager', auth()->user()->roles->pluck('name')->toArray()) ? auth()->user()->id : null,
             ];
 
-            if ($validated["using_wallet"] == 1 && $wallet) {
+            if ($validated["using_wallet"] && $wallet) {
 
                 if ($TotalAmountAfterDiscount >= $wallet) {
                     $finalTotal = $TotalAmountAfterDiscount - $wallet;
@@ -684,12 +683,16 @@ class OrderController extends Controller
                     $customer->wallet = 0;
                     $customer->save();
                     $order['paid'] = 0;
+                    $order['wallet_amount_used'] = $walletAmountUsed;
+                    $order['total_amount_after_discount'] = $finalTotal;
                 } else {
                     $walletAmountUsed = $TotalAmountAfterDiscount;
                     $customer->wallet = $wallet - $TotalAmountAfterDiscount;
                     $customer->save();
                     $finalTotal = 0;
                     $order['paid'] = 1;
+                    $order['wallet_amount_used'] = $walletAmountUsed;
+                    $order['total_amount_after_discount'] = $finalTotal;
                 }
             }
 
@@ -714,7 +717,16 @@ class OrderController extends Controller
 
                 if ($payment) {
 
-                    $order->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 8]);
+                    WalletLog::create([
+                        'user_id' => auth()->user()->id,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $order->ref_no,
+                        'action' => 'new_order'
+                    ]);
+
+                    $order->update(['payment_id' => $payment->id ?? null]);
                 }
             }
 
@@ -743,11 +755,12 @@ class OrderController extends Controller
 
             $this->storeOrderProducts($request->products, $order);
 
-            OrderToFoodics($order->ref_no);
-
             return response()->json([
-                'success' => true, 'data' => $order,
-                'message' => '', 'description' => '', 'code' => '200',
+                'success' => true,
+                'data' => $order,
+                'message' => '',
+                'description' => '',
+                'code' => '200',
             ], 200);
         });
     }
@@ -1062,8 +1075,11 @@ class OrderController extends Controller
         $orders->data = $items;
 
         return response()->json([
-            'success' => true, 'data' => $orders,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $orders,
+            'message' => 'retrieved successfully',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -1075,8 +1091,11 @@ class OrderController extends Controller
             ->orderBy('id', 'desc')->take(30)->get();
 
         return response()->json([
-            'success' => true, 'data' => $orders,
-            'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $orders,
+            'message' => 'Products retrieved successfully',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -1097,8 +1116,11 @@ class OrderController extends Controller
             ->paginate($perPage);
 
         return response()->json([
-            'success' => true, 'data' => $orders,
-            'message' => 'Products retrieved successfully', 'description' => "", 'code' => '200',
+            'success' => true,
+            'data' => $orders,
+            'message' => 'Products retrieved successfully',
+            'description' => "",
+            'code' => '200',
         ], 200);
     }
 
@@ -1109,16 +1131,21 @@ class OrderController extends Controller
 
         if ($order != null) {
             return response()->json([
-                'success' => true, 'data' => $order,
-                'message' => 'Products retrieved successfully', 'description' => '', 'code' => '200',
+                'success' => true,
+                'data' => $order,
+                'message' => 'Products retrieved successfully',
+                'description' => '',
+                'code' => '200',
             ], 200);
         } else {
             return response()->json([
-                'success' => false, 'data' => null,
-                'message' => 'order not found!', 'description' => '', 'code' => '404',
+                'success' => false,
+                'data' => null,
+                'message' => 'order not found!',
+                'description' => '',
+                'code' => '404',
             ], 404);
         }
-
     }
 
     public function createOrder(Request $request)
@@ -1141,7 +1168,10 @@ class OrderController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -1150,7 +1180,10 @@ class OrderController extends Controller
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -1172,8 +1205,11 @@ class OrderController extends Controller
 
         if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'your wallet is empty!', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'your wallet is empty!',
+                'code' => '400',
             ], 400);
         }
 
@@ -1189,34 +1225,45 @@ class OrderController extends Controller
 
             if ($deliveryPeriodCity != null) {
                 return response()->json([
-                    'success' => false, 'data' => [],
-                    'message' => 'failed', 'description' => 'select valid delivery date/period!', 'code' => '400',
+                    'success' => false,
+                    'data' => [],
+                    'message' => 'failed',
+                    'description' => 'select valid delivery date/period!',
+                    'code' => '400',
                 ], 400);
             }
-
         }
 
         $cart = Cart::where([['customer_id', auth()->user()->id], ['city_id', $currentCity->id]])->get();
 
         if (count($cart) == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'add itmes to your cart first!',
+                'code' => '400',
             ], 400);
         }
 
         $address = Address::where([['customer_id', auth()->user()->id], ['id', $validated["address_id"]]])->get()->first();
         if ($address === null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'invalid address', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'invalid address',
+                'code' => '400',
             ], 400);
         }
 
         if ($address->city_id != $currentCity->id) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'invalid address, your location does not match with your selected address!', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'invalid address, your location does not match with your selected address!',
+                'code' => '400',
             ], 400);
         }
 
@@ -1259,16 +1306,19 @@ class OrderController extends Controller
             list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = app(CouponController::class)->discountProcess($discountCode, $cartProduct, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
             if ($couponValid == null) {
                 return response()->json([
-                    'success' => false, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1], 'description' => 'invalid coupon used', 'code' => '400',
+                    'success' => false,
+                    'data' => Cart::where('customer_id', auth()->user()->id)->get(),
+                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1],
+                    'description' => 'invalid coupon used',
+                    'code' => '400',
                 ], 400);
             }
         } else {
             $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount;
         }
 
-        $customer = Customer::find(auth()->user()->id);
         #$delivery = DeliveryFee::where('city_id', $currentCity->id)->get()->first();
+        $paid = 0;
         $delivery = 0;
         $walletAmountUsed = 0;
         $wallet = $customer->wallet;
@@ -1276,14 +1326,16 @@ class OrderController extends Controller
         if ($validated["using_wallet"] == 1) {
 
             if ($TotalAmountAfterDiscount >= $wallet) {
-                $TotalAmountAfterDiscount = $TotalAmountAfterDiscount - $wallet;
                 $walletAmountUsed = $wallet;
                 $customer->wallet = 0;
                 $customer->save();
+                $paid = 0;
+                $TotalAmountAfterDiscount = $TotalAmountAfterDiscount - $wallet;
             } else {
                 $walletAmountUsed = $TotalAmountAfterDiscount;
                 $customer->wallet = $wallet - $TotalAmountAfterDiscount;
                 $customer->save();
+                $paid = 1;
                 $TotalAmountAfterDiscount = 0;
             }
         }
@@ -1309,10 +1361,11 @@ class OrderController extends Controller
             'payment_type_id' => $validated['payment_type_id'],
             'applied_discount_code' => $discountCode,
             'version_app' => $app,
-            // "integrate_id" => 0
+            "paid" => $paid ?? 0
         ];
 
         $createdOrder = Order::create($order);
+
 
         foreach ($orderProducts as $orderProduct) {
             $orderProduct['order_ref_no'] = $createdOrder->ref_no;
@@ -1346,7 +1399,7 @@ class OrderController extends Controller
                         "ref_no" => GetNextPaymentRefNo('SA', $lastPayment != null ? $lastPayment->id + 1 : 1),
                         "customer_id" => $createdOrder->customer_id,
                         'order_ref_no' => $createdOrder->ref_no,
-                        'payment_type_id' => 1, //wallet
+                        'payment_type_id' => $validated['payment_type_id'], //wallet
                         'price' => 0,
                         'status' => 'NotPaid',
                         'manual' => 1,
@@ -1355,22 +1408,30 @@ class OrderController extends Controller
                 );
 
                 if ($createdOrder->wallet_amount_used > 0) {
-                    // $payment->price = $createdOrder->wallet_amount_used;
-                    // $payment->status = 'Paid';
+                    $payment->price = $createdOrder->wallet_amount_used;
+                    $payment->status = 'Paid';
                     $payment->description = "Payment Wallet Created";
                     $payment->save();
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
                 }
 
                 if ($payment) {
 
-                    $createdOrder->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 1]);
+                    $createdOrder->update(['payment_id' => $payment->id ?? null]);
                 }
                 //code...
             } catch (\Throwable $th) {
                 //throw $th;
             }
 
-            OrderToFoodics($createdOrder->ref_no);
 
             // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
 
@@ -1385,8 +1446,11 @@ class OrderController extends Controller
             //     $orderToNS->update(['saleOrderId' => $res2]);
             // }
             return response()->json([
-                'success' => true, 'data' => $createdOrder,
-                'message' => '', 'description' => '', 'code' => '200',
+                'success' => true,
+                'data' => $createdOrder,
+                'message' => '',
+                'description' => '',
+                'code' => '200',
             ], 200);
         } else {
 
@@ -1396,11 +1460,13 @@ class OrderController extends Controller
 
                 if ($paymentType->active === 1) {
                     $paymentRes = app(MyFatoorahApiService::class)->Set_Payment_myfatoora($customer, $createdOrder, $paymentType, $country, 'KSA');
-
                 } else {
                     return response()->json([
-                        'success' => true, 'data' => $createdOrder,
-                        'message' => '', 'description' => '', 'code' => '200',
+                        'success' => true,
+                        'data' => $createdOrder,
+                        'message' => '',
+                        'description' => '',
+                        'code' => '200',
                     ], 200);
                 }
                 // $res = app(CallOrderNetsuiteApi::class)->sendOrderToNS($order, $request);
@@ -1417,8 +1483,11 @@ class OrderController extends Controller
                 // }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
 
                 // $paymentRes = app(AlRajhiPaymentService::class)->createARBpayment($customer, $createdOrder, $paymentType, $country);
@@ -1477,8 +1546,11 @@ class OrderController extends Controller
                 }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "tamara-v2") {
 
@@ -1503,8 +1575,11 @@ class OrderController extends Controller
                 }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
             } elseif ($country->code == 'AE' && $paymentType->code === "ARB") {
 
@@ -1542,8 +1617,11 @@ class OrderController extends Controller
                 // }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "Tabby") {
 
@@ -1563,8 +1641,11 @@ class OrderController extends Controller
                 // }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
             } elseif ($paymentType->code === "Ngenius") {
 
@@ -1586,8 +1667,11 @@ class OrderController extends Controller
                 // }
 
                 return response()->json([
-                    'success' => true, 'data' => $paymentRes,
-                    'message' => '', 'description' => '', 'code' => '200',
+                    'success' => true,
+                    'data' => $paymentRes,
+                    'message' => '',
+                    'description' => '',
+                    'code' => '200',
                 ], 200);
             } else {
 
@@ -1600,7 +1684,7 @@ class OrderController extends Controller
                             "ref_no" => GetNextPaymentRefNo('SA', $lastPayment != null ? $lastPayment->id + 1 : 1),
                             "customer_id" => $createdOrder->customer_id,
                             'order_ref_no' => $createdOrder->ref_no,
-                            'payment_type_id' => 1, //wallet
+                            'payment_type_id' => $validated['payment_type_id'], //wallet
                             'price' => 0,
                             'status' => 'NotPaid',
                             'manual' => 1,
@@ -1609,27 +1693,40 @@ class OrderController extends Controller
                     );
 
                     if ($createdOrder->wallet_amount_used > 0) {
-                        // $payment->price = $createdOrder->wallet_amount_used;
-                        // $payment->status = 'Paid';
+                        $payment->price = $createdOrder->wallet_amount_used;
+                        $payment->status = 'Paid';
                         $payment->description = "Payment Wallet Created";
                         $payment->save();
+
+
+                        WalletLog::create([
+                            'user_id' => null,
+                            'customer_id' => $customer->id,
+                            'last_amount' => $customer->wallet + $walletAmountUsed,
+                            'new_amount' => $customer->wallet,
+                            'action_id' =>  $createdOrder->ref_no,
+                            'action' => 'new_order'
+                        ]);
                     }
 
                     if ($payment) {
 
-                        $createdOrder->update(['payment_id' => $payment->id ?? null, 'payment_type_id' => 1]);
+                        $createdOrder->update(['payment_id' => $payment->id ?? null]);
                     }
                     //code...
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
 
-                OrderToFoodics($createdOrder->ref_no);
+                // OrderToFoodics($createdOrder->ref_no);
 
                 // TraceError::create(['class_name' => "create order 351", 'method_name' => "Get_Payment_Status", 'error_desc' => json_encode($createdOrder)]);
                 return response()->json([
-                    'success' => false, 'data' => $createdOrder,
-                    'message' => 'Please, contact support with ref: ' . $createdOrder->ref_no, 'description' => '', 'code' => '400',
+                    'success' => false,
+                    'data' => $createdOrder,
+                    'message' => 'Please, contact support with ref: ' . $createdOrder->ref_no,
+                    'description' => '',
+                    'code' => '400',
                 ], 400);
             }
         }

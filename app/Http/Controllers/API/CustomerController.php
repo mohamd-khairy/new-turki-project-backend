@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Country;
 use App\Models\Customer;
+use App\Models\WalletLog;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
 
@@ -94,9 +95,10 @@ class CustomerController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'nullable',//|unique:customers,email,' . $customer->id,
+            'email' => 'nullable', //|unique:customers,email,' . $customer->id,
             'mobile' => 'required|unique:customers,mobile,' . $customer->id,
             'foodics_integrate_id' => 'nullable',
+            'wallet' => 'nullable|numeric|min:1'
         ]);
 
         $data = $request->except('avatar');
@@ -109,6 +111,19 @@ class CustomerController extends Controller
 
         if ($request->is_active) {
             $data['is_active'] = $request->is_active == 'true' ? 1 : 0;
+        }
+
+        if ($request->wallet) {
+
+            WalletLog::create([
+                'user_id' => auth()->user()->id,
+                'customer_id' => $customer->id,
+                'last_amount' => $customer->wallet,
+                'new_amount' => (float)$request->wallet,
+                'action' => 'induction'
+            ]);
+
+            $data['wallet'] = $customer->wallet + (float)$request->wallet;
         }
 
         $customer->update($data);
@@ -134,8 +149,11 @@ class CustomerController extends Controller
         $address = Address::where('customer_id', $id)->get();
 
         return response()->json([
-            'success' => true, 'data' => $address,
-            'message' => 'Address retrieved successfully', 'description' => 'list Of Products', 'code' => '200'
+            'success' => true,
+            'data' => $address,
+            'message' => 'Address retrieved successfully',
+            'description' => 'list Of Products',
+            'code' => '200'
         ], 200);
     }
 

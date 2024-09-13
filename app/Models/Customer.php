@@ -60,19 +60,24 @@ class Customer extends Authenticatable
     protected static function boot()
     {
         parent::boot();
+        try {
 
-        static::created(function ($model) {
-            // This code will be executed when a new record is being created
-            foodics_create_or_update_customer($model);
-        });
+            static::created(function ($model) {
+                // This code will be executed when a new record is being created
+                foodics_create_or_update_customer($model);
+            });
 
-        static::updated(function ($model) {
+            static::updated(function ($model) {
 
-            $id = foodics_create_or_update_customer($model);
-            if ($model->foodics_integrate_id == 'null' || !$model->foodics_integrate_id) {
-                $model->update(['foodics_integrate_id' => $id]);
-            }
-        });
+                $id = foodics_create_or_update_customer($model);
+                if ($model->foodics_integrate_id == 'null' || !$model->foodics_integrate_id) {
+                    $model->update(['foodics_integrate_id' => $id]);
+                }
+            });
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
 
     public function getNameMobileAttribute()
@@ -87,7 +92,13 @@ class Customer extends Authenticatable
 
     public function wallet_orders()
     {
-        return $this->hasMany(Order::class)->where('using_wallet', 1);
+        return $this->hasMany(Order::class)->orderBy('created_at', 'desc')->where('using_wallet', 1);
+    }
+
+    public function wallet_logs()
+    {
+        return $this->hasMany(WalletLog::class)
+            ->orderBy('created_at', 'desc');
     }
 
     public function favorites()
