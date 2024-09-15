@@ -395,7 +395,8 @@ class CouponController extends Controller
                 $totalApplicableAmountBeforeDiscount = 0;
             }
 
-            $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount - $totalApplicableAmountBeforeDiscount;
+            // $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount - $totalApplicableAmountBeforeDiscount;
+            $TotalAmountAfterDiscount = $totalApplicableAmountBeforeDiscount - $discountAmount;
 
             if ($TotalAmountAfterDiscount < 0) {
                 $TotalAmountAfterDiscount = 0;
