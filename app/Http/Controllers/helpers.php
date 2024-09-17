@@ -5,6 +5,7 @@ use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
+use App\Models\WalletLog;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +13,25 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+
+function cashBack($order)
+{
+    if ($order->order_state_id == 200 && isset($order->selectedAddress->city->cash_back_amount)) {
+        $cash_back_amount = $order->selectedAddress->city->cash_back_amount;
+        $cash_back_start_date = $order->selectedAddress->city->cash_back_start_date ?? null;
+        $cash_back_end_date = $order->selectedAddress->city->cash_back_end_date ?? null;
+        if ($order->created_at->between($cash_back_start_date, $cash_back_end_date)) {
+            WalletLog::create([
+                'user_id' => null,
+                'customer_id' => $order->customer_id,
+                'last_amount' => $order->customer->wallet,
+                'new_amount' => ($order->customer->wallet + (($order->total_amount * $cash_back_amount) / 100)),
+                'action_id' =>  $order->ref_no,
+                'action' => 'cash_back',
+            ]);
+        }
+    }
+}
 
 function OrderToFoodics($ref_no)
 {

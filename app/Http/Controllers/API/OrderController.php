@@ -444,6 +444,8 @@ class OrderController extends Controller
     public function editOrder(Request $request)
     {
         try {
+            DB::beginTransaction();
+
             $request->validate([
                 'id' => 'required|exists:orders,id',
                 'order_state_id' => 'nullable|exists:order_states,code',
@@ -560,14 +562,18 @@ class OrderController extends Controller
                 $data['printed_at'] = now();
             }
 
-            // if ($order->order_state_id == "200") {
-            //     OrderToFoodics($order->ref_no);
-            // }
+            if ($request->order_state_id == "200") {
+                cashBack($order);
+            }
 
             $order->update($data);
 
+            DB::commit();
+
             return successResponse($order->refresh(), 'order updated successfully');
         } catch (\Throwable $th) {
+
+            DB::rollBack();
 
             return failResponse([], $th->getMessage());
         }
