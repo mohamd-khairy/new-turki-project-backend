@@ -23,9 +23,7 @@ class CartController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * Display a listing of the resource.
@@ -43,7 +41,10 @@ class CartController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -56,7 +57,10 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city, contact support!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city, contact support!',
+                'code' => '200',
             ], 200);
         }
 
@@ -78,7 +82,10 @@ class CartController extends Controller
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -100,7 +107,8 @@ class CartController extends Controller
         $list = NotDeliveryDateCity::where('city_id', $currentCity->id)->get(['id', 'delivery_date']);
 
         return response()->json([
-            'success' => true, 'data' => [
+            'success' => true,
+            'data' => [
                 'cart' => $cartWithDetails,
                 'min_order' => $minOrder,
                 'min_order_per_city' => $minOrderPerCity != null ? $minOrderPerCity->min_order : 0.0,
@@ -108,8 +116,11 @@ class CartController extends Controller
                 // 'paymentType' => $paymentType,
                 'not_included_dates' => $list,
                 'invoice-preview' => $preview,
+                'customer_wallet' => Customer::find(auth()->user()->id)->wallet
             ],
-            'message' => 'Products retrieved successfully', 'description' => 'list Of Products', 'code' => '200',
+            'message' => 'Products retrieved successfully',
+            'description' => 'list Of Products',
+            'code' => '200',
         ], 200);
     }
 
@@ -124,7 +135,10 @@ class CartController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -133,7 +147,10 @@ class CartController extends Controller
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -158,41 +175,59 @@ class CartController extends Controller
 
         if ($validated['quantity'] == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'quantity can not be zero!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'quantity can not be zero!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
         if ($product->is_active == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product not available!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product not available!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['preparation_id'] != null && $product->productPreparations()->find($validated['preparation_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid preparation used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid preparation used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['size_id'] != null && $product->productSizes()->find($validated['size_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid size used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid size used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['cut_id'] != null && $product->productCuts()->find($validated['cut_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid cut used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid cut used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['is_shalwata'] == 1 && $product->is_shalwata != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have shalwata!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have shalwata!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         // if ($validated['is_kwar3'] == 1 && $product->is_kwar3 != 1 ){
@@ -255,8 +290,11 @@ class CartController extends Controller
         $preview = $this->invoicePreview($validated, $allCart, $currentCity, $country);
 
         return response()->json([
-            'success' => true, 'data' => ['cart' => $cart, 'invoice-preview' => $preview],
-            'message' => '', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => ['cart' => $cart, 'invoice-preview' => $preview],
+            'message' => '',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -273,7 +311,7 @@ class CartController extends Controller
         $comment = null;
 
         list($cartProduct, $discountCode, $totalAddonsAmount, $totalItemsAmount, $orderProducts)
-        = app(OrderController::class)->calculateProductsAmount($cartProducts, $validated['applied_discount_code'], $shalwata, $addonsAmount, $itemsAmount, $orderProducts);
+            = app(OrderController::class)->calculateProductsAmount($cartProducts, $validated['applied_discount_code'], $shalwata, $addonsAmount, $itemsAmount, $orderProducts);
 
         $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount;
 
@@ -281,8 +319,11 @@ class CartController extends Controller
             list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = app(CouponController::class)->discountProcess($discountCode, $cartProducts, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
             if ($couponValid == null) {
                 return response()->json([
-                    'success' => false, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1], 'description' => 'invalid coupon used', 'code' => '400',
+                    'success' => false,
+                    'data' => Cart::where('customer_id', auth()->user()->id)->get(),
+                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1],
+                    'description' => 'invalid coupon used',
+                    'code' => '400',
                 ], 400);
             }
         } else {
@@ -334,7 +375,10 @@ class CartController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -343,7 +387,10 @@ class CartController extends Controller
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -368,73 +415,103 @@ class CartController extends Controller
 
         if ($validated['quantity'] == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'quantity can not be zero!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'quantity can not be zero!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
         if ($product->is_available == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product not available!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product not available!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['preparation_id'] != null && $product->productPreparations()->find($validated['preparation_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid preparation used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid preparation used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['size_id'] != null && $product->productSizes()->find($validated['size_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid size used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid size used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['cut_id'] != null && $product->productCuts()->find($validated['cut_id']) == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'invalid cut used!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'invalid cut used!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
         if ($validated['is_shalwata'] == 1 && $product->is_shalwata != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have shalwata!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have shalwata!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['is_kwar3'] == 1 && $product->is_kwar3 != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have kawar3!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have kawar3!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['is_Ras'] == 1 && $product->is_Ras != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have Ras!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have Ras!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['is_lyh'] == 1 && $product->is_lyh != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have lyh!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have lyh!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
         if ($validated['is_karashah'] == 1 && $product->is_karashah != 1) {
 
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'product does not have karashah!', 'description' => '', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'product does not have karashah!',
+                'description' => '',
+                'code' => '400',
             ], 400);
         }
 
@@ -474,8 +551,11 @@ class CartController extends Controller
         $preview = $this->invoicePreview($validated, $allCart, $currentCity, $country);
 
         return response()->json([
-            'success' => true, 'data' => ['cart' => $cart, 'invoice-preview' => $preview],
-            'message' => '', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => ['cart' => $cart, 'invoice-preview' => $preview],
+            'message' => '',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -488,7 +568,10 @@ class CartController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -498,14 +581,20 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city, contact support!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city, contact support!',
+                'code' => '200',
             ], 200);
         }
 
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -515,8 +604,11 @@ class CartController extends Controller
 
         if ($cartId == null && !is_numeric($cartId)) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'no items found!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'no items found!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
@@ -527,8 +619,11 @@ class CartController extends Controller
 
         if ($validated['quantity'] == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'quantity can not be zero, use delete insted!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'quantity can not be zero, use delete insted!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
@@ -536,8 +631,11 @@ class CartController extends Controller
 
         if ($cart == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'no items found!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'no items found!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
@@ -552,8 +650,11 @@ class CartController extends Controller
         $preview = $this->invoicePreview($validated, $allCart, $currentCity, $country);
 
         return response()->json([
-            'success' => true, 'data' => ['cart' => $cart, 'invoice-preview' => $preview],
-            'message' => '', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => ['cart' => $cart, 'invoice-preview' => $preview],
+            'message' => '',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -567,7 +668,10 @@ class CartController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -576,21 +680,30 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city, contact support!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city, contact support!',
+                'code' => '200',
             ], 200);
         }
 
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
         if ($cartId == null && !is_numeric($cartId)) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'no items found!', 'description' => '1', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'no items found!',
+                'description' => '1',
+                'code' => '400',
             ], 400);
         }
 
@@ -607,8 +720,11 @@ class CartController extends Controller
         $preview = $this->invoicePreview($validated, $cart->get(), $currentCity, $country);
 
         return response()->json([
-            'success' => true, 'data' => ['cart' => $cart->cartDetails()->get(), 'invoice-preview' => $preview],
-            'message' => '', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => ['cart' => $cart->cartDetails()->get(), 'invoice-preview' => $preview],
+            'message' => '',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -624,15 +740,21 @@ class CartController extends Controller
 
         if ($cartProducts->get()->first() == null) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'add itmes to your cart first!',
+                'code' => '400',
             ], 400);
         }
 
         $preview = [];
         return response()->json([
-            'success' => true, 'data' => $preview,
-            'message' => '', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $preview,
+            'message' => '',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 }

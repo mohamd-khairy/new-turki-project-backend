@@ -15,4 +15,9 @@ class WalletLog extends Model
     {
         return $this->belongsTo(Order::class, 'action_id', 'ref_no');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }

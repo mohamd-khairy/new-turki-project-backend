@@ -33,51 +33,60 @@ class Cart extends Model
         'is_karashah' => 'boolean',
         'is_kwar3' => 'boolean',
         'is_Ras' => 'boolean',
-        'is_lyh'=> 'boolean',
+        'is_lyh' => 'boolean',
     ];
 
-   protected $hidden = ['created_at', 'updated_at','pivot', 'city_id'];
+    protected $hidden = ['created_at', 'updated_at', 'pivot', 'city_id'];
 
-
-    public function customer(){
+    public function customer()
+    {
         return $this->belongsTo(Customer::class)->with('addresses');
     }
 
-    public function address(){
+    public function address()
+    {
         return $this->belongsTo(Address::class);
     }
 
-    public function coupon(){
+    public function coupon()
+    {
         return $this->belongsTo(Discount::class, 'applied_discount_code');
     }
 
-    public function preparation(){
+    public function preparation()
+    {
         return $this->belongsTo(Preparation::class);
     }
 
-    public function size(){
+    public function size()
+    {
         return $this->belongsTo(Size::class);
     }
 
-    public function cut(){
+    public function cut()
+    {
         return $this->belongsTo(Cut::class);
     }
 
-    public function shalwata(){
+    public function shalwata()
+    {
         return $this->belongsTo(Shalwata::class);
     }
 
-    public function city(){
+    public function city()
+    {
         return $this->belongsTo(City::class)->with("notDeliveryDateCity");
     }
 
-    public function product(){
-        return $this->belongsTo(Product::class)->with('productImages', 'shalwata','productPaymentTypes', 'notDeliveryDate');
+    public function product()
+    {
+        return $this->belongsTo(Product::class)->with('productImages', 'shalwata', 'productPaymentTypes', 'notDeliveryDate');
     }
 
-    public function scopeCartDetails($query){
+    public function scopeCartDetails($query)
+    {
         return $query
-//            ->with('product.notDeliveryDate')
+            //            ->with('product.notDeliveryDate')
             ->with('preparation')
             ->with('size')
             ->with('cut')

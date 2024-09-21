@@ -21,13 +21,22 @@ function cashBack($order)
         $cash_back_start_date = $order->selectedAddress->city->cash_back_start_date ?? null;
         $cash_back_end_date = $order->selectedAddress->city->cash_back_end_date ?? null;
         if ($order->created_at->between($cash_back_start_date, $cash_back_end_date)) {
-            WalletLog::create([
+            $cash_back = ($order->customer->wallet + (($order->total_amount * $cash_back_amount) / 100));
+            $log = WalletLog::updateOrCreate([
+                'action_id' => $order->ref_no,
+                'customer_id' => $order->customer_id,
+                'action' => 'cash_back',
+            ], [
                 'user_id' => null,
                 'customer_id' => $order->customer_id,
                 'last_amount' => $order->customer->wallet,
-                'new_amount' => ($order->customer->wallet + (($order->total_amount * $cash_back_amount) / 100)),
+                'new_amount' => $cash_back,
                 'action_id' =>  $order->ref_no,
                 'action' => 'cash_back',
+            ]);
+
+            $order->customer->update([
+                'wallet' => $cash_back
             ]);
         }
     }
@@ -318,7 +327,7 @@ function httpCurl($method, $route, $json = [])
     }
 }
 
-function streamOrder($number) // solution 2 for server
+function streamOrder($number, $event = null) // solution 2 for server
 {
     $sse = DB::table('orders')
         ->select(
@@ -358,7 +367,7 @@ function streamOrder($number) // solution 2 for server
         ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
         ->first();
 
-    sse_notify(json_encode($sse));
+    sse_notify(json_encode($sse), null, $event);
 }
 
 function foodics_payment_methods($type)

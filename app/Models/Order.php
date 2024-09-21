@@ -69,9 +69,18 @@ class Order extends Model
             // This code will be executed when a new record is being created
 
             try {
-                streamOrder($model->ref_no);
+                streamOrder($model->ref_no, 'message');
 
                 OrderToFoodics($model->ref_no);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
+        });
+
+        static::updated(function ($model) {
+            // This code will be executed when a new record is being created
+            try {
+                streamOrder($model->ref_no, 'update-order');
             } catch (\Throwable $th) {
                 //throw $th;
             }

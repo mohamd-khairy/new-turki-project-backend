@@ -119,7 +119,7 @@ class CustomerController extends Controller
                 'user_id' => auth()->user()->id,
                 'customer_id' => $customer->id,
                 'last_amount' => $customer->wallet,
-                'new_amount' => (float)$request->wallet,
+                'new_amount' => (float)$request->wallet + $customer->wallet,
                 'action' => 'induction'
             ]);
 

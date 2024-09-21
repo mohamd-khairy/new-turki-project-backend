@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CustomerWalletLogResource;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\WalletLog;
@@ -13,31 +14,22 @@ class WalletController extends Controller
 
     public function getWalletCustomerId(Request $request) /////////////
     {
-        $log = Customer::with('wallet_logs')->where('id', auth()->user()->id)->first()
-            ->wallet_logs->map(function ($item) {
-                return [
-                    "id" => $item->id,
-                    "last_amount" => $item->last_amount,
-                    "new_amount" => $item->new_amount,
-                    "action" => $item->action,
-                    "action_id" => $item->action_id,
-                    "created_at" => $item->created_at,
-                    'action_item' => $item->action_id ? Order::where('ref_no', $item->action_id)->first() : null
-                ];
-            });
+        $log = Customer::with('wallet_logs')->where('id', auth()->user()->id)->first();
+
+
 
         return response()->json([
             'success' => true,
             'message' => 'successfully updated!',
             'description' => "",
             "code" => "200",
-            "data" => $log
+            "data" => new CustomerWalletLogResource($log), //$log
         ], 200);
     }
 
     public function customerWalletLog()
     {
-        $logs = WalletLog::with('action_item')->where('customer_id', auth()->user()->id)->orderBy('id', 'desc')->get();
+        $logs = WalletLog::where('customer_id', auth()->user()->id)->orderBy('id', 'desc')->get();
         return response()->json([
             'success' => true,
             'message' => 'success!',
@@ -49,7 +41,7 @@ class WalletController extends Controller
 
     public function getWalletLog()
     {
-        $logs = WalletLog::with('action_item')->all();
+        $logs = WalletLog::all();
         return response()->json([
             'success' => true,
             'message' => 'success!',
