@@ -10,6 +10,8 @@ class StockController extends BaseController
 {
     public $model = Stock::class;
 
+    public $search = ['product_name'];
+
     public $with = ['product', 'store', 'invoice.supplier', 'invoice.user'];
 
     public function storeValidation()
@@ -89,5 +91,18 @@ class StockController extends BaseController
             DB::rollBack();
             throw $th;
         }
+    }
+
+    public function index()
+    {
+        $per_page = request('search') && !request('per_page') ? 100000 : request("per_page", 10);
+
+        $items = $this->model::with($this->with ?? []);
+
+        $items = $this->filter($items);
+
+        $items = $items->orderBy('id', 'desc')->paginate($per_page ?? 10);
+
+        return successResponse($items);
     }
 }

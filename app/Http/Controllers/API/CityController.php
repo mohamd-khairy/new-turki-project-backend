@@ -155,7 +155,7 @@ class CityController extends Controller
         $validateData['allow_cash'] = request('allow_cash', false);
         $polygonList = is_array($validateData['polygon']) ? $validateData['polygon'] : json_decode($validateData['polygon']);
 
-        if ($polygonList) {
+        if ($polygonList && count($polygonList) > 0) {
             $newPolygonList = [];
 
             // long lat format
@@ -164,6 +164,8 @@ class CityController extends Controller
             }
 
             $validateData['polygon'] = json_encode($newPolygonList);
+        }else{
+            unset($validateData['polygon']);
         }
 
         if ($city->update($validateData)) {

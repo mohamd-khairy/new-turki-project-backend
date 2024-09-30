@@ -204,6 +204,10 @@ Route::prefix("v2")->group(function () {
 
         /***********************HomeController******************* */
         Route::get('dashboard', [HomeController::class, 'dashboard']);
+        Route::get('cart-chart', [HomeController::class, 'handleCartChartObject']);
+        Route::get('profit-chart', [HomeController::class, 'handleProfitChartObject']);
+        Route::get('product-chart', [HomeController::class, 'handleProductChartObject']);
+
 
         /***********************RoleController******************* */
         Route::apiResource('roles', RoleController::class);

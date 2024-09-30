@@ -69,8 +69,8 @@ class OrderController extends Controller
         $total = 0;
         $orderStates = auth()->check() ? handleRoleOrderState(auth()->user()->roles->pluck('name')->toArray())['orders'] : null;
 
-        $perPage = $request->input('per_page', 6);
-        $perPage = ($perPage == 0) ? 6 : $perPage;
+        $perPage = $request->input('per_page', 20);
+        $perPage = ($perPage == 0) ? 20 : $perPage;
 
         $orders = DB::table('orders')
             ->select(
@@ -79,8 +79,8 @@ class OrderController extends Controller
                 'customers.mobile as customer_mobile',
                 'order_states.state_ar as order_state_ar',
                 'order_states.state_en as order_state_en',
-                'shalwatas.name_ar as shalwata_name',
-                'shalwatas.price as shalwata_price',
+                // 'shalwatas.name_ar as shalwata_name',
+                // 'shalwatas.price as shalwata_price',
                 'payment_types.name_ar as payment_type_name',
                 'payment_types.code as payment_type_code',
                 'delivery_periods.name_ar as delivery_period_name',
@@ -101,16 +101,17 @@ class OrderController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
             ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
             ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
-            ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
+            // ->leftJoin('shalwatas', 'shalwatas.id', '=', 'orders.shalwata_id')
             ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
             ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
             ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
+            ->orderBy('orders.id', 'desc')
             ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
                 $query->where('orders.customer_id', auth()->user()->id);
             })
-            ->when($orderStates, function ($query) use ($orderStates) {
+            ->when($orderStates && request()->header('Type') == 'dashboard', function ($query) use ($orderStates) {
                 $query->whereIn('orders.order_state_id', $orderStates);
             })
             ->when(request('order_state_ids'), function ($query) {
@@ -160,11 +161,9 @@ class OrderController extends Controller
                 $query->where('addresses.country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);
             });
 
-        // Add more conditions based on request parameters
-        $orders = $orders->orderBy('orders.id', 'desc');
 
         if (request()->header('Type') == 'dashboard') {
-            $total = $orders->sum('total_amount_after_discount');
+            $total = $orders->sum('total_amount');
         }
 
         if (request('export', null) == 1 && $orders->count() > 0) {
@@ -1488,6 +1487,19 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
+                }
+
+
                 return response()->json([
                     'success' => true,
                     'data' => $paymentRes,
@@ -1551,6 +1563,18 @@ class OrderController extends Controller
                     $paymentRes = app(TamaraApiService::class)->checkoutTamara($customer, $address, $createdOrder, $validated['tamara_payment_name'], $country);
                 }
 
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'data' => $paymentRes,
@@ -1578,6 +1602,18 @@ class OrderController extends Controller
 
                 } else {
                     $paymentRes = app(TamaraApiServiceV2::class)->checkoutTamara($customer, $address, $createdOrder, $validated['tamara_payment_name'], $country);
+                }
+
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
                 }
 
                 return response()->json([
@@ -1622,6 +1658,18 @@ class OrderController extends Controller
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
 
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'data' => $paymentRes,
@@ -1645,6 +1693,18 @@ class OrderController extends Controller
 
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
+
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
+                }
 
                 return response()->json([
                     'success' => true,
@@ -1671,6 +1731,18 @@ class OrderController extends Controller
 
                 //     $orderToNS->update(['saleOrderId' => $res2]);
                 // }
+
+                if ($createdOrder->wallet_amount_used > 0) {
+
+                    WalletLog::create([
+                        'user_id' => null,
+                        'customer_id' => $customer->id,
+                        'last_amount' => $customer->wallet + $walletAmountUsed,
+                        'new_amount' => $customer->wallet,
+                        'action_id' =>  $createdOrder->ref_no,
+                        'action' => 'new_order'
+                    ]);
+                }
 
                 return response()->json([
                     'success' => true,

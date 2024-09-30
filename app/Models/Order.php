@@ -95,7 +95,9 @@ class Order extends Model
 
     public function getRemainAmountAttribute()
     {
-        return ($this->payment && $this->payment->status == 'Paid' ?  $this->total_amount_after_discount - $this->payment->price : $this->total_amount_after_discount ?? 0) + $this->wallet_amount_used;
+        return $this->payment && $this->payment->status == 'Paid'
+            ? ($this->total_amount_after_discount - $this->payment->price)
+            : $this->total_amount_after_discount;
     }
 
     public function getTotalAmountAfterTaxAttribute()
@@ -104,7 +106,7 @@ class Order extends Model
         if (isset($this->selectedAddress->country_id) && $this->selectedAddress->country_id == 4) {
             $per = 1; //1.05;
         }
-        return  $this->total_amount_after_discount ? round($this->total_amount_after_discount / $per, 2) : 0;
+        return  $this->total_amount_after_discount ? round(($this->total_amount_after_discount + ($this->wallet_amount_used ?? 0)) / $per, 2) : 0;
     }
 
     public function getDiscountCodeAttribute()
@@ -114,7 +116,7 @@ class Order extends Model
 
     public function getTaxFeesAttribute()
     {
-        return round(($this->total_amount_after_discount ?? 0) - ($this->total_amount_after_tax ?? 0), 2);
+        return round((($this->total_amount_after_discount + ($this->wallet_amount_used ?? 0)) ?? 0) - ($this->total_amount_after_tax ?? 0), 2);
     }
 
     public function getQrAttribute()
