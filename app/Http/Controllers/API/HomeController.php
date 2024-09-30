@@ -96,23 +96,28 @@ class HomeController extends Controller
 
         $data = DB::table('order_products')
             ->select(
-                DB::raw('MONTH(order_products.created_at) as month'), // Extract month from created_at
-                DB::raw('YEAR(order_products.created_at) as year'),   // Extract year from created_at
-                DB::raw('SUM(sizes.sale_price) as total_sale_price'),
-                DB::raw('SUM(COALESCE(stocks.price / stocks.quantity, 0)) as total_buy_price'), // Handle null stock price
-                DB::raw('SUM(sizes.sale_price - COALESCE(stocks.price / stocks.quantity, 0)) as total_profit')  // Sum price difference and handle null stock
+                DB::raw('MONTH(orders.delivery_date) as month'),  // Extract month from order creation date
+                DB::raw('YEAR(orders.delivery_date) as year'),    // Extract year from order creation date
+                DB::raw('(SUM(order_products.total_price) - SUM(orders.discount_applied)) as total_sale_price'),  // Correct total price minus discount
+                DB::raw('SUM(COALESCE(stock_data.stock_price, 0)) as total_buy_price'),  // Use stock_price from subquery
+                DB::raw('SUM(order_products.total_price - COALESCE(stock_data.stock_price, 0)) as total_profit')  // Correct profit calculation
             )
             ->join('orders', 'orders.ref_no', '=', 'order_products.order_ref_no')
-            ->join('sizes', 'sizes.id', '=', 'order_products.size_id')
-            ->leftJoin('stocks', 'stocks.product_id', '=', 'order_products.product_id') // Changed to left join
-            ->whereNotNull('order_products.created_at') // Ensure created_at is not null
-            ->where('orders.order_state_id', 200); // Ensure order_state_id is 200
+            ->leftJoin(
+                DB::raw('(SELECT product_id, SUM(price / quantity) as stock_price FROM stocks GROUP BY product_id) as stock_data'),
+                'stock_data.product_id',
+                '=',
+                'order_products.product_id'
+            )  // Subquery for stock aggregation, avoiding duplicate rows
+            ->whereNotNull('orders.delivery_date');
 
         // Conditional filtering by country_id
         if (request('country_id') == 4) {
-            $data = $data->where('orders.ref_no', 'like', 'AE%');
+            $data = $data->where('orders.order_state_id', 101)
+                ->where('orders.ref_no', 'like', 'AE%');
         } else {
-            $data = $data->where('orders.ref_no', 'like', 'SA%');
+            $data = $data->where('orders.order_state_id', 200)
+                ->where('orders.ref_no', 'like', 'SA%');
         }
 
         // Filter by product_id if present
@@ -122,14 +127,13 @@ class HomeController extends Controller
 
         // Date range filter
         if (request('date_from') && request('date_to')) {
-            $data = $data->whereBetween('order_products.created_at', [request('date_from'), request('date_to')]);
+            $data = $data->whereBetween('orders.delivery_date', [request('date_from'), request('date_to')]);
         }
 
         $data = $data->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
-            ->groupBy(DB::raw('YEAR(order_products.created_at)'), DB::raw('MONTH(order_products.created_at)'))  // Group by year and month
+            ->groupBy(DB::raw('YEAR(orders.delivery_date)'), DB::raw('MONTH(orders.delivery_date)'))  // Group by year and month
             ->paginate(request('per_page', 10));
-
 
         return successResponse($data);
     }
