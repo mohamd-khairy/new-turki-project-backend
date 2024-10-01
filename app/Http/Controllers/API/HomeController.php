@@ -99,16 +99,16 @@ class HomeController extends Controller
                 DB::raw('MONTH(orders.delivery_date) as month'),  // Extract month from order creation date
                 DB::raw('YEAR(orders.delivery_date) as year'),    // Extract year from order creation date
                 DB::raw('(SUM(order_products.total_price) - SUM(orders.discount_applied)) as total_sale_price'),  // Correct total price minus discount
-                DB::raw('SUM(COALESCE(stock_data.stock_price, 0)) as total_buy_price'),  // Use stock_price from subquery
+                DB::raw('SUM(COALESCE(stock_data.stock_price, 0) * order_products.quantity)  as total_buy_price'),  // Use stock_price from subquery
                 DB::raw('SUM(order_products.total_price - COALESCE(stock_data.stock_price, 0)) as total_profit')  // Correct profit calculation
             )
             ->join('orders', 'orders.ref_no', '=', 'order_products.order_ref_no')
             ->leftJoin(
-                DB::raw('(SELECT product_id, SUM(price / quantity) as stock_price FROM stocks GROUP BY product_id) as stock_data'),
+                DB::raw('(SELECT product_id, AVG(price / quantity) as stock_price FROM stocks GROUP BY product_id) as stock_data'),
                 'stock_data.product_id',
                 '=',
                 'order_products.product_id'
-            )  // Subquery for stock aggregation, avoiding duplicate rows
+            )
             ->whereNotNull('orders.delivery_date');
 
         // Conditional filtering by country_id
