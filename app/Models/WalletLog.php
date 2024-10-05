@@ -9,7 +9,18 @@ class WalletLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['customer_id', 'last_amount', 'new_amount', 'action', 'user_id', 'action_id'];
+    protected $fillable = [
+        'customer_id',
+        'last_amount',
+        'new_amount',
+        'action',
+        'user_id',
+        'action_id',
+        'message_ar',
+        'message_en',
+        'expired_days',
+        'expired_at'
+    ];
 
     public function order()
     {

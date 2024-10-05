@@ -27,11 +27,18 @@ class CityController extends Controller
      */
     public function getAll()
     {
-        $data = City::with('country')->orderBy('id', 'desc')->get();
+        $data = City::with('country')
+            ->when(request('country_id'), function ($q) {
+                $q->where('country_id', request('country_id'));
+            })
+            ->orderBy('id', 'desc')->get();
 
         return response()->json([
-            'success' => 'true', 'data' => $data,
-            'message' => 'Cities retrieved successfully', 'description' => 'list Of Cities', 'code' => '200'
+            'success' => 'true',
+            'data' => $data,
+            'message' => 'Cities retrieved successfully',
+            'description' => 'list Of Cities',
+            'code' => '200'
         ], 200);
     }
 
@@ -39,16 +46,22 @@ class CityController extends Controller
     {
         $data = $city->load('country');
         return response()->json([
-            'success' => 'true', 'data' => $data,
-            'message' => 'City retrieved successfully', 'description' => ' City Details', 'code' => '200'
+            'success' => 'true',
+            'data' => $data,
+            'message' => 'City retrieved successfully',
+            'description' => ' City Details',
+            'code' => '200'
         ], 200);
     }
 
     public function getActiveCities()
     {
         return response()->json([
-            'success' => 'true', 'data' => City::with('country')->where('is_active', '1')->get(),
-            'message' => 'Active Cities retrieved successfully', 'description' => ' List Of Active Cities', 'code' => '200'
+            'success' => 'true',
+            'data' => City::with('country')->where('is_active', '1')->get(),
+            'message' => 'Active Cities retrieved successfully',
+            'description' => ' List Of Active Cities',
+            'code' => '200'
         ], 200);
     }
 
@@ -56,8 +69,11 @@ class CityController extends Controller
     {
         // dd($country->id);
         return response()->json([
-            'success' => 'true', 'data' => City::with('country')->where('country_id', $country->id)->get(),
-            'message' => 'City By Country retrieved successfully', 'description' => 'List Of City By Country', 'code' => '200'
+            'success' => 'true',
+            'data' => City::with('country')->where('country_id', $country->id)->get(),
+            'message' => 'City By Country retrieved successfully',
+            'description' => 'List Of City By Country',
+            'code' => '200'
         ], 200);
     }
 
@@ -76,9 +92,6 @@ class CityController extends Controller
             'polygon' => 'required', // need regex here
             'min_price' => 'nullable',
             'allow_cash' => 'nullable',
-            'cash_back_amount' => 'nullable',
-            'cash_back_start_date' => 'nullable',
-            'cash_back_end_date' => 'nullable',
         ]);
 
         $polygonList = is_array($validateData['polygon']) ? $validateData['polygon'] : json_decode($validateData['polygon']);
@@ -97,8 +110,11 @@ class CityController extends Controller
 
         if ($city) {
             return response()->json([
-                'success' => true, 'data' => $city,
-                'message' => 'Successfully Added!', 'description' => ' Add City', 'code' => '200'
+                'success' => true,
+                'data' => $city,
+                'message' => 'Successfully Added!',
+                'description' => ' Add City',
+                'code' => '200'
             ], 200);
         }
 
@@ -128,8 +144,11 @@ class CityController extends Controller
         if ($city->update()) {
 
             return response()->json([
-                'success' => true, 'data' => $city,
-                'message' => 'Successfully updated!', 'description' => ' Update Status City', 'code' => '200'
+                'success' => true,
+                'data' => $city,
+                'message' => 'Successfully updated!',
+                'description' => ' Update Status City',
+                'code' => '200'
             ], 200);
         }
         return response()->json(['message' => 'Something went wrong!'], 500);
@@ -164,15 +183,18 @@ class CityController extends Controller
             }
 
             $validateData['polygon'] = json_encode($newPolygonList);
-        }else{
+        } else {
             unset($validateData['polygon']);
         }
 
         if ($city->update($validateData)) {
 
             return response()->json([
-                'success' => true, 'data' => $city->load('country'),
-                'message' => 'Successfully updated!', 'description' => ' update City', 'code' => '200'
+                'success' => true,
+                'data' => $city->load('country'),
+                'message' => 'Successfully updated!',
+                'description' => ' update City',
+                'code' => '200'
             ], 200);
         }
         return response()->json(['message' => 'Something went wrong!'], 500);

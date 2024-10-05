@@ -1,4 +1,4 @@
-CREATE VIEW orders_dashboard_view AS
+<!-- CREATE VIEW orders_dashboard_view AS
 SELECT
     orders.id AS id,
     orders.ref_no AS ref_no,
@@ -48,4 +48,4 @@ LEFT JOIN payment_types ON payment_types.id = orders.payment_type_id
 LEFT JOIN delivery_periods ON delivery_periods.id = orders.delivery_period_id
 LEFT JOIN payments ON payments.id = orders.payment_id
 LEFT JOIN addresses ON addresses.id = orders.address_id
-LEFT JOIN cities ON cities.id = addresses.city_id;
+LEFT JOIN cities ON cities.id = addresses.city_id; -->

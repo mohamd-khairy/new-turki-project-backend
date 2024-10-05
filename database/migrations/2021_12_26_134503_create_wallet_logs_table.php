@@ -18,9 +18,13 @@ class CreateWalletLogsTable extends Migration
             $table->decimal('last_amount', 18, 2);
             $table->decimal('new_amount', 18, 2);
             $table->string('action');
+            $table->string('message_ar')->nullable();
+            $table->string('message_en')->nullable();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('action_id')->nullable();
+            $table->string('expired_days')->nullable();
+            $table->date('expired_at')->nullable();
             $table->timestamps();
         });
     }

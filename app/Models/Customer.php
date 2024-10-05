@@ -60,12 +60,16 @@ class Customer extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-        try {
 
-            static::created(function ($model) {
-                // This code will be executed when a new record is being created
-                foodics_create_or_update_customer($model);
-            });
+        static::created(function ($model) {
+
+            welcome($model);
+
+            // This code will be executed when a new record is being created
+            foodics_create_or_update_customer($model);
+        });
+
+        try {
 
             static::updated(function ($model) {
 

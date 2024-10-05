@@ -57,8 +57,11 @@ class ProductController extends Controller
 
         if ($latitude == null || $latitude == "" || $longitude == null || $longitude == "") {
             return response()->json([
-                'success' => false, 'data' => null,
-                'message' => 'provide the lang,lat please!', 'description' => '', 'code' => '400'
+                'success' => false,
+                'data' => null,
+                'message' => 'provide the lang,lat please!',
+                'description' => '',
+                'code' => '400'
             ], 400);
         }
 
@@ -76,7 +79,15 @@ class ProductController extends Controller
 
     public function all()
     {
-        $all = DB::table('products')->select('id', 'name_ar')->get();
+        $all = DB::table('products')
+            ->select('products.id', 'products.name_ar')
+            ->when(request('country_id'), function ($query) {
+                $query->join('product_cities', 'product_cities.product_id', '=', 'products.id')
+                    ->join('cities', 'cities.id', '=', 'product_cities.city_id') // Assuming a 'cities' table has 'product_id'
+                    ->where('cities.country_id', request('country_id'));
+            })
+            ->groupBy('products.id')
+            ->get();
         return successResponse($all, 'Products retrieved successfully');
     }
 
@@ -151,8 +162,11 @@ class ProductController extends Controller
     public function getProductById(Product $product)
     {
         return response()->json([
-            'success' => true, 'data' => new ProductDetailsResource($product),
-            'message' => 'Products retrieved successfully', 'description' => "", 'code' => '200'
+            'success' => true,
+            'data' => new ProductDetailsResource($product),
+            'message' => 'Products retrieved successfully',
+            'description' => "",
+            'code' => '200'
         ], 200);
     }
 
@@ -162,7 +176,10 @@ class ProductController extends Controller
         if (Product::find($productApp) === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'invalid product!', 'code' => '400'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'invalid product!',
+                'code' => '400'
             ], 400);
 
 
@@ -173,7 +190,10 @@ class ProductController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'this service not available in your country!', 'code' => '404'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'this service not available in your country!',
+                'code' => '404'
             ], 404);
 
         $currentCity = null;
@@ -182,7 +202,10 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'this service not available in your city, contact support!', 'code' => '404'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'this service not available in your city, contact support!',
+                'code' => '404'
             ], 404);
         }
 
@@ -190,7 +213,10 @@ class ProductController extends Controller
         if ($currentCity === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'this service not available in your city!', 'code' => '404'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'this service not available in your city!',
+                'code' => '404'
             ], 404);
 
         $productCity = ProductCity::where([['city_id', $currentCity->id], ['product_id', $productApp]])->get()->first();
@@ -198,13 +224,19 @@ class ProductController extends Controller
         if ($productCity === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'product not found in this city!', 'code' => '404'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'product not found in this city!',
+                'code' => '404'
             ], 404);
 
 
         return response()->json([
-            'success' => true, 'data' => new ProductAppDetailsResource($productCity->product),
-            'message' => 'Products retrieved successfully', 'description' => 'list Of Products', 'code' => '200'
+            'success' => true,
+            'data' => new ProductAppDetailsResource($productCity->product),
+            'message' => 'Products retrieved successfully',
+            'description' => 'list Of Products',
+            'code' => '200'
         ], 200);
     }
 
@@ -214,8 +246,11 @@ class ProductController extends Controller
         $category = Category::find($category);
         if ($category == null)
             return response()->json([
-                'success' => false, 'data' => null,
-                'message' => 'not found', 'description' => '', 'code' => '404'
+                'success' => false,
+                'data' => null,
+                'message' => 'not found',
+                'description' => '',
+                'code' => '404'
             ], 404);
 
         // get by location
@@ -226,7 +261,10 @@ class ProductController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '400'
+                'success' => false,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '400'
             ], 400);
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
@@ -245,8 +283,11 @@ class ProductController extends Controller
         $data = SubcategoryListWithProductResource::Collection($subcategories);
 
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Sub-categories retrieved successfully',
+            'description' => 'list Of Sub-categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -255,7 +296,10 @@ class ProductController extends Controller
         if ($subCategory === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => ' no subcategory with this id', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => ' no subcategory with this id',
+                'code' => '200'
             ], 200);
 
         $perPage = 6;
@@ -275,7 +319,10 @@ class ProductController extends Controller
 
         return response()->json([
             'data' =>  ProductListResource::Collection($products),
-            'success' => true, 'message' => 'success', 'description' => '', 'code' => '200'
+            'success' => true,
+            'message' => 'success',
+            'description' => '',
+            'code' => '200'
         ], 200);
     }
 
@@ -580,7 +627,10 @@ class ProductController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200'
             ], 200);
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
@@ -621,7 +671,10 @@ class ProductController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200'
             ], 200);
 
         $currentCity = null;
@@ -630,7 +683,10 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city, contact support!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city, contact support!',
+                'code' => '200'
             ], 200);
         }
 
@@ -638,7 +694,10 @@ class ProductController extends Controller
         if ($currentCity === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200'
             ], 200);
 
 

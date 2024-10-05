@@ -25,6 +25,10 @@ class CustomerWalletLogResource extends JsonResource
                     "new_amount" => $item->new_amount,
                     "action" => $item->action,
                     "action_id" => $item->action_id,
+                    "expired_days" => $item->expired_days,
+                    "expired_at" => $item->expired_at,
+                    "message_ar" => $item->message_ar,
+                    "message_en" => $item->message_en,
                     "created_at" => $item->created_at,
                     'action_item' => $item->action_id ? Order::where('ref_no', $item->action_id)->first() : null
                 ];

@@ -22,6 +22,12 @@ class CustomerController extends Controller
         }
     }
 
+    public function getAll()
+    {
+        $customers = Customer::select('id', 'name')->get();
+        return successResponse($customers);
+    }
+
     public function index(Request $request)
     {
 
@@ -58,6 +64,12 @@ class CustomerController extends Controller
             });
         }
 
+
+        if (request('country_id') == 1) {
+            $customers = $customers->where('mobile_country_code', '+966');
+        } elseif (request('country_id') == 4) {
+            $customers = $customers->where('mobile_country_code','!=', '+966');
+        }
 
         $customers = request('per_page') == -1 ? $customers->get() : $customers->paginate($perPage);
 
@@ -120,7 +132,9 @@ class CustomerController extends Controller
                 'customer_id' => $customer->id,
                 'last_amount' => $customer->wallet,
                 'new_amount' => (float)$request->wallet + $customer->wallet,
-                'action' => 'induction'
+                'action' => 'induction',
+                'message_ar' => 'تعويض',
+                'message_en' => 'Compensation',
             ]);
 
             $data['wallet'] = $customer->wallet + (float)$request->wallet;

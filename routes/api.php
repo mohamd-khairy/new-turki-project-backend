@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\AuthenticationController;
 use App\Http\Controllers\API\BannerController;
+use App\Http\Controllers\API\CashbackController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CityController;
 use App\Http\Controllers\API\CountryController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\API\Store\StoreController;
 use App\Http\Controllers\API\Store\SupplierController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\WelcomeMoneyController;
 use App\Models\OrderState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -190,6 +192,10 @@ Route::prefix("v2")->group(function () {
         Route::apiResource('suppliers', SupplierController::class);
         Route::apiResource('stocks', StockController::class);
         Route::apiResource('invoices', InvoiceController::class);
+        Route::apiResource('cashback', CashbackController::class);
+        Route::post('update-cashback-status/{cashback}', [CashbackController::class, 'updateStatus']);
+        Route::apiResource('welcome', WelcomeMoneyController::class);
+        Route::post('update-welcome-status/{welcome}', [WelcomeMoneyController::class, 'updateStatus']);
         Route::post('pay-invoice', [InvoiceController::class, 'payInvoice']);
         Route::post('transfer-stock', [StockController::class, 'transferStock']);
         Route::post('transfer-quantity', [StockController::class, 'transferQuantity']);
@@ -236,6 +242,7 @@ Route::prefix("v2")->group(function () {
 
         Route::post('customers/store', [CustomerController::class, 'store']);
         Route::get('customers', [CustomerController::class, 'index']);
+        Route::get('customers/all', [CustomerController::class, 'getAll']);
         Route::get('customers/{customer}', [CustomerController::class, 'show']);
         Route::post('customers/{customer}', [CustomerController::class, 'update']);
         Route::delete('customers/{customer}', [CustomerController::class, 'delete']);

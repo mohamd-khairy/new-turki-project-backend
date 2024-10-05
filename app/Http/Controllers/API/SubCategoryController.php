@@ -28,14 +28,21 @@ class SubCategoryController extends Controller
 
     public function list(Request $request)
     {
-
-        $data =  SubCategory::orderBy('id', 'desc')->get();
+        $data =  SubCategory::orderBy('id', 'desc')
+            ->when(request('country_id'), function ($q) {
+                $q->whereHas('subCategoryCities', function ($q) {
+                    $q->where('country_id', request('country_id'));
+                });
+            })->get();
 
         $data = SubcategoryListResource::Collection($data);
 
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Sub-categories retrieved successfully',
+            'description' => 'list Of Sub-categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -47,8 +54,11 @@ class SubCategoryController extends Controller
 
         $data =  SubCategory::orderBy('id', 'desc')->get();
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Categories retrieved successfully',
+            'description' => 'list Of Categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -64,16 +74,21 @@ class SubCategoryController extends Controller
         $data = SubcategoryListResource::Collection($data);
 
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Sub-categories retrieved successfully',
+            'description' => 'list Of Sub-categories',
+            'code' => '200'
         ], 200);
     }
 
     public function getById(SubCategory $subCategory)
     {
         return response()->json([
-            'data' => $subCategory, 'message' => "success",
-            'description' => "", 'code' => "200"
+            'data' => $subCategory,
+            'message' => "success",
+            'description' => "",
+            'code' => "200"
         ], 200);
     }
 
@@ -102,8 +117,11 @@ class SubCategoryController extends Controller
 
 
         return response()->json([
-            'success' => true, 'data' => $hasCreated,
-            'message' => 'Successfully Added!', 'description' => 'Add sub-category', 'code' => '200'
+            'success' => true,
+            'data' => $hasCreated,
+            'message' => 'Successfully Added!',
+            'description' => 'Add sub-category',
+            'code' => '200'
         ], 200);
     }
 
@@ -141,8 +159,11 @@ class SubCategoryController extends Controller
             ], 500);
 
         return response()->json([
-            'success' => true, 'data' => $subCategory,
-            'message' => 'Successfully updated!', 'description' => 'Update sub-category', 'code' => 200
+            'success' => true,
+            'data' => $subCategory,
+            'message' => 'Successfully updated!',
+            'description' => 'Update sub-category',
+            'code' => 200
         ], 200);
     }
 

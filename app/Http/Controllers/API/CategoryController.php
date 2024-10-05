@@ -28,10 +28,18 @@ class CategoryController extends Controller
 
     public function listCategories(Request $request)
     {
-        $data =  CategoryResource::collection(Category::orderBy('id', 'desc')->get());
+        $data =  CategoryResource::collection(Category::orderBy('id', 'desc')
+            ->when(request('country_id'), function ($q) {
+                $q->whereHas('categoryCities', function ($q) {
+                        $q->where('country_id', request('country_id'));
+                });
+            })->get());
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Categories retrieved successfully',
+            'description' => 'list Of Categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -49,7 +57,10 @@ class CategoryController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200'
             ], 200);
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
@@ -64,8 +75,11 @@ class CategoryController extends Controller
 
         $data =  CategoryAppListRecource::collection($categories);
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Categories retrieved successfully',
+            'description' => 'list Of Categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -83,7 +97,10 @@ class CategoryController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200'
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200'
             ], 200);
 
         $currentCity = app(PointLocation::class)->getLocatedCity($country, $point);
@@ -103,8 +120,11 @@ class CategoryController extends Controller
 
         $data =  CategoryAppListRecourceV2::collection($categories);
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Categories retrieved successfully',
+            'description' => 'list Of Categories',
+            'code' => '200'
         ], 200);
     }
 
@@ -112,8 +132,11 @@ class CategoryController extends Controller
     {
         $data = $category;
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Category retrieved successfully', 'description' => 'Category Details', 'code' => '200'
+            'success' => true,
+            'data' => $data,
+            'message' => 'Category retrieved successfully',
+            'description' => 'Category Details',
+            'code' => '200'
         ], 200);
     }
 
@@ -157,7 +180,9 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'data' => $hasCreated,
-            'message' => 'Successfully Added!', 'description' => 'Add Category', 'code' => '200'
+            'message' => 'Successfully Added!',
+            'description' => 'Add Category',
+            'code' => '200'
         ], 200);
     }
 
@@ -195,8 +220,11 @@ class CategoryController extends Controller
         $category->update($validatedData);
 
         return response()->json([
-            'success' => true, 'data' => $category,
-            'message' => 'Successfully updated!', 'description' => 'Update Category', 'code' => '200'
+            'success' => true,
+            'data' => $category,
+            'message' => 'Successfully updated!',
+            'description' => 'Update Category',
+            'code' => '200'
         ], 200);
     }
 
@@ -216,8 +244,11 @@ class CategoryController extends Controller
         $category->update($validatedData);
 
         return response()->json([
-            'success' => true, 'data' => $category,
-            'message' => 'Successfully Added!', 'description' => 'Add Category', 'code' => '200'
+            'success' => true,
+            'data' => $category,
+            'message' => 'Successfully Added!',
+            'description' => 'Add Category',
+            'code' => '200'
         ], 200);
     }
 

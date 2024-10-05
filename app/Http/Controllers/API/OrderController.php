@@ -728,7 +728,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $order->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $order->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $order->ref_no
                     ]);
 
                     $order->update(['payment_id' => $payment->id ?? null]);
@@ -1424,7 +1426,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1495,7 +1499,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1571,7 +1577,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1612,7 +1620,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1666,7 +1676,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1702,7 +1714,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1740,7 +1754,9 @@ class OrderController extends Controller
                         'last_amount' => $customer->wallet + $walletAmountUsed,
                         'new_amount' => $customer->wallet,
                         'action_id' =>  $createdOrder->ref_no,
-                        'action' => 'new_order'
+                        'action' => 'new_order',
+                        'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                        'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                     ]);
                 }
 
@@ -1783,7 +1799,9 @@ class OrderController extends Controller
                             'last_amount' => $customer->wallet + $walletAmountUsed,
                             'new_amount' => $customer->wallet,
                             'action_id' =>  $createdOrder->ref_no,
-                            'action' => 'new_order'
+                            'action' => 'new_order',
+                            'message_en' => 'Payment Order with number ' . $createdOrder->ref_no,
+                            'message_ar' => ' سداد الطلب رقم' . $createdOrder->ref_no
                         ]);
                     }
 

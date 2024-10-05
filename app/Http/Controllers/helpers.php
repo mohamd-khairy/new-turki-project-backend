@@ -1,11 +1,12 @@
 <?php
 
-use App\Models\Customer;
+use App\Models\Cashback;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
 use App\Models\WalletLog;
+use App\Models\WelcomeMoney;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,31 +15,132 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-function cashBack($order)
+function welcome($customer)
 {
-    if ($order->order_state_id == 200 && isset($order->selectedAddress->city->cash_back_amount)) {
-        $cash_back_amount = $order->selectedAddress->city->cash_back_amount;
-        $cash_back_start_date = $order->selectedAddress->city->cash_back_start_date ?? null;
-        $cash_back_end_date = $order->selectedAddress->city->cash_back_end_date ?? null;
-        if ($order->created_at->between($cash_back_start_date, $cash_back_end_date)) {
-            $cash_back = ($order->customer->wallet + (($order->total_amount * $cash_back_amount) / 100));
+    try {
+
+        $customer = $customer->refresh();
+
+        if ($customer->mobile_country_code == '+966') {
+            $country_id = 1;
+        } else {
+            $country_id = 4;
+        }
+
+        $welcome = WelcomeMoney::where('is_active', 1)
+            ->where('country_id', $country_id)
+            ->where(function ($q) use ($customer) {
+                $q->whereDate('welcome_start_date', '<= ', $customer->created_at)
+                    ->whereDate('welcome_end_date', '>=', $customer->created_at);
+            })
+            ->first();
+
+        if ($welcome) {
+            $new_amount = $customer->wallet + $welcome->welcome_amount;
             $log = WalletLog::updateOrCreate([
-                'action_id' => $order->ref_no,
-                'customer_id' => $order->customer_id,
-                'action' => 'cash_back',
+                'action_id' => $welcome->id,
+                'customer_id' => $customer->id,
+                'action' => 'welcome_money',
             ], [
                 'user_id' => null,
-                'customer_id' => $order->customer_id,
-                'last_amount' => $order->customer->wallet,
-                'new_amount' => $cash_back,
-                'action_id' =>  $order->ref_no,
-                'action' => 'cash_back',
+                'customer_id' => $customer->id,
+                'last_amount' => $customer->wallet ?? 0,
+                'new_amount' => $new_amount,
+                'action_id' => $welcome->id,
+                'action' => 'welcome_money',
+                'expired_days' => $welcome->expired_days,
+                'expired_at' => $welcome->expired_at,
+                'message_ar' => 'رصيد ترحيبي',
+                'message_en' => 'welcome money',
             ]);
 
-            $order->customer->update([
-                'wallet' => $cash_back
+            $customer->update([
+                'wallet' => $new_amount
             ]);
         }
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
+}
+
+function cashBack($order)
+{
+    try {
+
+        if ($order->order_state_id == 200) {
+
+            $cash_back = null;
+            $cash_back_amount = 0;
+
+            if (Cashback::where('country_id', $order->selectedAddress->country_id)->where('is_active', 1)->exists()) {
+                $cash_back = Cashback::where('country_id', $order->selectedAddress->country_id)->where('is_active', 1)->first();
+                $cash_back_amount = getCashBackAmount($order, $cash_back);
+            } elseif (Cashback::whereJsonContains('city_ids', $order->selectedAddress->city_id)->where('is_active', 1)->exists()) {
+                $cash_back = Cashback::whereJsonContains('city_ids', $order->selectedAddress->city_id)->where('is_active', 1)->first();
+                $cash_back_amount = getCashBackAmount($order, $cash_back);
+            } elseif (Cashback::whereJsonContains('customer_ids', $order->customer_id)->where('is_active', 1)->exists()) {
+                $cash_back = Cashback::whereJsonContains('customer_ids', $order->customer_id)->where('is_active', 1)->first();
+                $cash_back_amount = getCashBackAmount($order, $cash_back);
+            } else {
+                $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+
+                $cash_back_amount = 0;
+                foreach ($order_products as $key => $order) {
+
+                    if (Cashback::whereJsonContains('category_ids', $order->product->category_id)->where('is_active', 1)->exists()) {
+                        $cash_back = Cashback::whereJsonContains('category_ids', $order->product->category_id)->where('is_active', 1)->first();
+                        $cash_back_amount += getCashBackAmount($order, $cash_back);
+                    } elseif (Cashback::whereJsonContains('sub_category_ids', $order->product->sub_category_id)->where('is_active', 1)->exists()) {
+                        $cash_back = Cashback::whereJsonContains('sub_category_ids', $order->product->sub_category_id)->where('is_active', 1)->first();
+                        $cash_back_amount += getCashBackAmount($order, $cash_back);
+                    } elseif (Cashback::whereJsonContains('product_ids', $order->product_id)->where('is_active', 1)->exists()) {
+                        $cash_back = Cashback::whereJsonContains('product_ids', $order->product_id)->where('is_active', 1)->first();
+                        $cash_back_amount += getCashBackAmount($order, $cash_back);
+                    }
+                }
+            }
+
+            addCashBack($order, $cash_back, $cash_back_amount);
+        }
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
+}
+
+function getCashBackAmount($order = null, $cash_back = null)
+{
+    if ($order && $cash_back && $order->created_at->between($cash_back->cash_back_start_date, $cash_back->cash_back_end_date)) {
+
+        $cash_back_amount = ($order->customer->wallet + (($order->total_amount * $cash_back->cash_back_amount) / 100));
+        return $cash_back_amount;
+    }
+    return 0;
+}
+function addCashBack($order = null, $cash_back = null, $cash_back_amount = null)
+{
+    if ($order && $cash_back && $cash_back_amount) {
+        $new_amount =  $order->customer->wallet + $cash_back_amount;
+        $log = WalletLog::updateOrCreate([
+            'action_id' => $order->ref_no,
+            'customer_id' => $order->customer_id,
+            'action' => 'cash_back',
+        ], [
+            'user_id' => null,
+            'customer_id' => $order->customer_id,
+            'last_amount' => $order->customer->wallet,
+            'new_amount' => $new_amount,
+            'action_id' =>  $order->ref_no,
+            'action' => 'cash_back',
+            'expired_at' => $cash_back->expired_at,
+            'message_ar' => 'كاش باك للطلب رقم ' . $order->ref_no,
+            'message_en' => 'Cashback on order number ' . $order->ref_no
+        ]);
+
+        $order->customer->update([
+            'wallet' => $new_amount
+        ]);
     }
 }
 
@@ -206,7 +308,7 @@ function foodics_create_or_update_customer($item)
         $data = [
             "name" => $customer->name ?? $customer->mobile ?? "new",
             "dial_code" => 966,
-            "phone" => substr($customer->mobile, -9) ?? '',
+            "phone" => substr($customer->mobile ?? '+966000000000', 4) ?? '',
             "email" => $customer->email ?? '',
             "gender" => 1,
             "birth_date" => "1996-09-17",
