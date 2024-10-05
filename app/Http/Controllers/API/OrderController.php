@@ -561,11 +561,11 @@ class OrderController extends Controller
                 $data['printed_at'] = now();
             }
 
+            $order->update($data);
+
             if ($request->order_state_id == "200") {
                 cashBack($order);
             }
-
-            $order->update($data);
 
             DB::commit();
 

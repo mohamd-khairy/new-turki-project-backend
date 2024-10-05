@@ -66,82 +66,91 @@ function welcome($customer)
 
 function cashBack($order)
 {
-    try {
+    // dd($order->toArray());
+    $cashBack = Cashback::where('is_active', 1)
+        ->where('country_id', $order->selectedAddress->country_id)
+        ->where(function ($q) use ($order) {
+            $q->whereDate('cash_back_start_date', '<=', $order->created_at)
+                ->whereDate('cash_back_end_date', '>=', $order->created_at);
+        })
+        ->orderBy('id', 'desc')->first();
 
-        if ($order->order_state_id == 200) {
-
-            $cash_back = null;
-            $cash_back_amount = 0;
-
-            if (Cashback::where('country_id', $order->selectedAddress->country_id)->where('is_active', 1)->exists()) {
-                $cash_back = Cashback::where('country_id', $order->selectedAddress->country_id)->where('is_active', 1)->first();
-                $cash_back_amount = getCashBackAmount($order, $cash_back);
-            } elseif (Cashback::whereJsonContains('city_ids', $order->selectedAddress->city_id)->where('is_active', 1)->exists()) {
-                $cash_back = Cashback::whereJsonContains('city_ids', $order->selectedAddress->city_id)->where('is_active', 1)->first();
-                $cash_back_amount = getCashBackAmount($order, $cash_back);
-            } elseif (Cashback::whereJsonContains('customer_ids', $order->customer_id)->where('is_active', 1)->exists()) {
-                $cash_back = Cashback::whereJsonContains('customer_ids', $order->customer_id)->where('is_active', 1)->first();
-                $cash_back_amount = getCashBackAmount($order, $cash_back);
-            } else {
-                $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
-
-                $cash_back_amount = 0;
-                foreach ($order_products as $key => $order) {
-
-                    if (Cashback::whereJsonContains('category_ids', $order->product->category_id)->where('is_active', 1)->exists()) {
-                        $cash_back = Cashback::whereJsonContains('category_ids', $order->product->category_id)->where('is_active', 1)->first();
-                        $cash_back_amount += getCashBackAmount($order, $cash_back);
-                    } elseif (Cashback::whereJsonContains('sub_category_ids', $order->product->sub_category_id)->where('is_active', 1)->exists()) {
-                        $cash_back = Cashback::whereJsonContains('sub_category_ids', $order->product->sub_category_id)->where('is_active', 1)->first();
-                        $cash_back_amount += getCashBackAmount($order, $cash_back);
-                    } elseif (Cashback::whereJsonContains('product_ids', $order->product_id)->where('is_active', 1)->exists()) {
-                        $cash_back = Cashback::whereJsonContains('product_ids', $order->product_id)->where('is_active', 1)->first();
-                        $cash_back_amount += getCashBackAmount($order, $cash_back);
-                    }
-                }
-            }
-
-            addCashBack($order, $cash_back, $cash_back_amount);
+    if ($cashBack) {
+        if (
+            count($cashBack->city_ids ?? []) > 0 && !in_array($order->selectedAddress->city_id, $cashBack->city_ids)
+        ) {
+            return;
         }
-        //code...
-    } catch (\Throwable $th) {
-        //throw $th;
+
+        if (count($cashBack->customer_ids ?? []) > 0 && !in_array($order->customer_id, $cashBack->customer_ids)) {
+            return;
+        }
+
+        $cash_back_amount = ($order->total_amount_after_discount * $cashBack->cash_back_amount) / 100;
+
+        if (
+            count($cashBack->category_ids) > 0 || count($cashBack->sub_category_ids) > 0 || count($cashBack->product_ids) > 0
+        ) {
+
+            $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+            $cash_back_amount = 0;
+            $discount = $order->discount_applied > 0 ? $order->discount_applied / count($order_products) : 0;
+
+            foreach ($order_products as $key => $order_product) {
+
+                if (
+                    (count($cashBack->category_ids ?? []) > 0 &&
+                        !in_array($order_product->product->category_id, $cashBack->category_ids))
+                ) {
+                    break;
+                }
+
+                if (
+                    (count($cashBack->sub_category_ids ?? []) > 0 && !in_array($order_product->product->sub_category_id, $cashBack->sub_category_ids))
+                ) {
+                    break;
+                }
+
+                if (
+                    (count($cashBack->product_ids ?? []) > 0 && !in_array($order_product->product_id, $cashBack->product_ids))
+                ) {
+                    break;
+                }
+
+                $cash_back_amount += ((($order_product->total_price - $discount) * $cashBack->cash_back_amount) / 100);
+            }
+        }
+
+        // dd(round($cash_back_amount, 2));
+        if ($cash_back_amount) {
+            addCashBack($order, $cashBack, round($cash_back_amount, 2));
+        }
     }
 }
 
-function getCashBackAmount($order = null, $cash_back = null)
-{
-    if ($order && $cash_back && $order->created_at->between($cash_back->cash_back_start_date, $cash_back->cash_back_end_date)) {
-
-        $cash_back_amount = ($order->customer->wallet + (($order->total_amount * $cash_back->cash_back_amount) / 100));
-        return $cash_back_amount;
-    }
-    return 0;
-}
 function addCashBack($order = null, $cash_back = null, $cash_back_amount = null)
 {
-    if ($order && $cash_back && $cash_back_amount) {
-        $new_amount =  $order->customer->wallet + $cash_back_amount;
-        $log = WalletLog::updateOrCreate([
-            'action_id' => $order->ref_no,
-            'customer_id' => $order->customer_id,
-            'action' => 'cash_back',
-        ], [
-            'user_id' => null,
-            'customer_id' => $order->customer_id,
-            'last_amount' => $order->customer->wallet,
-            'new_amount' => $new_amount,
-            'action_id' =>  $order->ref_no,
-            'action' => 'cash_back',
-            'expired_at' => $cash_back->expired_at,
-            'message_ar' => 'كاش باك للطلب رقم ' . $order->ref_no,
-            'message_en' => 'Cashback on order number ' . $order->ref_no
-        ]);
+    $new_amount =  $order->customer->wallet + $cash_back_amount;
+    $log = WalletLog::updateOrCreate([
+        'action_id' => $order->ref_no,
+        'customer_id' => $order->customer_id,
+        'action' => 'cash_back',
+    ], [
+        'user_id' => null,
+        'customer_id' => $order->customer_id,
+        'last_amount' => $order->customer->wallet,
+        'new_amount' => $new_amount,
+        'action_id' =>  $order->ref_no,
+        'action' => 'cash_back',
+        'expired_days' => $cash_back->expired_days,
+        'expired_at' => $cash_back->expired_at,
+        'message_ar' => 'كاش باك للطلب رقم ' . $order->ref_no,
+        'message_en' => 'Cashback on order number ' . $order->ref_no
+    ]);
 
-        $order->customer->update([
-            'wallet' => $new_amount
-        ]);
-    }
+    $order->customer->update([
+        'wallet' => $new_amount
+    ]);
 }
 
 function OrderToFoodics($ref_no)
