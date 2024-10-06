@@ -133,6 +133,7 @@ class CustomerController extends Controller
                 'last_amount' => $customer->wallet,
                 'new_amount' => (float)$request->wallet + $customer->wallet,
                 'action' => 'induction',
+                'action_id' => time(),
                 'message_ar' => 'تعويض',
                 'message_en' => 'Compensation',
             ]);

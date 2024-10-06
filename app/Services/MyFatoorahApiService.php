@@ -837,6 +837,7 @@ class MyFatoorahApiService
                         'last_amount' => $customer->wallet,
                         'new_amount' => $amount,
                         'action' => 'induction',
+                        'action_id' => time(),
                         'message_ar' => 'تعويض',
                         'message_en' => 'Compensation ',
                     ]);
