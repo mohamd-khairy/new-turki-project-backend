@@ -396,15 +396,16 @@ class OrderController extends Controller
     private function handlePaymentStatus($order)
     {
         if ($order->payment_status == 'Paid') {
-            $order->remain_amount = ($order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0) + $order->wallet_amount_used;
+            $order->remain_amount = ($order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0);
+            $order->payment_price = $order->payment_price + $order->wallet_amount_used;
 
             if (!$order->paid && $order->remain_amount <= 0) {
 
                 Order::where('id', $order->id)->update(['paid' => 1]);
             }
         } else {
-            $order->remain_amount = $order->total_amount_after_discount + $order->wallet_amount_used;
-            $order->payment_price = 0;
+            $order->remain_amount = $order->total_amount_after_discount;
+            $order->payment_price = $order->wallet_amount_used;
         }
     }
 
@@ -559,6 +560,23 @@ class OrderController extends Controller
 
             if ($request->is_printed) {
                 $data['printed_at'] = now();
+            }
+
+            if (($request->order_state_id == "107" || $request->order_state_id == "4000") && $order->using_wallet) {
+                $data['using_wallet'] = 0;
+                $data['wallet_amount_used'] = 0;
+                $data['total_amount_after_discount'] = $order->total_amount_after_discount + $order->wallet_amount_used;
+                WalletLog::create([
+                    'user_id' => auth()->user()->id,
+                    'customer_id' => $order->customer_id,
+                    'last_amount' => $order->customer->wallet,
+                    'new_amount' => (float)$order->customer->wallet + $order->wallet_amount_used,
+                    'action' => 'refund',
+                    'action_id' => time(),
+                    'message_ar' => 'استرجاع رصيد ' . $order->ref_no,
+                    'message_en' => 'Refund to wallet ' . $order->ref_no,
+                ]);
+                $order->customer->update(['wallet' => $order->customer->wallet + $order->wallet_amount_used]);
             }
 
             $order->update($data);
