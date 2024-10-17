@@ -36,7 +36,7 @@ class CouponController extends Controller
         $data = Discount::latest();
 
         if (request('search')) {
-            $data = $data->where(function ($q) {
+            $data = $data->where('is_active', 1)->where(function ($q) {
                 $q->where('code', 'like', '%' . request('search') . '%')
                     ->orWhere('name', 'like', '%' . request('search') . '%');
             });
@@ -45,15 +45,21 @@ class CouponController extends Controller
         $data = request('per_page') == -1 ? $data->get() : $data->paginate($perPage);
 
         return response()->json([
-            'success' => 'true', 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
+            'success' => 'true',
+            'data' => $data,
+            'message' => 'retrieved successfully',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
     public function getCouponById(Discount $discount)
     {
         return response()->json([
-            'success' => true, 'message' => '', 'description' => "", "code" => "200",
+            'success' => true,
+            'message' => '',
+            'description' => "",
+            "code" => "200",
             "data" => $discount,
         ], 200);
     }
@@ -67,8 +73,11 @@ class CouponController extends Controller
 
         $data = CategoryAppListRecource::collection(Category::orderBy('sort', 'ASC')->get());
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Categories retrieved successfully', 'description' => 'list Of Categories', 'code' => '200',
+            'success' => true,
+            'data' => $data,
+            'message' => 'Categories retrieved successfully',
+            'description' => 'list Of Categories',
+            'code' => '200',
         ], 200);
     }
 
@@ -78,8 +87,11 @@ class CouponController extends Controller
         $data = SubCategory::all();
 
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'Sub-categories retrieved successfully', 'description' => 'list Of Sub-categories', 'code' => '200',
+            'success' => true,
+            'data' => $data,
+            'message' => 'Sub-categories retrieved successfully',
+            'description' => 'list Of Sub-categories',
+            'code' => '200',
         ], 200);
     }
 
@@ -89,8 +101,11 @@ class CouponController extends Controller
         $data = Product::all();
         $data = ProductCouponResource::collection($data);
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $data,
+            'message' => 'retrieved successfully',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -114,8 +129,11 @@ class CouponController extends Controller
 
         //  $data = Customer::paginate($perPage);
         return response()->json([
-            'success' => true, 'data' => $data,
-            'message' => 'retrieved successfully', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $data,
+            'message' => 'retrieved successfully',
+            'description' => '',
+            'code' => '200',
         ], 200);
 
         //       }
@@ -181,8 +199,11 @@ class CouponController extends Controller
         $discount = Discount::create($validatedData);
 
         return response()->json([
-            'success' => true, 'data' => $discount,
-            'message' => 'Successfully Added!', 'description' => 'Add Coupon', 'code' => '200',
+            'success' => true,
+            'data' => $discount,
+            'message' => 'Successfully Added!',
+            'description' => 'Add Coupon',
+            'code' => '200',
         ], 200);
     }
 
@@ -242,8 +263,11 @@ class CouponController extends Controller
         $discount->update($validatedData);
 
         return response()->json([
-            'success' => true, 'data' => $validatedData,
-            'message' => 'Successfully updated!', 'description' => '', 'code' => '200',
+            'success' => true,
+            'data' => $validatedData,
+            'message' => 'Successfully updated!',
+            'description' => '',
+            'code' => '200',
         ], 200);
     }
 
@@ -261,7 +285,6 @@ class CouponController extends Controller
 
     public function checkValidation(Request $request)
     {
-
         $validate = $request->validate([
             'code' => 'required|exists:discounts,code',
         ]);
@@ -275,7 +298,10 @@ class CouponController extends Controller
         if ($country === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your country!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your country!',
+                'code' => '200',
             ], 200);
         }
 
@@ -284,7 +310,10 @@ class CouponController extends Controller
         if ($currentCity === null) {
             return response()->json([
                 'data' => [],
-                'success' => true, 'message' => 'success', 'description' => 'this service not available in your city!', 'code' => '200',
+                'success' => true,
+                'message' => 'success',
+                'description' => 'this service not available in your city!',
+                'code' => '200',
             ], 200);
         }
 
@@ -292,8 +321,11 @@ class CouponController extends Controller
 
         if (count($cart) == 0) {
             return response()->json([
-                'success' => false, 'data' => [],
-                'message' => 'failed', 'description' => 'add itmes to your cart first!', 'code' => '400',
+                'success' => false,
+                'data' => [],
+                'message' => 'failed',
+                'description' => 'add itmes to your cart first!',
+                'code' => '400',
             ], 400);
         }
 
@@ -315,16 +347,22 @@ class CouponController extends Controller
         list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = $this->discountProcess($discountCode, $cart, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
         if ($couponValid == null) {
             return response()->json([
-                'success' => false, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                'message' => 'invalid coupon used', 'description' => 'invalid coupon used', 'code' => '400',
+                'success' => false,
+                'data' => Cart::where('customer_id', auth()->user()->id)->get(),
+                'message' => 'invalid coupon used',
+                'description' => 'invalid coupon used',
+                'code' => '400',
             ], 400);
         }
 
         TraceError::create(['class_name' => "CouponController::consumer sent data248", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
 
         return response()->json([
-            'success' => true, 'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-            'message' => 'valid', 'description' => 'valid coupon used', 'code' => '200',
+            'success' => true,
+            'data' => Cart::where('customer_id', auth()->user()->id)->get(),
+            'message' => 'valid',
+            'description' => 'valid coupon used',
+            'code' => '200',
         ], 200);
     }
 

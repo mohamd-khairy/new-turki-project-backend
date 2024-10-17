@@ -1,8 +1,6 @@
 <?php
 
 use App\Models\Customer;
-use App\Models\WalletLog;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -18,15 +16,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-
-Route::get('/customers', function () {
-    $customers = Customer::whereNull('foodics_integrate_id')->get();
-
-    foreach ($customers as $key => $value) {
-        foodics_create_or_update_customer($value);
-        sleep(3);
-    }
-});
 
 Route::group(
     [

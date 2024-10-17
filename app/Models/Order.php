@@ -9,12 +9,13 @@ use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
-    // use  LogsActivity;
+    use LogsActivity;
 
-    protected static $logAttributes = ['order_state_id'];
+    protected static $logAttributes = ['*'];
 
     protected static $logOnlyDirty = true;
 
@@ -71,7 +72,7 @@ class Order extends Model
             try {
                 streamOrder($model->ref_no, 'message');
 
-                OrderToFoodics($model->ref_no);
+                // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
                 //throw $th;
             }
@@ -86,18 +87,29 @@ class Order extends Model
             }
         });
     }
-
-    public $appends = ['tax_fees', 'total_amount_after_tax', 'qr', 'qr_string', 'remain_amount', 'discount_code', 'is_printed'];
+    public $appends = [
+        'tax_fees',
+        'total_amount_after_tax',
+        'qr',
+        'qr_string',
+        'remain_amount',
+        'discount_code',
+        'is_printed',
+        'final_amount'
+    ];
     public function getIsPrintedAttribute()
     {
         return  $this->printed_at ?  true : false;
     }
 
+    public function getFinalAmountAttribute()
+    {
+        return round(($this->order_subtotal - $this->discount_applied),2) ?? 0;
+    }
+
     public function getRemainAmountAttribute()
     {
-        return $this->payment && $this->payment->status == 'Paid'
-            ? ($this->total_amount_after_discount - $this->payment->price)
-            : $this->total_amount_after_discount;
+        return round(($this->final_amount - (($this->payment && $this->payment->status == 'Paid' ? $this->payment->price : 0) + ($this->wallet_amount_used ?? 0))),2);
     }
 
     public function getTotalAmountAfterTaxAttribute()
@@ -106,17 +118,17 @@ class Order extends Model
         if (isset($this->selectedAddress->country_id) && $this->selectedAddress->country_id == 4) {
             $per = 1; //1.05;
         }
-        return  $this->total_amount_after_discount ? round(($this->total_amount_after_discount + ($this->wallet_amount_used ?? 0)) / $per, 2) : 0;
+        return  round($this->final_amount / $per, 2);
+    }
+
+    public function getTaxFeesAttribute()
+    {
+        return round($this->final_amount - ($this->total_amount_after_tax ?? 0), 2);
     }
 
     public function getDiscountCodeAttribute()
     {
         return  $this->applied_discount_code ? $this->applied_discount_code : null;
-    }
-
-    public function getTaxFeesAttribute()
-    {
-        return round((($this->total_amount_after_discount + ($this->wallet_amount_used ?? 0)) ?? 0) - ($this->total_amount_after_tax ?? 0), 2);
     }
 
     public function getQrAttribute()
@@ -146,7 +158,7 @@ class Order extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function orderState()

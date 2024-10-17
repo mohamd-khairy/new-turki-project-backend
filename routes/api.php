@@ -153,6 +153,7 @@ Route::prefix("v2")->group(function () {
         Route::prefix('cities')->group(function () {
             Route::get('/get-active-cities', [CityController::class, 'getActiveCities']);
             Route::get('/get-city-ByCountry/{country}', [CityController::class, 'getCityByCountry']);
+            Route::get('/get-city-ByCountry', [CityController::class, 'getCityByCountry']);
             Route::get('/', [CityController::class, 'getAll']);
             Route::get('/{city}', [CityController::class, 'getById']);
             Route::get('/{country}', [CityController::class, 'getCityByCountry']);

@@ -296,6 +296,9 @@ class OrderController extends Controller
                 'payments.price as payment_price',
                 'payments.status as payment_status',
                 'orders.total_amount_after_discount',
+                'orders.total_amount',
+                'orders.order_subtotal',
+                'orders.discount_applied',
                 'orders.wallet_amount_used',
                 'addresses.country_id as address_country_id'
             )->get();
@@ -332,12 +335,15 @@ class OrderController extends Controller
 
             // Write data rows
             foreach ($data as $row) {
+
                 if ($row->payment_status == 'Paid') {
-                    $remain_amount = (($row->payment_price ? ($row->total_amount_after_discount - $row->payment_price) : $row->total_amount_after_discount ?? 0) + $row->wallet_amount_used) ?? 0;
-                    $payment_price = $row->payment_price;
+                    $payment_price = round($row->payment_price + $row->wallet_amount_used, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
+                    $remain_amount = round($final_amount - $payment_price, 2);
                 } else {
-                    $remain_amount = ($row->total_amount_after_discount + $row->wallet_amount_used) ?? 0;
-                    $payment_price = 0;
+                    $payment_price = round($row->wallet_amount_used, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
+                    $remain_amount = round($final_amount - $payment_price, 2);
                 }
 
                 fputcsv($file, [
@@ -396,16 +402,18 @@ class OrderController extends Controller
     private function handlePaymentStatus($order)
     {
         if ($order->payment_status == 'Paid') {
-            $order->remain_amount = ($order->payment_price ? ($order->total_amount_after_discount - $order->payment_price) : $order->total_amount_after_discount ?? 0);
-            $order->payment_price = $order->payment_price + $order->wallet_amount_used;
+            $order->payment_price = round($order->payment_price + $order->wallet_amount_used, 2);
+            $order->final_amount = round($order->order_subtotal - $order->discount_applied, 2);
+            $order->remain_amount = round($order->final_amount - $order->payment_price, 2);
 
             if (!$order->paid && $order->remain_amount <= 0) {
 
                 Order::where('id', $order->id)->update(['paid' => 1]);
             }
         } else {
-            $order->remain_amount = $order->total_amount_after_discount;
-            $order->payment_price = $order->wallet_amount_used;
+            $order->payment_price = round($order->wallet_amount_used, 2);
+            $order->final_amount = round($order->order_subtotal - $order->discount_applied, 2);
+            $order->remain_amount = round($order->final_amount - $order->payment_price, 2);
         }
     }
 
@@ -542,17 +550,10 @@ class OrderController extends Controller
                     }
                 } else if (!$request->paid) {
                     $payment = Payment::where('order_ref_no', $order->ref_no)->latest()->first();
-                    if ($payment && $order->using_wallet) {
-
-                        $customer = Customer::where('id', $order->customer_id)->first();
-
-                        $customer->wallet += $payment->price;
-                    }
 
                     if ($payment) {
                         $payment->update([
                             'status' => 'Waiting for Client',
-                            'price' => 0,
                         ]);
                     }
                 }
@@ -563,20 +564,23 @@ class OrderController extends Controller
             }
 
             if (($request->order_state_id == "107" || $request->order_state_id == "4000") && $order->using_wallet) {
-                $data['using_wallet'] = 0;
-                $data['wallet_amount_used'] = 0;
-                $data['total_amount_after_discount'] = $order->total_amount_after_discount + $order->wallet_amount_used;
-                WalletLog::create([
-                    'user_id' => auth()->user()->id,
-                    'customer_id' => $order->customer_id,
-                    'last_amount' => $order->customer->wallet,
-                    'new_amount' => (float)$order->customer->wallet + $order->wallet_amount_used,
-                    'action' => 'refund',
-                    'action_id' => time(),
-                    'message_ar' => 'استرجاع رصيد ' . $order->ref_no,
-                    'message_en' => 'Refund to wallet ' . $order->ref_no,
-                ]);
-                $order->customer->update(['wallet' => $order->customer->wallet + $order->wallet_amount_used]);
+                $customer = Customer::withTrashed()->where('id', $order->customer_id)->first();
+                if ($customer) {
+                    $data['using_wallet'] = 0;
+                    $data['wallet_amount_used'] = 0;
+                    $data['total_amount_after_discount'] = $order->order_subtotal - $order->discount_applied;
+                    WalletLog::create([
+                        'user_id' => auth()->user()->id,
+                        'customer_id' => $order->customer_id,
+                        'last_amount' => $customer->wallet,
+                        'new_amount' => (float)$customer->wallet + $order->wallet_amount_used,
+                        'action' => 'refund',
+                        'action_id' => time(),
+                        'message_ar' => 'استرجاع رصيد ' . $order->ref_no,
+                        'message_en' => 'Refund to wallet ' . $order->ref_no,
+                    ]);
+                    $customer->update(['wallet' => $customer->wallet + $order->wallet_amount_used]);
+                }
             }
 
             $order->update($data);
@@ -590,8 +594,10 @@ class OrderController extends Controller
             return successResponse($order->refresh(), 'order updated successfully');
         } catch (\Throwable $th) {
 
+
             DB::rollBack();
 
+            throw $th;
             return failResponse([], $th->getMessage());
         }
     }
@@ -982,7 +988,7 @@ class OrderController extends Controller
     {
         $value = 0;
         if ($code) {
-            $discount = Discount::where('code', 'like', '%' . $code . '%')->first();
+            $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
             if ($discount && $TotalAmountBeforeDiscount > 0) {
                 if ($discount->is_percent) {
                     $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;

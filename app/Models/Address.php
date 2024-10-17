@@ -26,15 +26,15 @@ class Address extends Model
     {
         parent::boot();
 
-        static::created(function ($model) {
-            // This code will be executed when a new record is being created
-            try {
-                //code...
-                $res = foodics_create_or_update_customer_address($model);
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
-        });
+        // static::created(function ($model) {
+        //     // This code will be executed when a new record is being created
+        //     try {
+        //         //code...
+        //         $res = foodics_create_or_update_customer_address($model);
+        //     } catch (\Throwable $th) {
+        //         //throw $th;
+        //     }
+        // });
     }
 
     public function country()

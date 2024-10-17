@@ -49,14 +49,17 @@ class WelcomeMoneyController extends Controller
             'welcome_amount' => 'required|min:1|max:100',
             'welcome_start_date' => 'required|after_or_equal:today',
             'welcome_end_date' => ['required', 'after_or_equal:welcome_start_date', new DateRangeNotOverlap($request->welcome_start_date, $request->welcome_end_date)],
-            'expired_days' => 'required|numeric',
+            'expired_days' => 'nullable|numeric',
             'is_active' => 'required|boolean',
             'country_id' => 'required',
 
         ]);
 
         if ($request->expired_days) {
-            $validateData['expired_at'] = Carbon::parse($request->welcome_end_date)->addDays($request->expired_days);
+            $validateData['expired_at'] = $request->welcome_end_date;
+            $date1 = Carbon::parse($request->welcome_start_date);
+            $date2 = Carbon::parse($request->welcome_end_date);
+            $validateData['expired_days'] = $date1->diffInDays($date2);
         }
 
         $data = WelcomeMoney::create($validateData);

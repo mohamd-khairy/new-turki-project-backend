@@ -66,22 +66,22 @@ class Customer extends Authenticatable
             welcome($model);
 
             // This code will be executed when a new record is being created
-            foodics_create_or_update_customer($model);
+            // foodics_create_or_update_customer($model);
         });
 
-        try {
+        // try {
 
-            static::updated(function ($model) {
+        //     static::updated(function ($model) {
 
-                $id = foodics_create_or_update_customer($model);
-                if ($model->foodics_integrate_id == 'null' || !$model->foodics_integrate_id) {
-                    $model->update(['foodics_integrate_id' => $id]);
-                }
-            });
-            //code...
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        //         $id = foodics_create_or_update_customer($model);
+        //         if ($model->foodics_integrate_id == 'null' || !$model->foodics_integrate_id) {
+        //             $model->update(['foodics_integrate_id' => $id]);
+        //         }
+        //     });
+        //     //code...
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }
     }
 
     public function getNameMobileAttribute()

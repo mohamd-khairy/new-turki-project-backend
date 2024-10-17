@@ -10,8 +10,6 @@ use App\Models\OrderProduct;
 use App\Models\Shalwata;
 use App\Models\Size;
 use App\Models\TraceError;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use App\Models\Payment;
 use App\Models\PaymentLog;
@@ -72,7 +70,7 @@ class TabbyApiService
 
         $data = [
             "payment" => [
-                "amount" => $order->total_amount,
+                "amount" => $order->total_amount_after_discount,
                 "currency" => $Country->currency_en,
                 "description" => $order->comment,
                 "buyer" => [
@@ -92,7 +90,7 @@ class TabbyApiService
                 "order_history" => [
                     [
                         "purchased_at" => $order->created_at,
-                        "amount" => $order->total_amount,
+                        "amount" => $order->total_amount_after_discount,
                         "status" => "new",
                     ]
                 ],
@@ -115,9 +113,7 @@ class TabbyApiService
             ]
         ];
 
-
         $payload = json_encode($data);
-
 
         $curl = curl_init();
 
@@ -358,7 +354,6 @@ class TabbyApiService
         ];
     }
 
-
     public function manualResponseUpdate(Request $request)
     {
         $validData = $request->validate([
@@ -414,8 +409,6 @@ class TabbyApiService
 
     public function manualResponseUpdateV2(Request $request)
     {
-
-
         $validData = $request->validate([
             "bank_ref" => 'required',
             "payment_ref" => 'required',
@@ -466,7 +459,6 @@ class TabbyApiService
         }
 
         $order = $order->toArray();
-
 
         // $callPaymentNetsuiteApi = new CallPaymentNetsuiteApi();
         // $callPaymentNetsuiteApi->sendUpdatePaymentToNS($order, $request);

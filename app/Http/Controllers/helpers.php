@@ -18,10 +18,9 @@ use Illuminate\Support\Str;
 function welcome($customer)
 {
     try {
-
         $customer = $customer->refresh();
 
-        if ($customer->mobile_country_code == '+966') {
+        if ($customer->mobile_country_code == '+966' || substr($customer->mobile, 0, 4) == "+966") {
             $country_id = 1;
         } else {
             $country_id = 4;
@@ -61,70 +60,79 @@ function welcome($customer)
         //code...
     } catch (\Throwable $th) {
         //throw $th;
+        info($th->getMessage());
     }
 }
 
 function cashBack($order)
 {
-    // dd($order->toArray());
-    $cashBack = Cashback::where('is_active', 1)
-        ->where('country_id', $order->selectedAddress->country_id)
-        ->where(function ($q) use ($order) {
-            $q->whereDate('cash_back_start_date', '<=', $order->created_at)
-                ->whereDate('cash_back_end_date', '>=', $order->created_at);
-        })
-        ->orderBy('id', 'desc')->first();
+    try {
 
-    if ($cashBack) {
-        if (
-            count($cashBack->city_ids ?? []) > 0 && !in_array($order->selectedAddress->city_id, $cashBack->city_ids)
-        ) {
-            return;
-        }
+        $order->load('selectedAddress');
 
-        if (count($cashBack->customer_ids ?? []) > 0 && !in_array($order->customer_id, $cashBack->customer_ids)) {
-            return;
-        }
+        $cashBack = Cashback::where('is_active', 1)
+            ->where('country_id', $order->selectedAddress->country_id)
+            ->where(function ($q) use ($order) {
+                $q->whereDate('cash_back_start_date', '<=', $order->created_at)
+                    ->whereDate('cash_back_end_date', '>=', $order->created_at);
+            })
+            ->orderBy('id', 'desc')->first();
 
-        $cash_back_amount = ($order->total_amount_after_discount * $cashBack->cash_back_amount) / 100;
+        if ($cashBack) {
+            if (
+                count($cashBack->city_ids ?? []) > 0 && !in_array($order->selectedAddress->city_id, $cashBack->city_ids)
+            ) {
+                return;
+            }
 
-        if (
-            count($cashBack->category_ids) > 0 || count($cashBack->sub_category_ids) > 0 || count($cashBack->product_ids) > 0
-        ) {
+            if (count($cashBack->customer_ids ?? []) > 0 && !in_array($order->customer_id, $cashBack->customer_ids)) {
+                return;
+            }
 
-            $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
-            $cash_back_amount = 0;
-            $discount = $order->discount_applied > 0 ? $order->discount_applied / count($order_products) : 0;
+            $cash_back_amount = ($order->total_amount_after_discount * $cashBack->cash_back_amount) / 100;
 
-            foreach ($order_products as $key => $order_product) {
+            if (
+                count($cashBack->category_ids) > 0 || count($cashBack->sub_category_ids) > 0 || count($cashBack->product_ids) > 0
+            ) {
 
-                if (
-                    (count($cashBack->category_ids ?? []) > 0 &&
-                        !in_array($order_product->product->category_id, $cashBack->category_ids))
-                ) {
-                    break;
+                $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+                $cash_back_amount = 0;
+                $discount = $order->discount_applied > 0 ? $order->discount_applied / count($order_products) : 0;
+
+                foreach ($order_products as $key => $order_product) {
+
+                    if (
+                        (count($cashBack->category_ids ?? []) > 0 &&
+                            !in_array($order_product->product->category_id, $cashBack->category_ids))
+                    ) {
+                        break;
+                    }
+
+                    if (
+                        (count($cashBack->sub_category_ids ?? []) > 0 && !in_array($order_product->product->sub_category_id, $cashBack->sub_category_ids))
+                    ) {
+                        break;
+                    }
+
+                    if (
+                        (count($cashBack->product_ids ?? []) > 0 && !in_array($order_product->product_id, $cashBack->product_ids))
+                    ) {
+                        break;
+                    }
+
+                    $cash_back_amount += ((($order_product->total_price - $discount) * $cashBack->cash_back_amount) / 100);
                 }
+            }
 
-                if (
-                    (count($cashBack->sub_category_ids ?? []) > 0 && !in_array($order_product->product->sub_category_id, $cashBack->sub_category_ids))
-                ) {
-                    break;
-                }
-
-                if (
-                    (count($cashBack->product_ids ?? []) > 0 && !in_array($order_product->product_id, $cashBack->product_ids))
-                ) {
-                    break;
-                }
-
-                $cash_back_amount += ((($order_product->total_price - $discount) * $cashBack->cash_back_amount) / 100);
+            // dd(round($cash_back_amount, 2));
+            if ($cash_back_amount) {
+                addCashBack($order, $cashBack, round($cash_back_amount, 2));
             }
         }
-
-        // dd(round($cash_back_amount, 2));
-        if ($cash_back_amount) {
-            addCashBack($order, $cashBack, round($cash_back_amount, 2));
-        }
+        //code...
+    } catch (\Throwable $th) {
+        //throw $th;
+        info($th->getMessage());
     }
 }
 
@@ -155,287 +163,289 @@ function addCashBack($order = null, $cash_back = null, $cash_back_amount = null)
 
 function OrderToFoodics($ref_no)
 {
-    try {
+    // try {
 
-        $order = Order::with('deliveryPeriod', 'customer', 'selectedAddress', 'paymentType')->where('ref_no', $ref_no)->first();
+    //     $order = Order::with('deliveryPeriod', 'customer', 'selectedAddress', 'paymentType')->where('ref_no', $ref_no)->first();
 
-        if ($order->selectedAddress->country_id == 1) {
+    //     if ($order->selectedAddress->country_id == 1) {
 
-            $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
+    //         $order_products = OrderProduct::with('size', 'preparation', 'cut')->where('order_ref_no', $order->ref_no)->get();
 
-            $price = 0;
+    //         $price = 0;
 
-            $to = strlen($order->deliveryPeriod->to) < 2 ? '0' . $order->deliveryPeriod->to : $order->deliveryPeriod->to;
-            $deliveryPeriod = $to . ':00:00';
-            $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
+    //         $to = strlen($order->deliveryPeriod->to) < 2 ? '0' . $order->deliveryPeriod->to : $order->deliveryPeriod->to;
+    //         $deliveryPeriod = $to . ':00:00';
+    //         $delivery_date = date('Y-m-d H:i:s', strtotime($order->delivery_date . $deliveryPeriod . ' -3 hours'));
 
-            $notes = ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - " : '') .
-                (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - " : '') .
-                ($order->comment ?? "");
-            $json = [
-                "type" => 2,
-                "status" => true,
-                "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
-                "discount_amount" => $order->discount_applied ?? 0,
-                'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
-                "due_at" => $delivery_date,
-                "customer_notes" => $order->ref_no ?? "",
-                "kitchen_notes" => $notes ?? '',
-                "coupon_code" => $order->applied_discount_code ?? "",
-                "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
-                "meta" => [
-                    "3rd_party_order_number" => $order->ref_no ?? "111",
-                ],
-            ];
+    //         $notes = ($order->deliveryPeriod ? $order->deliveryPeriod->name_ar . " - " : '') .
+    //             (isset($order->selectedAddress->city) ? $order->selectedAddress->city->name_ar . " - " : '') .
+    //             ($order->comment ?? "");
+    //         $json = [
+    //             "type" => 2,
+    //             "status" => true,
+    //             "business_date" => date('Y-m-d H:i:s', strtotime($order->created_at)),
+    //             "discount_amount" => $order->discount_applied ?? 0,
+    //             'branch_id' => "960fb2d5-4bd4-4d7c-bbef-538e977682ea",
+    //             "due_at" => $delivery_date,
+    //             "customer_notes" => $order->ref_no ?? "",
+    //             "kitchen_notes" => $notes ?? '',
+    //             "coupon_code" => $order->applied_discount_code ?? "",
+    //             "tax_exclusive_discount_amount" => $order->tax_fees ?? "",
+    //             "meta" => [
+    //                 "3rd_party_order_number" => $order->ref_no ?? "111",
+    //             ],
+    //         ];
 
-            if ($order->applied_discount_code) {
-                $coupon = Discount::where('code', $order->applied_discount_code)->first();
-                if ($coupon && $coupon->foodics_integrate_id) {
-                    $json['coupon_id'] = $coupon->foodics_integrate_id ?? null;
-                }
-            }
+    //         if ($order->applied_discount_code) {
+    //             $coupon = Discount::where('code', $order->applied_discount_code)->first();
+    //             if ($coupon && $coupon->foodics_integrate_id) {
+    //                 $json['coupon_id'] = $coupon->foodics_integrate_id ?? null;
+    //             }
+    //         }
 
-            foreach ($order_products as $k => $pro) {
+    //         foreach ($order_products as $k => $pro) {
 
-                if ($pro->size && isset($pro->size->foodics_integrate_id)) {
-                    $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
-                    $json['products'][$k] = [
-                        "product_id" => $pro->size->foodics_integrate_id,
-                        "quantity" => $pro->quantity ?? 1,
-                        "unit_price" => $pro->size->sale_price,
-                        "total_price" => $total_price,
-                    ];
+    //             if ($pro->size && isset($pro->size->foodics_integrate_id)) {
+    //                 $total_price = ($pro->size->sale_price * $pro->quantity ?? 1);
+    //                 $json['products'][$k] = [
+    //                     "product_id" => $pro->size->foodics_integrate_id,
+    //                     "quantity" => $pro->quantity ?? 1,
+    //                     "unit_price" => $pro->size->sale_price,
+    //                     "total_price" => $total_price,
+    //                 ];
 
-                    if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => $pro->preparation->foodics_integrate_id,
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->preparation && isset($pro->preparation->foodics_integrate_id)) {
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => $pro->preparation->foodics_integrate_id,
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => $pro->cut->foodics_integrate_id,
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->cut && isset($pro->cut->foodics_integrate_id)) {
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => $pro->cut->foodics_integrate_id,
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    if ($pro->is_kwar3) { //  without
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->is_kwar3) { //  without
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => '9b9c4179-13bd-4877-b334-fbd316be7bba',
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    if ($pro->is_Ras) { // without
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->is_Ras) { // without
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => '9b9c4194-dc59-4793-9b76-903220f255c1',
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    if ($pro->is_lyh) { //  without
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->is_lyh) { //  without
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => '9b9c4155-aa01-4061-a774-1dfc729fbb1c',
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    if ($pro->is_karashah) { //  without
-                        $json['products'][$k]['options'][] = [
-                            "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
-                            "quantity" => 1,
-                            "unit_price" => 0,
-                        ];
-                    }
+    //                 if ($pro->is_karashah) { //  without
+    //                     $json['products'][$k]['options'][] = [
+    //                         "modifier_option_id" => '9b9c41a9-a5ed-404d-a876-313bb73fbba7',
+    //                         "quantity" => 1,
+    //                         "unit_price" => 0,
+    //                     ];
+    //                 }
 
-                    $price += $total_price;
-                }
-            }
+    //                 $price += $total_price;
+    //             }
+    //         }
 
-            $json['subtotal_price'] = $order->order_subtotal ?? $price;
-            $json['total_price'] = $order->total_amount_after_discount ?? $price;
+    //         $json['subtotal_price'] = $order->order_subtotal ?? $price;
+    //         $json['total_price'] = $order->total_amount_after_discount ?? $price;
 
-            if (foodics_payment_methods($order->paymentType->code)) {
-                $json['payments'][] = [
-                    'payment_method_id' => foodics_payment_methods($order->paymentType->code),
-                    'amount' => $order->total_amount_after_discount,
-                ];
-            }
+    //         if (foodics_payment_methods($order->paymentType->code)) {
+    //             $json['payments'][] = [
+    //                 'payment_method_id' => foodics_payment_methods($order->paymentType->code),
+    //                 'amount' => $order->total_amount_after_discount,
+    //             ];
+    //         }
 
-            if ($order->customer->foodics_integrate_id) {
-                $json['customer_id'] = $order->customer->foodics_integrate_id;
-            } else if ($customer_id = foodics_create_or_update_customer($order->customer)) {
-                $json['customer_id'] = $customer_id;
-            }
+    //         if ($order->customer->foodics_integrate_id) {
+    //             $json['customer_id'] = $order->customer->foodics_integrate_id;
+    //         } else if ($customer_id = foodics_create_or_update_customer($order->customer)) {
+    //             $json['customer_id'] = $customer_id;
+    //         }
 
-            if (isset($json['customer_id']) && $json['customer_id']) {
-                if ($order->selectedAddress->foodics_integrate_id) {
-                    $json['customer_address_id'] = $order->selectedAddress->foodics_integrate_id;
-                    $json['type'] = 3;
-                } else if ($customer_address_id = foodics_create_or_update_customer_address($order->selectedAddress)) {
-                    $json['customer_address_id'] = $customer_address_id;
-                    $json['type'] = 3;
-                }
-            }
+    //         if (isset($json['customer_id']) && $json['customer_id']) {
+    //             if ($order->selectedAddress->foodics_integrate_id) {
+    //                 $json['customer_address_id'] = $order->selectedAddress->foodics_integrate_id;
+    //                 $json['type'] = 3;
+    //             } else if ($customer_address_id = foodics_create_or_update_customer_address($order->selectedAddress)) {
+    //                 $json['customer_address_id'] = $customer_address_id;
+    //                 $json['type'] = 3;
+    //             }
+    //         }
 
-            $res = httpCurl('post', 'orders', $json);
+    //         $res = httpCurl('post', 'orders', $json);
 
-            if (isset($res['id'])) {
-                $order->update(['foodics_integrate_id' => $res['id']]);
+    //         if (isset($res['id'])) {
+    //             $order->update(['foodics_integrate_id' => $res['id']]);
 
-                foodics_create_or_update_customer($order->customer); //
+    //             foodics_create_or_update_customer($order->customer); //
 
-                return $res['id'];
-            }
-            return null;
-        }
-        return null;
-        //code...
-    } catch (\Throwable $th) {
-        //throw $th;
-        return null;
-    }
+    //             return $res['id'];
+    //         }
+    //         return null;
+    //     }
+    //     return null;
+    //     //code...
+    // } catch (\Throwable $th) {
+    //     //throw $th;
+    //     return null;
+    // }
     //code...
 }
 
 function foodics_create_or_update_customer($item)
 {
-    try {
+    // try {
 
-        $customer = \App\Models\Customer::find($item->id);
+    //     $customer = \App\Models\Customer::find($item->id);
 
-        if (!isset($customer->id)) {
-            return null;
-        }
+    //     if (!isset($customer->id)) {
+    //         return null;
+    //     }
 
-        $data = [
-            "name" => $customer->name ?? $customer->mobile ?? "new",
-            "dial_code" => 966,
-            "phone" => substr($customer->mobile ?? '+966000000000', 4) ?? '',
-            "email" => $customer->email ?? '',
-            "gender" => 1,
-            "birth_date" => "1996-09-17",
-            "tags" => [],
-            "is_blacklisted" => false,
-            "is_house_account_enabled" => false,
-            "house_account_limit" => 1000,
-            "is_loyalty_enabled" => false,
-        ];
+    //     $data = [
+    //         "name" => $customer->name ?? $customer->mobile ?? "new",
+    //         "dial_code" => 966,
+    //         "phone" => substr($customer->mobile ?? '+966000000000', 4) ?? '',
+    //         "email" => $customer->email ?? '',
+    //         "gender" => 1,
+    //         "birth_date" => "1996-09-17",
+    //         "tags" => [],
+    //         "is_blacklisted" => false,
+    //         "is_house_account_enabled" => false,
+    //         "house_account_limit" => 1000,
+    //         "is_loyalty_enabled" => false,
+    //     ];
 
-        if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
+    //     if ($customer->foodics_integrate_id && $customer->foodics_integrate_id != 'null') {
 
-            $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'], 'email' => $data['email']]);
+    //         $res = httpCurl('put', 'customers/' . $customer->foodics_integrate_id, ['name' => $data['name'], 'email' => $data['email']]);
 
-            return $item->foodics_integrate_id;
-        } else {
-            $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
-            if (isset($res[0]['id'])) {
-                $id = $res[0]['id'];
-                $customer->update(['foodics_integrate_id' => $id]);
+    //         return $item->foodics_integrate_id;
+    //     } else {
+    //         $res = $customer->mobile ? httpCurl('get', 'customers?filter[phone]=' . substr($customer->mobile, -9)) : null;
+    //         if (isset($res[0]['id'])) {
+    //             $id = $res[0]['id'];
+    //             $customer->update(['foodics_integrate_id' => $id]);
 
-                $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'], 'email' => $data['email']]);
+    //             $res = httpCurl('put', 'customers/' . $id, ['name' => $data['name'], 'email' => $data['email']]);
 
-                return $id;
-            } else {
+    //             return $id;
+    //         } else {
 
-                $res = httpCurl('post', 'customers', $data);
+    //             $res = httpCurl('post', 'customers', $data);
 
-                if (isset($res['id'])) {
-                    $customer->update(['foodics_integrate_id' => $res['id']]);
-                    return $res['id'];
-                }
-            }
-        }
+    //             if (isset($res['id'])) {
+    //                 $customer->update(['foodics_integrate_id' => $res['id']]);
+    //                 return $res['id'];
+    //             }
+    //         }
+    //     }
 
-        return null;
-        //code...
-    } catch (\Throwable $th) {
-        //throw $th;
-        return null;
-    }
+    //     return null;
+    //     //code...
+    // } catch (\Throwable $th) {
+    //     //throw $th;
+    //     return null;
+    // }
 }
 
 function foodics_create_or_update_customer_address($item)
 {
-    try {
+    // try {
 
-        $address = \App\Models\Address::with('customer')->find($item->id);
+    //     $address = \App\Models\Address::with('customer')->find($item->id);
 
-        $data = [
-            "name" => $address->label ?? '',
-            "description" => $address->address . ' ' . $address->comment,
-            "latitude" => $address->lat ?? '',
-            "longitude" => $address->long ?? '',
-            "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653",
-        ];
-        if ($address->customer->foodics_integrate_id) {
-            $data["customer_id"] = $address->customer->foodics_integrate_id;
-        } else if ($customer_id = foodics_create_or_update_customer($address->customer)) {
-            $data['customer_id'] = $customer_id;
-        }
+    //     $data = [
+    //         "name" => $address->label ?? '',
+    //         "description" => $address->address . ' ' . $address->comment,
+    //         "latitude" => $address->lat ?? '',
+    //         "longitude" => $address->long ?? '',
+    //         "delivery_zone_id" => "9bf2c28b-ea66-4f47-ab1a-e6c017d0a653",
+    //     ];
+    //     if ($address->customer->foodics_integrate_id) {
+    //         $data["customer_id"] = $address->customer->foodics_integrate_id;
+    //     } else if ($customer_id = foodics_create_or_update_customer($address->customer)) {
+    //         $data['customer_id'] = $customer_id;
+    //     }
 
-        $res = httpCurl('post', 'addresses', $data);
+    //     $res = httpCurl('post', 'addresses', $data);
 
-        if (isset($res['id'])) {
-            $address->update(['foodics_integrate_id' => $res['id']]);
-            return $res['id'];
-        }
-        return null;
-        //code...
-    } catch (\Throwable $th) {
-        //throw $th;
-        return null;
-    }
+    //     if (isset($res['id'])) {
+    //         $address->update(['foodics_integrate_id' => $res['id']]);
+    //         return $res['id'];
+    //     }
+    //     return null;
+    //     //code...
+    // } catch (\Throwable $th) {
+    //     //throw $th;
+    //     return null;
+    // }
 }
 
 function httpCurl($method, $route, $json = [])
 {
-    try {
-        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5YmUwN2NjMS1hYjcwLTQzNzQtYTAyOC1lMmNiZjhlYjk4MDMiLCJqdGkiOiJmMDY4MzJiY2E4Y2Q2OWQ2ZTgzMWVjNDZhNWI2ZTdlNDA4ZjE5M2RkZWY3YTliMjVhNDY2YmIyMTk4ZWI2Yjg5NDdjNWIyMzk2MjdhYzRjMiIsImlhdCI6MTcxMzk1NjMyNS4zMDEyMTMsIm5iZiI6MTcxMzk1NjMyNS4zMDEyMTMsImV4cCI6MTg3MTcyMjcyNS4yNjc1MjMsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOTYwZmIyYTctMTJmMS00ZWZhLWI1NjctY2FlYmI2MDZiMDMxIiwicmVmZXJlbmNlIjoiOTQ5NDMwIn0.kJXEXgFsfgSyFU4TH2VU_Y5y1YsHs1ZUw2ndQ4zv7bMo-AxRUiHxN9ZwCO8RceeMWyMr5zyCbg1kwDXtp_okXUYb0BN5ytHw3s3Vz8bNFGuJVYVPwo1InvY_z8yeNT3LmwJMO6xvIgv9LbicH1cS1u0fYRbjegWBNHXDlLkPSj4LhkN3ZPP4XcxjNJXsn2QfGaKtk-TiHY2DUqhf-WSPG6O2YlD-sLXVM3QP8ir6ggYuznQ81YYhsKj6Ha_TnSX8hxdCVDeSYN2HBp91f98jMKf8YBHgiFSfmFm_NBvprNcf7JcCiqubpWPmeeT0lfpuNQvFOQknjMXAMbfMAGN8YOf7d38Z3HSzv5yVjb18bf3ZFat0y3EIOHLHmYC_oceC4OaCQvaz0yuFsdjnG0_Lz2kqtDPGW40aKURYMarW4IqELH8dsUG7F1ZJ5W62WCYfToGzEsRdhZ2d1TA6vPS_62B1Hgu9xg4BAVKb_edhNEYp8xA6nbh3CL8U3MUUSKEJ7AVW3T-vPHjk7C1xqd7oXPlzjplz40i5tSLxlGerEQVRGaiypKzjc3Dpgq4IqqkJHi5Rs1nVTcI7JPs-UtCw9-PYbkviRhpebvtsLh53qfgPjA583U0KiLzN6Nhl4vFRwZ7cLcxNgUffcYqpMt4XKGsXG_pGpc6WEdPu0HP8Le0";
+    return null;
 
-        $httpClient = new Client();
+    // try {
+    // $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5YmUwN2NjMS1hYjcwLTQzNzQtYTAyOC1lMmNiZjhlYjk4MDMiLCJqdGkiOiJmMDY4MzJiY2E4Y2Q2OWQ2ZTgzMWVjNDZhNWI2ZTdlNDA4ZjE5M2RkZWY3YTliMjVhNDY2YmIyMTk4ZWI2Yjg5NDdjNWIyMzk2MjdhYzRjMiIsImlhdCI6MTcxMzk1NjMyNS4zMDEyMTMsIm5iZiI6MTcxMzk1NjMyNS4zMDEyMTMsImV4cCI6MTg3MTcyMjcyNS4yNjc1MjMsInN1YiI6Ijk2MGZiMmE3LTEyYTQtNGY1OC04MDYwLTMyMDExMzMyNWUyZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOTYwZmIyYTctMTJmMS00ZWZhLWI1NjctY2FlYmI2MDZiMDMxIiwicmVmZXJlbmNlIjoiOTQ5NDMwIn0.kJXEXgFsfgSyFU4TH2VU_Y5y1YsHs1ZUw2ndQ4zv7bMo-AxRUiHxN9ZwCO8RceeMWyMr5zyCbg1kwDXtp_okXUYb0BN5ytHw3s3Vz8bNFGuJVYVPwo1InvY_z8yeNT3LmwJMO6xvIgv9LbicH1cS1u0fYRbjegWBNHXDlLkPSj4LhkN3ZPP4XcxjNJXsn2QfGaKtk-TiHY2DUqhf-WSPG6O2YlD-sLXVM3QP8ir6ggYuznQ81YYhsKj6Ha_TnSX8hxdCVDeSYN2HBp91f98jMKf8YBHgiFSfmFm_NBvprNcf7JcCiqubpWPmeeT0lfpuNQvFOQknjMXAMbfMAGN8YOf7d38Z3HSzv5yVjb18bf3ZFat0y3EIOHLHmYC_oceC4OaCQvaz0yuFsdjnG0_Lz2kqtDPGW40aKURYMarW4IqELH8dsUG7F1ZJ5W62WCYfToGzEsRdhZ2d1TA6vPS_62B1Hgu9xg4BAVKb_edhNEYp8xA6nbh3CL8U3MUUSKEJ7AVW3T-vPHjk7C1xqd7oXPlzjplz40i5tSLxlGerEQVRGaiypKzjc3Dpgq4IqqkJHi5Rs1nVTcI7JPs-UtCw9-PYbkviRhpebvtsLh53qfgPjA583U0KiLzN6Nhl4vFRwZ7cLcxNgUffcYqpMt4XKGsXG_pGpc6WEdPu0HP8Le0";
 
-        $data = [
-            'headers' => [
-                'Authorization' => "Bearer $token",
-                'Content-Type' => 'application/json',
-            ],
-        ];
+    // $httpClient = new Client();
 
-        if ($method == 'post' && $json) {
-            $data['json'] = $json;
-            $response = $httpClient->post('https://api.foodics.com/v5/' . $route, $data);
-        } elseif ($method == 'get') {
-            $response = $httpClient->get('https://api.foodics.com/v5/' . $route, $data);
-        } elseif ($method == 'put') {
-            $data['json'] = $json;
-            $response = $httpClient->put('https://api.foodics.com/v5/' . $route, $data);
-        }
+    // $data = [
+    //     'headers' => [
+    //         'Authorization' => "Bearer $token",
+    //         'Content-Type' => 'application/json',
+    //     ],
+    // ];
 
-        $statusCode = $response->getStatusCode();
-        $responseBody = $response->getBody()->getContents();
+    // if ($method == 'post' && $json) {
+    //     $data['json'] = $json;
+    //     $response = $httpClient->post('https://api.foodics.com/v5/' . $route, $data);
+    // } elseif ($method == 'get') {
+    //     $response = $httpClient->get('https://api.foodics.com/v5/' . $route, $data);
+    // } elseif ($method == 'put') {
+    //     $data['json'] = $json;
+    //     $response = $httpClient->put('https://api.foodics.com/v5/' . $route, $data);
+    // }
 
-        if ($statusCode == 200) {
-            // Successful response
-            $res = is_array($responseBody) ? $responseBody : json_decode($responseBody, true);
-            if (isset($res['data'])) {
-                return $res['data'];
-            }
-        }
-        return null;
-        //code...
-    } catch (\Throwable $th) {
-        //throw $th;
-        info('erorrrrrrrrrr');
-        info($th->getMessage());
-        return null;
-    }
+    // $statusCode = $response->getStatusCode();
+    // $responseBody = $response->getBody()->getContents();
+
+    // if ($statusCode == 200) {
+    //     // Successful response
+    //     $res = is_array($responseBody) ? $responseBody : json_decode($responseBody, true);
+    //     if (isset($res['data'])) {
+    //         return $res['data'];
+    //     }
+    // }
+    // return null;
+    //code...
+    // } catch (\Throwable $th) {
+    //throw $th;
+    // info('erorrrrrrrrrr');
+    // info($th->getMessage());
+    // return null;
+    // }
 }
 
 function streamOrder($number, $event = null) // solution 2 for server
