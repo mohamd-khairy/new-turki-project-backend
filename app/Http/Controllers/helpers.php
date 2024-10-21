@@ -5,6 +5,7 @@ use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
+use App\Models\StockLog;
 use App\Models\WalletLog;
 use App\Models\WelcomeMoney;
 use GuzzleHttp\Client;
@@ -14,6 +15,61 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+
+function touchStock($order)
+{
+    try {
+        $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+
+        foreach ($order_products as $order_product) {
+
+            if ($order_product->size) {
+
+                $size_stores = $order_product->size->size_store;
+
+                foreach ($size_stores as $size_store) {
+
+                    $stock = $size_store->stock;
+
+                    if ($stock->quantity > $order_product->quantity) {
+
+                        $new_quantity = $stock->quantity - $order_product->quantity;
+
+                        if (!StockLog::where([
+                            'stock_id' => $stock->id,
+                            'order_product_id' => $order_product->id,
+                            'action' => 'order',
+                            'order_ref_no' => $order->ref_no,
+                            'quantity' => $order_product->quantity
+                        ])->exists()) {
+                            $log = [
+                                'stock_id' => $stock->id,
+                                'quantity' => $order_product->quantity,
+                                'old_quantity' => $stock->quantity,
+                                'new_quantity' => $new_quantity,
+                                'order_ref_no' => $order->ref_no,
+                                'order_product_id' => $order_product->id,
+                                'action' => 'order',
+                                'customer_id' => $order->customer_id,
+                                'user_id' => auth()->user()->id,
+                                'size_id' => $order_product->size_id
+                            ];
+
+                            StockLog::create($log);
+
+                            $stock->update([
+                                'quantity' => $new_quantity,
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $th) {
+        // throw $th;
+        info($th->getMessage());
+    }
+}
 
 function welcome($customer)
 {

@@ -587,6 +587,8 @@ class OrderController extends Controller
 
             if ($request->order_state_id == "200") {
                 cashBack($order);
+
+                touchStock($order);
             }
 
             DB::commit();
@@ -597,7 +599,7 @@ class OrderController extends Controller
 
             DB::rollBack();
 
-            throw $th;
+            // throw $th;
             return failResponse([], $th->getMessage());
         }
     }
