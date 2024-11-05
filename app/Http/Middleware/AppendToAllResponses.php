@@ -83,7 +83,7 @@ class AppendToAllResponses
             // Collect the dates of the next 4 dates
             for ($i = 0; $i < 3; $i++) {
                 $d = $date->copy()->toDateString();
-                if (!NotDeliveryDateCity::where('delivery_date', $d)->first()) {
+                if (!NotDeliveryDateCity::where('city_id',$currentCity->id)->where('delivery_date', $d)->first()) {
                     $dates[] = $d;
                 }
                 $date->addWeek();
