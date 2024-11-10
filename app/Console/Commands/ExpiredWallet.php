@@ -48,43 +48,43 @@ class ExpiredWallet extends Command
                 ->whereDate('expired_at', date('Y-m-d'))->get();
 
                 info($logs);
-            // foreach ($logs as $key => $log) {
-            //     $amount = $log->new_amount - $log->last_amount;
-            //     if (
-            //         $log->customer->orders
-            //         ->where('created_at', '>=',  Carbon::parse($log->created_at)->format('Y-m-d'))
-            //         ->where('created_at', '<=', Carbon::parse($log->expired_at)->format('Y-m-d'))
-            //         ->where('total_amount', '>=', $amount)
-            //         ->count() < 1
-            //     ) {
+            foreach ($logs as $key => $log) {
+                $amount = $log->new_amount - $log->last_amount;
+                if (
+                    $log->customer->orders
+                    ->where('created_at', '>=',  Carbon::parse($log->created_at)->format('Y-m-d'))
+                    ->where('created_at', '<=', Carbon::parse($log->expired_at)->format('Y-m-d'))
+                    ->where('total_amount', '>=', $amount)
+                    ->count() < 1
+                ) {
 
-            //         $remove = WalletLog::where([
-            //             'action_id' => $log->action_id,
-            //             'customer_id' => $log->customer_id,
-            //             'action' => 'remove',
-            //         ])->first();
+                    $remove = WalletLog::where([
+                        'action_id' => $log->action_id,
+                        'customer_id' => $log->customer_id,
+                        'action' => 'remove',
+                    ])->first();
 
-            //         if (!$remove) {
+                    if (!$remove) {
 
-            //             $new_amount = $log->customer->wallet - $amount;
+                        $new_amount = $log->customer->wallet - $amount;
 
-            //             $log = WalletLog::create([
-            //                 'user_id' => null,
-            //                 'customer_id' => $log->customer_id,
-            //                 'last_amount' => $log->customer->wallet,
-            //                 'new_amount' => $new_amount,
-            //                 'action_id' =>  $log->action_id,
-            //                 'action' => 'remove',
-            //                 'expired_days' => null,
-            //                 'expired_at' => null,
-            //                 'message_ar' => 'انتهاء الرصيد',
-            //                 'message_en' => 'expired money'
-            //             ]);
+                        $log = WalletLog::create([
+                            'user_id' => null,
+                            'customer_id' => $log->customer_id,
+                            'last_amount' => $log->customer->wallet,
+                            'new_amount' => $new_amount,
+                            'action_id' =>  $log->action_id,
+                            'action' => 'expiry',
+                            'expired_days' => null,
+                            'expired_at' => null,
+                            'message_ar' => ' تسوية رصيد منتهي الصلاحية',
+                            'message_en' => 'Expired balance settlement '
+                        ]);
 
-            //             $log->customer->update(['wallet' => $new_amount]);
-            //         }
-            //     }
-            // }
+                        $log->customer->update(['wallet' => $new_amount]);
+                    }
+                }
+            }
 
             DB::commit();
             //code...
