@@ -506,6 +506,10 @@ function httpCurl($method, $route, $json = [])
 
 function streamOrder($number, $event = null) // solution 2 for server
 {
+    if(in_array('logistic_manager', auth()->user()->roles->pluck('name')->toArray())){
+        return null;
+    }
+    
     $sse = DB::table('orders')
         ->select(
             'orders.*',
