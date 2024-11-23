@@ -20,10 +20,15 @@ class Category extends Model
     protected static $logOnlyDirty = true;
 
     protected $fillable = ['type_ar', 'type_en', 'description', 'color', 'backgroundColor', 'image', 'thumbnail', 'banner', 'sort'];
-    
+
     protected $hidden = ['created_at', 'updated_at', 'image', 'thumbnail', 'pivot', 'banner'];
 
     protected $appends = ['image_url', 'thumbnail_url', 'banner_url'];
+
+    public function subCategories()
+    {
+        return $this->hasMany(SubCategory::class);
+    }
 
     public static function uploadImage(Request $request, $category, $validatedData)
     {

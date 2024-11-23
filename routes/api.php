@@ -3,6 +3,8 @@
 use App\Http\Controllers\API\AuthenticationController;
 use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\CashbackController;
+use App\Http\Controllers\API\Cashier\BranchController;
+use App\Http\Controllers\API\Cashier\CashierController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CityController;
 use App\Http\Controllers\API\CountryController;
@@ -51,6 +53,20 @@ use App\Services\TabbyApiService;
 */
 
 Route::prefix("v2")->group(function () {
+
+
+    Route::group(['middleware' => 'auth:sanctum'], function () {
+
+        Route::get('cashier-categories', [CashierController::class, 'cashierCategories'])->name('cashier-categories');
+        Route::get('cashier-subcategories/{category_id}', [CashierController::class, 'cashierSubCategories'])->name('cashier-subcategories');
+        Route::get('cashier-products/{subcategory_id}', [CashierController::class, 'cashierProducts'])->name('cashier-products');
+        /************************************* branch routes ******************************************************** */
+        Route::apiResource('branch', BranchController::class);
+        Route::get('active-branches', [BranchController::class, 'activeBranches']);
+        Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
+    });
+
+
 
     /************************************************** public routes ******************************************************** */
     Route::group([], function () {

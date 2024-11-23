@@ -194,27 +194,35 @@ function cashBack($order)
 
 function addCashBack($order = null, $cash_back = null, $cash_back_amount = null)
 {
-    $new_amount =  $order->customer->wallet + $cash_back_amount;
-    $log = WalletLog::updateOrCreate([
+    $log = WalletLog::where([
         'action_id' => $order->ref_no,
         'customer_id' => $order->customer_id,
         'action' => 'cash_back',
-    ], [
-        'user_id' => null,
-        'customer_id' => $order->customer_id,
-        'last_amount' => $order->customer->wallet,
-        'new_amount' => $new_amount,
-        'action_id' =>  $order->ref_no,
-        'action' => 'cash_back',
-        'expired_days' => $cash_back->expired_days,
-        'expired_at' => $cash_back->expired_at,
-        'message_ar' => 'كاش باك للطلب رقم ' . $order->ref_no,
-        'message_en' => 'Cashback on order number ' . $order->ref_no
-    ]);
+    ])->first();
 
-    $order->customer->update([
-        'wallet' => $new_amount
-    ]);
+    if (!$log) {
+        $new_amount =  $order->customer->wallet + $cash_back_amount;
+
+        $log = WalletLog::create([
+            'action_id' => $order->ref_no,
+            'customer_id' => $order->customer_id,
+            'action' => 'cash_back',
+            'user_id' => null,
+            'customer_id' => $order->customer_id,
+            'last_amount' => $order->customer->wallet,
+            'new_amount' => $new_amount,
+            'action_id' =>  $order->ref_no,
+            'action' => 'cash_back',
+            'expired_days' => $cash_back->expired_days,
+            'expired_at' => $cash_back->expired_days ? Carbon::today()->addDays($cash_back->expired_days) : null,
+            'message_ar' => 'كاش باك للطلب رقم ' . $order->ref_no,
+            'message_en' => 'Cashback on order number ' . $order->ref_no
+        ]);
+
+        $order->customer->update([
+            'wallet' => $new_amount
+        ]);
+    }
 }
 
 function OrderToFoodics($ref_no)
@@ -506,10 +514,10 @@ function httpCurl($method, $route, $json = [])
 
 function streamOrder($number, $event = null) // solution 2 for server
 {
-    if(in_array('logistic_manager', auth()->user()->roles->pluck('name')->toArray())){
+    if (in_array('logistic_manager', auth()->user()->roles->pluck('name')->toArray())) {
         return null;
     }
-    
+
     $sse = DB::table('orders')
         ->select(
             'orders.*',
@@ -710,41 +718,41 @@ if (!function_exists('handleRoleOrderState')) {
 
         if (in_array('admin', $roles)) { // 'admin' => 'مدير النظام',
             $data = [
-                'status' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'status' => OrderState::pluck('new_code')->toArray(),
+                'orders' => OrderState::pluck('new_code')->toArray(),
             ];
         }
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             $data = [
                 'status' => ['104', '105'],
-                'orders' => ['101', '104', '105', '106', '200'],
+                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
             $data = [
                 'status' => ['104', '105'],
-                'orders' => ['101', '104', '105', '106', '200'],
+                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
             ];
         }
 
         if (in_array('logistic_manager', $roles)) { // 'logistic_manager' => 'مسئول لوجيستي',///////////////////
             $data = [
-                'status' => ['103', '106', '200'],
-                'orders' => ['101', '104', '105', '106', '109', '200'],
+                'status' => ['103', '104', '106', '200', '201', '206'],
+                'orders' => ['101', '104', '105', '106', '109', '200', '201', '206'],
             ];
         }
         if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
             $data = [
-                'status' => ['101', '102', '103', '106', '109', '200'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '109', '200'],
+                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
             ];
         }
         if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
             $data = [
-                'status' => ['101', '102', '103', '106', '109', '200'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209'],
             ];
         }
         if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////
@@ -765,8 +773,8 @@ if (!function_exists('handleRoleOrderState')) {
             return $data;
         } else {
             return [
-                'status' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200'],
+                'status' => OrderState::pluck('new_code')->toArray(),
+                'orders' => OrderState::pluck('new_code')->toArray(),
             ];
         }
     }
