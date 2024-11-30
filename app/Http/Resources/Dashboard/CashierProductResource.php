@@ -3,9 +3,6 @@
 namespace App\Http\Resources\Dashboard;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Category;
-use App\Models\SubCategory;
-
 
 class CashierProductResource extends JsonResource
 {

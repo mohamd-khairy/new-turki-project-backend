@@ -16,7 +16,6 @@ use App\Models\PaymentType;
 use App\Models\Product;
 use App\Models\Size;
 use App\Models\SubCategory;
-use App\Models\User;
 use App\Models\WalletLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +76,36 @@ class CashierController extends Controller
                 'compensation'
             ])->get();
         return successResponse($data, 'success');
+    }
+
+    public function cashierOrderDetails($ref_no)
+    {
+        $order = Order::where('ref_no', $ref_no)
+            ->with(
+                'paymentType',
+                'customer',
+                'payment',
+                'orderState',
+                'user',
+                'salesRepresentative'
+            )->first();
+
+        $data['order'] = $order;
+
+        $data['products'] = OrderProduct::with('preparation', 'size', 'cut', 'product.productImages')
+            ->where('order_ref_no', $order->ref_no)->get()->map(function ($i) {
+                $i->shalwata = $i->shalwata ? true : false;
+                return $i;
+            });
+
+        return \successResponse($data);
+    }
+
+    public function cashierDeleteOrder($ref_no)
+    {
+        $order = Order::where('ref_no', $ref_no)->delete();
+
+        return \successResponse($order);
     }
 
     public function cashierCreateOrder(Request $request)
@@ -193,7 +222,6 @@ class CashierController extends Controller
         return $customer;
     }
 
-
     private function prepareOrderData($validated, $customer, $totalBeforeDiscount, $discountAmount, $finalTotal, $walletAmountUsed, $lastOrderId, $countryCode)
     {
         return [
@@ -214,7 +242,7 @@ class CashierController extends Controller
             'sales_representative_id' => auth()->id(),
             'user_id' => auth()->id(),
             'paid' => 0,
-
+            // 'order_state_id' => 300 الاستلم من الفرع
         ];
     }
 
@@ -300,7 +328,6 @@ class CashierController extends Controller
 
         return OrderProduct::insert($orderProducts);
     }
-
 
     private function getAuthCountryCode()
     {

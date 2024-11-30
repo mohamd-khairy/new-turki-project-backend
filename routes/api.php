@@ -63,6 +63,8 @@ Route::prefix("v2")->group(function () {
         Route::get('cashier-payment-types', [CashierController::class, 'cashierPaymentMethods'])->name('cashier-payment-types');
         Route::post('cashier-create-order', [CashierController::class, 'cashierCreateOrder'])->name('cashier-create-order');
         Route::post('cashier-store-payment', [CashierController::class, 'cashierStorePayment'])->name('cashier-store-payment');
+        Route::get('cashier-order-details/{ref_no}', [CashierController::class, 'cashierOrderDetails'])->name('cashier-order-details');
+        Route::delete('cashier-delete-order/{ref_no}', [CashierController::class, 'cashierDeleteOrder'])->name('cashier-delete-order');
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);
         Route::get('active-branches', [BranchController::class, 'activeBranches']);
