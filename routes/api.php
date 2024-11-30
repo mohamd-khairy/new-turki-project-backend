@@ -66,6 +66,7 @@ Route::prefix("v2")->group(function () {
         Route::get('cashier-order-details/{ref_no}', [CashierController::class, 'cashierOrderDetails'])->name('cashier-order-details');
         Route::delete('cashier-delete-order/{ref_no}', [CashierController::class, 'cashierDeleteOrder'])->name('cashier-delete-order');
         Route::post('cashier-discount-code-details', [CashierController::class, 'cashierDiscountCodeDetails'])->name('cashier-discount-code-details');
+        Route::get('cashier-user-sales-details', [CashierController::class, 'cashierUserSalesDetails'])->name('cashier-user-sales-details');
 
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);

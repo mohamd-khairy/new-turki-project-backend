@@ -195,6 +195,47 @@ class CashierController extends Controller
         return successResponse($discount, 'order updated successfully');
     }
 
+    public function cashierUserSalesDetails(Request $request)
+    {
+        DB::statement('SET sql_mode = " "');
+
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $data = DB::table('orders')
+            ->when($request->start_date && $request->end_date, function ($query) use ($request) {
+                $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            })
+            ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->select(
+                'users.id as user_id',
+                'users.username as user_name',
+                'payment_types.name_en as payment_type_en',
+                'payment_types.name_ar as payment_type_ar'
+            )
+            ->selectRaw('SUM(orders.total_amount) as total')
+            ->groupBy('users.id', 'users.username', 'payment_type_en', 'payment_type_ar')
+            ->get();
+
+        $groupedData = $data->groupBy('user_id')->map(function ($userOrders, $userId) {
+            return [
+                'user_id' => $userId,
+                'user_name' => $userOrders->first()->user_name, // Assuming all rows for this user have the same name
+                'payment_types' => $userOrders->map(function ($order) {
+                    return [
+                        'payment_type_en' => $order->payment_type_en,
+                        'payment_type_ar' => $order->payment_type_ar,
+                        'total' => $order->total,
+                    ];
+                })->values(), // Reset keys for the nested array
+            ];
+        })->values();
+
+        return successResponse($groupedData, 'success');
+    }
 
     /********************************************************************************************** */
 
