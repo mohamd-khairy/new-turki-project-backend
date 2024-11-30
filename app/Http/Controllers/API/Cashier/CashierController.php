@@ -242,6 +242,90 @@ class CashierController extends Controller
         return successResponse($groupedData, 'success');
     }
 
+    public function cashierOrders(Request $request)
+    {
+        $total = 0;
+        $perPage = $request->input('per_page', 20);
+        $perPage = ($perPage == 0) ? 20 : $perPage;
+
+        $orders = DB::table('orders')
+            ->select(
+                'orders.*',
+                'customers.name as customer_name',
+                'customers.mobile as customer_mobile',
+                'order_states.state_ar as order_state_ar',
+                'order_states.state_en as order_state_en',
+                'payment_types.name_ar as payment_type_name',
+                'payment_types.code as payment_type_code',
+                'payments.price as payment_price',
+                'payments.status as payment_status',
+                'users.username as sales_officer_name',
+                'u.username as driver_name',
+                'u.id as driver_id'
+            )
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
+            ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')
+            ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
+            ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
+            ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+            ->orderBy('orders.id', 'desc')
+            ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
+                $query->where('orders.customer_id', auth()->user()->id);
+            })
+
+            ->when(request('order_state_ids'), function ($query) {
+                $query->whereIn('orders.order_state_id', request('order_state_ids'));
+            })
+            ->when(request('date_from') && request('date_to'), function ($query) {
+                $query->whereBetween('orders.delivery_date', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
+            })
+            ->when(request('customer_id'), function ($query) {
+                $query->where('orders.customer_id', request('customer_id'));
+            })
+            ->when(request('mobile'), function ($query) {
+                $query->where('customers.mobile', request('mobile'));
+            })
+            ->when(request('user_id'), function ($query) {
+                $query->where('orders.user_id', request('user_id'));
+            })
+            ->when(request('sales_agent_id'), function ($query) {
+                $query->where('orders.user_id', request('sales_agent_id'));
+            })
+            ->when(request('sales_representative_id'), function ($query) {
+                $query->where('orders.sales_representative_id', request('sales_representative_id'));
+            })
+            ->when(request('payment_type_ids'), function ($query) {
+                $payment_type_ids = is_array(request('payment_type_ids')) ? request('payment_type_ids') : json_decode(request('payment_type_ids'));
+                $query->whereIn('orders.payment_type_id', $payment_type_ids ?? []);
+            })
+            ->when(auth()->check() && in_array('delegate', auth()->user()->roles->pluck('name')->toArray()), function ($query) {
+                $query->where('orders.user_id', auth()->user()->id);
+            })
+            ->when(request('ref_no'), function ($query) {
+                $query->where('orders.ref_no', request('ref_no'));
+            })
+            ->when(auth()->check() && !in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
+                $query->where('addresses.country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);
+            });
+
+
+        if (request('export', null) == 1 && $orders->count() > 0) {
+            return $this->exportCsv($orders);
+        } else {
+            $total = $orders->sum('total_amount');
+
+            $orders = $orders->paginate($perPage);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+            'total' => $total,
+            'message' => 'Retrieved successfully',
+            'code' => '200',
+        ], 200);
+    }
     /********************************************************************************************** */
 
     private function validateOrderRequest(Request $request)
