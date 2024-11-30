@@ -31,7 +31,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username', 'email', 'mobile_country_code', 'mobile', 'password', 'age', 'country_code', 'gender',
-        'email_verified_at', 'mobile_verified_at', 'is_active', 'avatar', 'avatar_thumb', 'name', 'foodics_integrate_id'
+        'email_verified_at', 'mobile_verified_at', 'is_active', 'avatar', 'avatar_thumb', 'name', 'foodics_integrate_id',
+        'branch_id' , 'code',
     ];
     /**
      * The attributes that should be hidden for serialization.
@@ -51,6 +52,10 @@ class User extends Authenticatable
         'mobile_verified_at' => 'datetime',
     ];
 
+    public function branch()
+    {
+        return $this->belongsTo(branch::class);
+    }
 
     public function getAvatarAttribute()
     {

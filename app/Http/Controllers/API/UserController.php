@@ -63,7 +63,9 @@ class UserController extends Controller
             'country_code' => 'required',
             'roles.*' => 'required|exists:roles,id',
             'avatar' => 'nullable',
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
+            'branch_id' => 'nullable',
+            'code' => 'nullable|unique:users',
         ]);
 
         $data = $request->except('avatar');
@@ -114,10 +116,13 @@ class UserController extends Controller
             'roles.*' => 'nullable|exists:roles,id',
             'country_code' => 'required',
             'avatar' => 'nullable',
-            'foodics_integrate_id' => 'nullable'
+            'foodics_integrate_id' => 'nullable',
+            'branch_id' => 'nullable',
+            'code' => 'nullable|unique:users,code,' . $id,
         ]);
 
         $data = $request->except('password', 'avatar');
+
 
         $user = User::findOrFail($id);
 

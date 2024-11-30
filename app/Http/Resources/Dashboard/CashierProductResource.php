@@ -14,8 +14,11 @@ class CashierProductResource extends JsonResource
         return [
             'id'  => $this->id,
             'name_ar'  => $this->name_ar,
-            'sale price' => $this->sale_price,
-            'image_url' => $this->productImages()->first()?->image_url,
+            'sale_price' => $this->sale_price,
+            'image_url' => isset($this->productImages()->first()->image_url) ? $this->productImages()->first()->image_url : null,
+            'sizes' => $this->productSizes,
+            'cuts' => $this->productCuts,
+            'preparations' => $this->productPreparations,
         ];
     }
 }

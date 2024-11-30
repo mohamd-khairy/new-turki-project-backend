@@ -100,7 +100,8 @@ class SubCategoryController extends Controller
             'type_ar' => 'required|string',
             'type_en' => 'required|string',
             'city_ids' => array('nullable', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
-            'description' => 'nullable'
+            'description' => 'nullable',
+            'image' => 'nullable|mimes:png,jpg,jpeg|max:2048',
         ]);
 
         $city_ids = explode(',', $validatedData['city_ids']);
@@ -115,6 +116,15 @@ class SubCategoryController extends Controller
 
         $hasCreated->subCategoryCities()->attach($cities);
 
+
+        if ($request->image) {
+
+            $hasUploaded = SubCategory::uploadImage($request, $hasCreated, $validatedData);
+
+            if (!$hasCreated->update($hasUploaded))
+                return response()->json(['message' => 'Category has not created or image not uploaded,
+             contact support please'], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -135,7 +145,8 @@ class SubCategoryController extends Controller
             'type_ar' => 'sometimes|string',
             'type_en' => 'sometimes|string',
             'city_ids' => array('sometimes', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
-            'description' => 'nullable'
+            'description' => 'nullable',
+            'image' => 'sometimes|mimes:png,jpg,jpeg|max:2048',
         ]);
 
         $subCategory = SubCategory::find($subCategoryId);
@@ -151,6 +162,10 @@ class SubCategoryController extends Controller
         // unset($validatedData['city_ids']);
 
         $subCategory->subCategoryCities()->sync($cities);
+
+        if (isset($validatedData['image'])) {
+            $validatedData = SubCategory::uploadImage($request, $subCategory, $validatedData);
+        }
 
         if (!$subCategory->update($validatedData))
             return response()->json([
