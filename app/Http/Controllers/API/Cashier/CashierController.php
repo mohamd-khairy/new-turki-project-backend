@@ -145,13 +145,13 @@ class CashierController extends Controller
         });
     }
 
-
     public function cashierStorePayment(Request $request)
     {
         return DB::transaction(function () use ($request) {
             $request->validate([
                 'order_ref_no' => 'required|exists:orders,ref_no',
                 'payment_type_id' => 'required|exists:payment_types,id',
+                'comment' => 'nullable|string',
             ]);
 
             $order = Order::where('ref_no', $request->order_ref_no)->first();
@@ -172,6 +172,7 @@ class CashierController extends Controller
             $order->update([
                 'payment_id' => $payment->id,
                 'payment_type_id' => $request->payment_type_id,
+                'comment' => $request->comment,
                 'paid' => 1,
             ]);
 
@@ -179,6 +180,19 @@ class CashierController extends Controller
 
             return successResponse($order, 'success');
         });
+    }
+
+
+    public function cashierDiscountCodeDetails(Request $request)
+    {
+        $request->validate([
+            'discount_code' => 'required|exists:discounts,code',
+            'total_amount' => 'required|min:1',
+        ]);
+
+        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount);
+
+        return successResponse($discount, 'order updated successfully');
     }
 
 
