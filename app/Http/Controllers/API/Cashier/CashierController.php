@@ -205,6 +205,10 @@ class CashierController extends Controller
         ]);
 
         $data = DB::table('orders')
+            ->where('paid', 1)
+            ->when($request->user_id, function ($query) use ($request) {
+                $query->where('user_id', $request->user_id);
+            })
             ->when($request->start_date && $request->end_date, function ($query) use ($request) {
                 $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
             })
@@ -216,19 +220,20 @@ class CashierController extends Controller
                 'payment_types.name_en as payment_type_en',
                 'payment_types.name_ar as payment_type_ar'
             )
-            ->selectRaw('SUM(orders.total_amount) as total')
-            ->groupBy('users.id', 'users.username', 'payment_type_en', 'payment_type_ar')
+            ->selectRaw('SUM(orders.total_amount_after_discount) as total')
+            ->groupBy('user_id', 'user_name', 'payment_type_en', 'payment_type_ar')
             ->get();
 
         $groupedData = $data->groupBy('user_id')->map(function ($userOrders, $userId) {
             return [
                 'user_id' => $userId,
                 'user_name' => $userOrders->first()->user_name, // Assuming all rows for this user have the same name
-                'payment_types' => $userOrders->map(function ($order) {
+                'payment_types' => PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders) {
                     return [
-                        'payment_type_en' => $order->payment_type_en,
-                        'payment_type_ar' => $order->payment_type_ar,
-                        'total' => $order->total,
+                        'payment_type_en' => $type->name_en,
+                        'payment_type_ar' => $type->name_ar,
+                        'total' => isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
+                            $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0,
                     ];
                 })->values(), // Reset keys for the nested array
             ];
