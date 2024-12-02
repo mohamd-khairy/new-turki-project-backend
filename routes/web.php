@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\WalletLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;

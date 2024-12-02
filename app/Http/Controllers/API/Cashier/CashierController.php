@@ -136,7 +136,7 @@ class CashierController extends Controller
             );
 
             $AllOrderData = $this->handleWalletUsage($validated, $customer, $finalTotal, $walletAmountUsed, $orderData);
-            $order = Order::create($AllOrderData);
+            $order = Order::updateOrCreate(['ref_no' => $orderData['ref_no']], $AllOrderData);
 
             $this->handleWalletLog($order);
             $this->storeOrderProducts($validated['products'], $order);
