@@ -116,10 +116,11 @@ class CashierController extends Controller
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
             $discountAmount = $this->handleDiscountAmount($validated['discount_code'] ?? null, $totalBeforeDiscount);
-            $finalTotal = $totalBeforeDiscount - $discountAmount;
+            $finalTotal = $totalBeforeDiscount; // $finalTotal = $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
-            $lastOrderId = Order::max('id') ?? 0;
+
+            $lastOrder = Order::withTrashed()->latest("id")->first();
             $countryCode = $this->getCountryCode($customer);
 
             $this->ensureWalletBalance($validated, $customer);
@@ -131,7 +132,7 @@ class CashierController extends Controller
                 $discountAmount,
                 $finalTotal,
                 $walletAmountUsed,
-                $lastOrderId,
+                $lastOrder ? $lastOrder->id : 0,
                 $countryCode
             );
 
@@ -181,7 +182,6 @@ class CashierController extends Controller
             return successResponse($order, 'success');
         });
     }
-
 
     public function cashierDiscountCodeDetails(Request $request)
     {
