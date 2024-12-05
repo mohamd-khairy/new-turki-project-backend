@@ -304,9 +304,6 @@ class CashierController extends Controller
             })
             ->when(request('ref_no'), function ($query) {
                 $query->where('orders.ref_no', request('ref_no'));
-            })
-            ->when(auth()->check() && !in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
-                $query->where('addresses.country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);
             });
 
 
