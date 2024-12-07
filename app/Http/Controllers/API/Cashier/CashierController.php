@@ -204,6 +204,7 @@ class CashierController extends Controller
             'end_date' => 'nullable|date',
         ]);
 
+
         $data = DB::table('orders')
             ->where('paid', 1)
             ->when($request->user_id, function ($query) use ($request) {
@@ -211,6 +212,9 @@ class CashierController extends Controller
             })
             ->when($request->start_date && $request->end_date, function ($query) use ($request) {
                 $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            })
+            ->when(empty($request->start_date) && empty($request->end_date), function ($query) use ($request) {
+                $query->where('created_at', date('Y-m-d'));
             })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
@@ -273,7 +277,6 @@ class CashierController extends Controller
             ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
                 $query->where('orders.customer_id', auth()->user()->id);
             })
-
             ->when(request('order_state_ids'), function ($query) {
                 $query->whereIn('orders.order_state_id', request('order_state_ids'));
             })
