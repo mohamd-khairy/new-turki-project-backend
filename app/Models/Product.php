@@ -205,8 +205,6 @@ class Product extends Model
         return config('app.url') . Storage::url($this->thumbnail);
     }
 
-    public function favorites()
-    {
-        return $this->hasMany(Favorite::class);
-    }
+
+
 }

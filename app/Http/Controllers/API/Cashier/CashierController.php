@@ -211,10 +211,10 @@ class CashierController extends Controller
                 $query->where('user_id', $request->user_id);
             })
             ->when($request->start_date && $request->end_date, function ($query) use ($request) {
-                $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+                $query->whereBetween('orders.created_at', [$request->start_date, $request->end_date]);
             })
             ->when(empty($request->start_date) && empty($request->end_date), function ($query) use ($request) {
-                $query->where('created_at', date('Y-m-d'));
+                $query->where('orders.created_at', date('Y-m-d'));
             })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
@@ -229,18 +229,15 @@ class CashierController extends Controller
             ->get();
 
         $groupedData = $data->groupBy('user_id')->map(function ($userOrders, $userId) {
-            return [
+            $data = [
                 'user_id' => $userId,
                 'user_name' => $userOrders->first()->user_name, // Assuming all rows for this user have the same name
-                'payment_types' => PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders) {
-                    return [
-                        'payment_type_en' => $type->name_en,
-                        'payment_type_ar' => $type->name_ar,
-                        'total' => isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
-                            $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0,
-                    ];
-                })->values(), // Reset keys for the nested array
             ];
+            PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders, &$data) {
+                $data[$type->name_ar] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
+                    $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0;
+            });
+            return $data;
         })->values();
 
         return successResponse($groupedData, 'success');

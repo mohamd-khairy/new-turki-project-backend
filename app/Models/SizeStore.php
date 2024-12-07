@@ -10,7 +10,10 @@ class SizeStore extends Model
     use HasFactory;
 
     protected $fillable = [
-        'size_id', 'stock_id', 'store_id', 'quantity'
+        'size_id',
+        'product_id',
+        'store_id',
+        'quantity',
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
@@ -25,8 +28,8 @@ class SizeStore extends Model
         return $this->belongsTo(Store::class);
     }
 
-    public function stock()
+    public function product()
     {
-        return $this->belongsTo(Stock::class);
+        return $this->belongsTo(Product::class);
     }
 }

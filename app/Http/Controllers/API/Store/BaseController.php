@@ -13,7 +13,9 @@ class BaseController extends Controller
 
         $items = $this->filter($items);
 
-        $items = $items->orderBy('id', 'desc')->paginate(request("per_page", 10));
+        $items = $items->orderBy('id', 'desc');
+
+        $items = request('search') ? $items->paginate(100000) : $items->paginate(request("per_page", 10));
 
         return successResponse($items);
     }

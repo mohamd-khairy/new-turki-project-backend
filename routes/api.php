@@ -55,7 +55,7 @@ use App\Services\TabbyApiService;
 Route::prefix("v2")->group(function () {
 
 
-    Route::group(['middleware' => 'auth:sanctum'], function () {
+    // Route::group(['middleware' => 'auth:sanctum'], function () {
 
         Route::get('cashier-categories', [CashierController::class, 'cashierCategories'])->name('cashier-categories');
         Route::get('cashier-subcategories/{category_id}', [CashierController::class, 'cashierSubCategories'])->name('cashier-subcategories');
@@ -73,7 +73,7 @@ Route::prefix("v2")->group(function () {
         Route::apiResource('branch', BranchController::class);
         Route::get('active-branches', [BranchController::class, 'activeBranches']);
         Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
-    });
+    // });
 
 
 

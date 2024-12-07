@@ -28,6 +28,6 @@ class Size extends Model
 
     public function stores()
     {
-        return $this->hasMany(SizeStore::class)->with(['store', 'stock']);
+        return $this->hasMany(SizeStore::class)->with(['store', 'product']);
     }
 }

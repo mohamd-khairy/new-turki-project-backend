@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Size;
 use App\Models\SizeStore;
+use App\Models\Stock;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,24 +25,33 @@ class ProductSizeController extends Controller
         }
 
         return response()->json([
-            'success' => true, 'data' => $size,
-            'message' => 'Sizes retrieved successfully', 'description' => 'list Of Sizes', 'code' => '200'
+            'success' => true,
+            'data' => $size,
+            'message' => 'Sizes retrieved successfully',
+            'description' => 'list Of Sizes',
+            'code' => '200'
         ], 200);
     }
 
     public function getById(Size $size)
     {
         return response()->json([
-            'success' => true, 'data' => $size->load('stores'),
-            'message' => 'Size retrieved successfully', 'description' => 'Size Details', 'code' => '200'
+            'success' => true,
+            'data' => $size->load('stores'),
+            'message' => 'Size retrieved successfully',
+            'description' => 'Size Details',
+            'code' => '200'
         ], 200);
     }
 
     public function getActiveProductSizes()
     {
         return response()->json([
-            'success' => true, 'data' => Size::where('is_active', '1')->get(),
-            'message' => 'Active Product Sizes retrieved successfully', 'description' => 'List Of Active Product Sizes', 'code' => 200
+            'success' => true,
+            'data' => Size::where('is_active', '1')->get(),
+            'message' => 'Active Product Sizes retrieved successfully',
+            'description' => 'List Of Active Product Sizes',
+            'code' => 200
         ], 200);
     }
 
@@ -63,7 +73,7 @@ class ProductSizeController extends Controller
 
             'stores' => 'nullable',
             'stores.*.store_id' => 'required|exists:stores,id',
-            'stores.*.stock_id' => 'nullable|exists:stocks,id',
+            'stores.*.product_id' => 'nullable|exists:products,id',
             'stores.*.quantity' => 'required',
         ]);
 
@@ -72,12 +82,25 @@ class ProductSizeController extends Controller
         if ($productSize) {
 
             if ($request->stores) {
-                $productSize->size_store->createMany($request->stores);
+
+                $data = $request->stores;
+                foreach ($request->stores as $key => $store) {
+
+                    SizeStore::updateOrCreate([
+                        'size_id' => $productSize->id,
+                        'product_id' => $store['product_id'] ?? null,
+                        'store_id' => $store['store_id'] ?? null,
+                        'quantity' => $store['quantity'],
+                    ]);
+                }
             }
 
             return response()->json([
-                'success' => true, 'data' => $productSize,
-                'message' => 'Successfully Added!', 'description' => 'Add Size', 'code' => '200'
+                'success' => true,
+                'data' => $productSize,
+                'message' => 'Successfully Added!',
+                'description' => 'Add Size',
+                'code' => '200'
             ], 200);
         }
 
@@ -124,7 +147,7 @@ class ProductSizeController extends Controller
 
             'stores' => 'nullable',
             'stores.*.store_id' => 'required|exists:stores,id',
-            'stores.*.stock_id' => 'nullable|exists:stocks,id',
+            'stores.*.product_id' => 'nullable|exists:products,id',
             'stores.*.quantity' => 'required',
         ]);
 
@@ -133,10 +156,10 @@ class ProductSizeController extends Controller
             if ($request->stores) {
                 SizeStore::where(['size_id' => $productSize->id])->delete();
                 foreach ($request->stores as $key => $store) {
+
                     SizeStore::create([
                         'size_id' => $productSize->id,
-                        'stock_id' => $store['stock_id'] ?? null,
-                        'product_id' => null,
+                        'product_id' => $store['product_id'] ?? null,
                         'store_id' => $store['store_id'] ?? null,
                         'quantity' => $store['quantity'],
                     ]);
@@ -144,8 +167,11 @@ class ProductSizeController extends Controller
             }
 
             return response()->json([
-                'success' => true, 'data' => $productSize,
-                'message' => 'Successfully updated!', 'description' => 'Update Size', 'code' => 200
+                'success' => true,
+                'data' => $productSize,
+                'message' => 'Successfully updated!',
+                'description' => 'Update Size',
+                'code' => 200
             ], 200);
         }
         return response()->json(['message' => 'Something went wrong!'], 500);

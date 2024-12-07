@@ -2,6 +2,8 @@
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\SizeStore;
+use App\Models\Stock;
 use App\Models\WalletLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -45,6 +47,12 @@ Route::group(
 
 Route::get('/', function () {
     // Artisan::call('migrate');
+
+    $stocks = Stock::get();
+
+    foreach ($stocks as $key => $value) {
+        SizeStore::where('stock_id', $value->id)->update(['product_id' => $value->product_id]);
+    }
 
     Artisan::call('cache:clear');
     Artisan::call('config:cache');

@@ -5,6 +5,7 @@ use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;
+use App\Models\Stock;
 use App\Models\StockLog;
 use App\Models\WalletLog;
 use App\Models\WelcomeMoney;
@@ -29,15 +30,16 @@ function touchStock($order)
 
                 foreach ($size_stores as $size_store) {
 
-                    $stock = $size_store->stock;
+                    $stock = Stock::where('product_id', $size_store->product_id)
+                        ->where('store_id', $size_store->store_id)->first();
+                    //$size_store->stock;
 
                     if ($stock->quantity > $order_product->quantity) {
 
                         $new_quantity = $stock->quantity - $order_product->quantity;
 
                         if (!StockLog::where([
-                            'stock_id' => $stock->id,
-                            'order_product_id' => $order_product->id,
+                            'order_product_id' => $size_store->product_id,
                             'action' => 'order',
                             'order_ref_no' => $order->ref_no,
                             'quantity' => $order_product->quantity
@@ -48,7 +50,7 @@ function touchStock($order)
                                 'old_quantity' => $stock->quantity,
                                 'new_quantity' => $new_quantity,
                                 'order_ref_no' => $order->ref_no,
-                                'order_product_id' => $order_product->id,
+                                'order_product_id' => $size_store->product_id,
                                 'action' => 'order',
                                 'customer_id' => $order->customer_id,
                                 'user_id' => auth()->user()->id,
