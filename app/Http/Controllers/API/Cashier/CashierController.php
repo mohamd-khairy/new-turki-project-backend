@@ -218,6 +218,7 @@ class CashierController extends Controller
             })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
+            // ->where('is_cashier', 1)
             ->select(
                 'users.id as user_id',
                 'users.username as user_name',
