@@ -60,6 +60,7 @@ Route::prefix("v2")->group(function () {
         Route::get('cashier-categories', [CashierController::class, 'cashierCategories'])->name('cashier-categories');
         Route::get('cashier-subcategories/{category_id}', [CashierController::class, 'cashierSubCategories'])->name('cashier-subcategories');
         Route::get('cashier-products/{subcategory_id}', [CashierController::class, 'cashierProducts'])->name('cashier-products');
+        Route::get('cashier-product-code/{product_code}', [CashierController::class, 'cashierProductCode'])->name('cashier-product-code');
         Route::get('cashier-payment-types', [CashierController::class, 'cashierPaymentMethods'])->name('cashier-payment-types');
         Route::post('cashier-create-order', [CashierController::class, 'cashierCreateOrder'])->name('cashier-create-order');
         Route::post('cashier-store-payment', [CashierController::class, 'cashierStorePayment'])->name('cashier-store-payment');

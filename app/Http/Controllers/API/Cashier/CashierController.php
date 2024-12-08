@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Dashboard\CashierCategoryResource;
+use App\Http\Resources\Dashboard\CashierProductCodeResource;
 use App\Http\Resources\Dashboard\CashierProductResource;
 use App\Http\Resources\Dashboard\CashierSubcategoryResource;
 use App\Models\Category;
@@ -61,6 +62,23 @@ class CashierController extends Controller
             })->get();
 
         return successResponse(CashierProductResource::collection($data), 'success');
+    }
+
+    public function cashierProductCode($product_code)
+    {
+        $data =  Product::with('productSizes', 'productCuts', 'productPreparations')
+            ->where('is_active', 1)
+            ->whereHas('productSizes', function ($q) use ($product_code) {
+                $q->where('product_code', $product_code);
+            })
+            ->when(request('country_id', $this->getAuthCountryCode()), function ($q) {
+                $q->whereHas('productCities', function ($q) {
+                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()));
+                });
+            })
+            ->first();
+
+        return successResponse(new  CashierProductCodeResource($data), 'success');
     }
 
     public function cashierPaymentMethods()

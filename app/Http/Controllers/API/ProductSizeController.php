@@ -70,6 +70,7 @@ class ProductSizeController extends Controller
             'sale_price' => 'required|numeric',
             'is_available_for_use' => 'required|boolean',
             'foodics_integrate_id' => 'nullable',
+            'product_code' => 'nullable',
 
             'stores' => 'nullable',
             'stores.*.store_id' => 'required|exists:stores,id',
@@ -144,6 +145,7 @@ class ProductSizeController extends Controller
             'sale_price' => 'required|numeric',
             'use_again' => 'nullable|boolean',
             'foodics_integrate_id' => 'nullable',
+            'product_code' => 'nullable',
 
             'stores' => 'nullable',
             'stores.*.store_id' => 'required|exists:stores,id',

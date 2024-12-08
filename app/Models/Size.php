@@ -11,7 +11,7 @@ class Size extends Model
 
     protected $fillable = [
         'name_ar', 'name_en', 'price', 'sale_price', 'is_active', 'weight', 'calories', 'use_again',
-        'foodics_integrate_id'
+        'foodics_integrate_id' , 'product_code'
     ];
 
     protected $hidden = ['created_at', 'updated_at', 'pivot'];
