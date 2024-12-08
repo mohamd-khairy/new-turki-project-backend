@@ -244,7 +244,7 @@ class CashierController extends Controller
         return response()->json([
             'success' => true,
             'data' => $groupedData,
-            'payment_types' => PaymentType::where('active', 1)->pluck('name_ar', 'name_en')->toArray(),
+            'payment_types' => PaymentType::where('active', 1)->select('id', 'name_en', 'name_ar')->get(),
             'description' => 'success',
             'code' => '200',
         ], 200);
