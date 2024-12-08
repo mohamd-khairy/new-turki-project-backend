@@ -235,7 +235,7 @@ class CashierController extends Controller
                 'user_name' => $userOrders->first()->user_name, // Assuming all rows for this user have the same name
             ];
             PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders, &$data) {
-                $data[$type->name_ar] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
+                $data[$type->name_en] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
                     $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0;
             });
             return $data;
