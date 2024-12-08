@@ -295,6 +295,7 @@ class CashierController extends Controller
             ->leftJoin('order_states', 'order_states.code', '=', 'orders.order_state_id')
             ->leftJoin('payment_types', 'payment_types.id', '=', 'orders.payment_type_id')
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
+            ->whereNull('orders.address_id')
             ->orderBy('orders.id', 'desc')
             ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
                 $query->where('orders.customer_id', auth()->user()->id);

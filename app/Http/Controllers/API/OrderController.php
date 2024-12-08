@@ -159,7 +159,8 @@ class OrderController extends Controller
             })
             ->when(auth()->check() && !in_array('admin', auth()->user()->roles->pluck('name')->toArray()) && request()->header('Type') == 'dashboard', function ($query) {
                 $query->where('addresses.country_id', strtolower(auth()->user()->country_code) == 'sa' ? 1 : 4);
-            });
+            })
+            ->whereNotNull('orders.address_id');
 
 
         if (request()->header('Type') == 'dashboard') {
@@ -237,7 +238,9 @@ class OrderController extends Controller
             ->when(request('ref_no'), function ($query) {
                 $query->where('orders.ref_no', request('ref_no'));
             })
-            ->groupBy('order_products.size_id')->get();
+            ->groupBy('order_products.size_id')
+            ->whereNotNull('orders.address_id')
+            ->get();
 
         // Define CSV file headers
         $headers = [
@@ -301,7 +304,9 @@ class OrderController extends Controller
                 'orders.discount_applied',
                 'orders.wallet_amount_used',
                 'addresses.country_id as address_country_id'
-            )->get();
+            )
+            ->whereNotNull('address_id')
+            ->get();
         // Define CSV file headers
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -1052,7 +1057,8 @@ class OrderController extends Controller
             ->leftJoin('delivery_periods', 'delivery_periods.id', '=', 'orders.delivery_period_id')
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->leftJoin('addresses', 'addresses.id', '=', 'orders.address_id')
-            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id');
+            ->leftJoin('cities', 'cities.id', '=', 'addresses.city_id')
+            ->whereNotNull('orders.address_id');
 
         $orders = $orders->where('orders.user_id', request('user_id', auth()->user()->id));
 
@@ -1121,6 +1127,7 @@ class OrderController extends Controller
     {
         $orders = Order::where('customer_id', auth()->user()->id)
             ->with('orderProducts.product', 'orderState', 'deliveryPeriod', 'selectedAddress')
+            ->whereNotNull('address_id')
             ->orderBy('id', 'desc')->take(30)->get();
 
         return response()->json([
@@ -1180,6 +1187,7 @@ class OrderController extends Controller
             ], 404);
         }
     }
+
 
     public function createOrder(Request $request)
     {
