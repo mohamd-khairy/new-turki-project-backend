@@ -241,7 +241,13 @@ class CashierController extends Controller
             return $data;
         })->values();
 
-        return successResponse($groupedData, 'success');
+        return response()->json([
+            'success' => true,
+            'data' => $groupedData,
+            'payment_types' => PaymentType::where('active', 1)->pluck('name_ar', 'name_en')->toArray(),
+            'description' => 'success',
+            'code' => '200',
+        ], 200);
     }
 
     public function cashierOrders(Request $request)
