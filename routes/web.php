@@ -48,17 +48,11 @@ Route::group(
 Route::get('/', function () {
     // Artisan::call('migrate');
 
-    $stocks = Stock::get();
-
-    foreach ($stocks as $key => $value) {
-        SizeStore::where('stock_id', $value->id)->update(['product_id' => $value->product_id]);
-    }
-
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
-    dd(PHP_VERSION);
+    dd(PHP_VERSION , 'here');
     return view('welcome');
 });
 
