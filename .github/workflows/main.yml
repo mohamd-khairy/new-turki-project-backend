@@ -3,7 +3,7 @@ name: Deploy Laravel Project
 on:
   push:
     branches:
-      - main # Adjust the branch name to your deployment branch 
+      - main # Adjust the branch name to your deployment branch
 
 jobs:
   deploy:
