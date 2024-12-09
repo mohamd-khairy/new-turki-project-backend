@@ -10,8 +10,16 @@ class Size extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name_ar', 'name_en', 'price', 'sale_price', 'is_active', 'weight', 'calories', 'use_again',
-        'foodics_integrate_id' , 'product_code'
+        'name_ar',
+        'name_en',
+        'price',
+        'sale_price',
+        'is_active',
+        'weight',
+        'calories',
+        'use_again',
+        'foodics_integrate_id',
+        'product_code'
     ];
 
     protected $hidden = ['created_at', 'updated_at', 'pivot'];
@@ -29,5 +37,10 @@ class Size extends Model
     public function stores()
     {
         return $this->hasMany(SizeStore::class)->with(['store', 'product']);
+    }
+
+    public function sizeProducts()
+    {
+        return $this->belongsToMany(Product::class, 'product_sizes')->orderBy('sort', 'asc')->distinct();
     }
 }
