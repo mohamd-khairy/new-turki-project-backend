@@ -1,0 +1,29 @@
+name: Deploy Laravel Project
+
+on:
+  push:
+    branches:
+      - main # Adjust the branch name to your deployment branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: turki.almaraacompany.com
+        username: turki
+        password: ${{ secrets.server_dev_turki_password }}
+        server-dir: /public_html/admin/ # Target directory on the server
+        protocol: ftps
+        port: 21
+        exclude: |
+          .git*
+          node_modules/
+          tests/
+          vendor/ # Unless your server has Composer installed
