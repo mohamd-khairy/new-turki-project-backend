@@ -126,6 +126,22 @@ class CashierController extends Controller
         return \successResponse($order);
     }
 
+    public function cashierOrderUpdate($ref_no)
+    {
+        $order = Order::where('ref_no', $ref_no)->first();
+
+        if ($order && request('order_state_id')) {
+            $order->update(['order_state_id' => request('order_state_id')]);
+        }
+
+        if (request('order_state_id') && request('order_state_id') == '203') {
+            touchStock($order);
+        }
+
+        return \successResponse($order);
+    }
+
+
     public function cashierCreateOrder(Request $request)
     {
         return DB::transaction(function () use ($request) {

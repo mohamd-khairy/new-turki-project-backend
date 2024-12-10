@@ -30,9 +30,11 @@ function touchStock($order)
 
                 foreach ($size_stores as $size_store) {
 
+
                     $stock = Stock::where('product_id', $size_store->product_id)
                         ->where('store_id', $size_store->store_id)->first();
                     //$size_store->stock;
+
 
                     if ($stock->quantity > $order_product->quantity) {
 
