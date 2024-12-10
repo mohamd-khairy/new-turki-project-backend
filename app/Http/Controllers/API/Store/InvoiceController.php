@@ -201,17 +201,23 @@ class InvoiceController extends BaseController
             //     'sale_price' => $stock['price'],
             // ]);
         } else {
-            $product = Product::create([
-                'description_en' => $stock['product_name'],
-                'description_ar' => $stock['product_name'],
-                'name_ar' => $stock['product_name'],
-                'name_en' => $stock['product_name'],
-                'price' => $stock['price'],
-                'sale_price' => $stock['price'],
-                'is_active' => 0,
-                'is_available' => 0,
-                'category_id' => Category::first('id')->id,
-            ]);
+            $product = Product::where(function ($query) use ($stock) {
+                $query->where('name_ar', $stock['product_name'])
+                    ->orWhere('name_en', $stock['product_name']);
+            })->first();
+            if (!$product) {
+                $product = Product::create([
+                    'description_en' => $stock['product_name'],
+                    'description_ar' => $stock['product_name'],
+                    'name_ar' => $stock['product_name'],
+                    'name_en' => $stock['product_name'],
+                    'price' => $stock['price'],
+                    'sale_price' => $stock['price'],
+                    'is_active' => 0,
+                    'is_available' => 0,
+                    'category_id' => Category::first('id')->id,
+                ]);
+            }
         }
 
         return $product->refresh();
