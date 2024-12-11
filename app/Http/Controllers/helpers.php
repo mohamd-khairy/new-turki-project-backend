@@ -38,7 +38,7 @@ function touchStock($order)
 
                     if ($stock->quantity > $order_product->quantity) {
 
-                        $new_quantity = $stock->quantity - $order_product->quantity;
+                        $new_quantity = $stock->quantity - ($order_product->quantity * $size_store->quantity);
 
                         if (!StockLog::where([
                             'order_product_id' => $size_store->product_id,
