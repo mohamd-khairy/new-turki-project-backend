@@ -130,7 +130,11 @@ class CashierController extends Controller
     {
         $order = Order::where('ref_no', $ref_no)->first();
 
-        if ($order && request('order_state_id')) {
+        if (!$order) {
+            return failResponse('Order not found');
+        }
+
+        if (request('order_state_id')) {
             $order->update(['order_state_id' => request('order_state_id')]);
         }
 
