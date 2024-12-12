@@ -515,8 +515,8 @@ class CashierController extends Controller
 
     private function getAuthCountryCode()
     {
-        return null;
-        // return auth()->user()->mobile_country_code === '+966' ? 1 : 4;
+        // return null;
+        return auth()->user()->mobile_country_code === '+966' ? 1 : 4;
     }
 
     private function getCountryCode($customer)
