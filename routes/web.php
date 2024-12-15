@@ -258,11 +258,17 @@ Route::get('/add-new-status', function () {
 
 Route::get('/remove-log', function () {
 
-    $logs = WalletLog::with('customer')
-        ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))
-        // ->whereIn('action', ['cash_back', 'expiry'])
-        ->get();
-        // ->groupBy('action_id');
+    // $logs = WalletLog::with('customer')
+    //     ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))
+    //     // ->whereIn('action', ['cash_back', 'expiry'])
+    //     ->get();
+    //     // ->groupBy('action_id');
+
+        $logs = WalletLog::with('customer')
+                ->whereNotNull('expired_at')
+                ->where('action', 'cash_back')
+                ->whereDate('expired_at', '<', date('Y-m-d', strtotime('-1 day')))
+                ->get();
 
     dd($logs->toArray());
 

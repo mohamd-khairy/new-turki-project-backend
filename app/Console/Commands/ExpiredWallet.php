@@ -45,6 +45,8 @@ class ExpiredWallet extends Command
 
 
             $logs = WalletLog::with('customer')
+                ->whereNotNull('expired_at')
+                ->whereNotNull('action_id')
                 ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))
                 ->get();
 
@@ -52,6 +54,7 @@ class ExpiredWallet extends Command
             foreach ($logs as $key => $log) {
                 $amount = $log->new_amount - $log->last_amount;
                 if (
+                    $log->customer &&
                     $log->customer->orders
                     ->where('created_at', '>=',  Carbon::parse($log->created_at))
                     ->where('created_at', '<=', Carbon::parse($log->expired_at))
@@ -70,7 +73,7 @@ class ExpiredWallet extends Command
 
                         $new_amount = $log->customer->wallet - $amount;
 
-                        if ($new_amount > 0) {
+                        if ($new_amount >= 0) {
                             $newlog = WalletLog::create([
                                 'user_id' => null,
                                 'customer_id' => $log->customer_id,
