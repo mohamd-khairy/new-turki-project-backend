@@ -243,6 +243,7 @@ class CashierController extends Controller
 
 
         $data = DB::table('orders')
+            ->whereNull('orders.address_id')
             ->where('paid', 1)
             ->when($request->user_id, function ($query) use ($request) {
                 $query->where('user_id', $request->user_id);
@@ -255,26 +256,30 @@ class CashierController extends Controller
             })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
-            // ->where('is_cashier', 1)
+            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
             ->select(
                 'users.id as user_id',
                 'users.username as user_name',
+                'branches.name as branch_name',
                 'payment_types.name_en as payment_type_en',
                 'payment_types.name_ar as payment_type_ar'
             )
             ->selectRaw('SUM(orders.total_amount_after_discount) as total')
-            ->groupBy('user_id', 'user_name', 'payment_type_en', 'payment_type_ar')
+            ->groupBy('user_id', 'user_name', 'branch_name', 'payment_type_en', 'payment_type_ar')
             ->get();
 
         $groupedData = $data->groupBy('user_id')->map(function ($userOrders, $userId) {
             $data = [
                 'user_id' => $userId,
-                'user_name' => $userOrders->first()->user_name, // Assuming all rows for this user have the same name
+                'user_name' => $userOrders->first()->user_name,
+                'branch_name' => $userOrders->first()->branch_name, // Assuming all rows for this user have the same name
             ];
-            PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders, &$data) {
-                $data[$type->name_en] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
+            $total = 0;
+            PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders, &$data, &$total) {
+                $total += $data[$type->name_en] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
                     $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0;
             });
+            $data['total'] = round($total, 2);
             return $data;
         })->values();
 
@@ -429,7 +434,7 @@ class CashierController extends Controller
             'user_id' => auth()->id(),
             'paid' => 0,
             // 'is_cashier' => 1,
-            'order_state_id' => 201// الاستلم من الفرع
+            'order_state_id' => 202 // الاستلم من الفرع
         ];
     }
 
