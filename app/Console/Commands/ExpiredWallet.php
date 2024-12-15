@@ -45,20 +45,21 @@ class ExpiredWallet extends Command
 
 
             $logs = WalletLog::with('customer')
-                ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))->get();
+                ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))
+                ->get();
 
-                
+
             foreach ($logs as $key => $log) {
                 $amount = $log->new_amount - $log->last_amount;
                 if (
                     $log->customer->orders
-                    ->where('created_at', '>=',  Carbon::parse($log->created_at)->format('Y-m-d'))
-                    ->where('created_at', '<=', Carbon::parse($log->expired_at)->format('Y-m-d'))
+                    ->where('created_at', '>=',  Carbon::parse($log->created_at))
+                    ->where('created_at', '<=', Carbon::parse($log->expired_at))
                     ->where('total_amount', '>=', $amount)
                     ->count() < 1
                 ) {
 
-                    
+
                     $remove = WalletLog::where([
                         'action_id' => $log->action_id,
                         'customer_id' => $log->customer_id,
@@ -69,8 +70,8 @@ class ExpiredWallet extends Command
 
                         $new_amount = $log->customer->wallet - $amount;
 
-                        if($new_amount > 0){
-                            $log = WalletLog::create([
+                        if ($new_amount > 0) {
+                            $newlog = WalletLog::create([
                                 'user_id' => null,
                                 'customer_id' => $log->customer_id,
                                 'last_amount' => $log->customer->wallet,
@@ -82,19 +83,22 @@ class ExpiredWallet extends Command
                                 'message_ar' => ' تسوية رصيد منتهي الصلاحية',
                                 'message_en' => 'Expired balance settlement '
                             ]);
-    
+
+                            $log->update(['is_active' => 0]);
                             $log->customer->update(['wallet' => $new_amount]);
                         }
                     }
                 }
-            }   
-            
+            }
+
 
             DB::commit();
+            info('expired wallet success');
             //code...
         } catch (\Throwable $th) {
             DB::rollBack();
             //throw $th;
+            info('expired wallet error');
             info($th->getMessage());
         }
     }

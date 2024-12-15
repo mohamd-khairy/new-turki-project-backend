@@ -23,14 +23,6 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::get('/customers', function () {
-    $customers = Customer::whereNull('foodics_integrate_id')->get();
-
-    foreach ($customers as $key => $value) {
-        foodics_create_or_update_customer($value);
-        sleep(3);
-    }
-});
 
 Route::group(
     [
@@ -52,7 +44,7 @@ Route::get('/', function () {
     Artisan::call('config:cache');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
-    dd(PHP_VERSION , 'here');
+    dd(PHP_VERSION, 'here');
     return view('welcome');
 });
 
@@ -267,20 +259,23 @@ Route::get('/add-new-status', function () {
 Route::get('/remove-log', function () {
 
     $logs = WalletLog::with('customer')
-        ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))->get();
+        ->whereDate('expired_at', date('Y-m-d', strtotime('-1 day')))
+        // ->whereIn('action', ['cash_back', 'expiry'])
+        ->get();
+        // ->groupBy('action_id');
 
     dd($logs->toArray());
 
     foreach ($logs as $key => $log) {
         $amount = $log->new_amount - $log->last_amount;
+
         if (
             $log->customer->orders
-            ->where('created_at', '>=',  Carbon::parse($log->created_at)->format('Y-m-d'))
-            ->where('created_at', '<=', Carbon::parse($log->expired_at)->format('Y-m-d'))
+            ->where('created_at', '>=',  Carbon::parse($log->created_at))
+            ->where('created_at', '<=', Carbon::parse($log->expired_at))
             ->where('total_amount', '>=', $amount)
             ->count() < 1
         ) {
-
 
 
             $remove = WalletLog::where([

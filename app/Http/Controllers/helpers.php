@@ -765,6 +765,12 @@ if (!function_exists('handleRoleOrderState')) {
                 'orders' => ['106', '109'],
             ];
         }
+        if (in_array('cashier', $roles)) { // 'cashier' => 'مندوب',///////////////////
+            $data = [
+                'status' => ['201', '202' , '203' , '206' , '207'],
+                'orders' => ['201', '202' , '203' , '206' , '207'],
+            ];
+        }
 
         if (isset($data)) {
             if (Schema::hasColumn('order_states', 'new_code')) {

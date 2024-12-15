@@ -145,7 +145,6 @@ class CashierController extends Controller
         return \successResponse($order);
     }
 
-
     public function cashierCreateOrder(Request $request)
     {
         return DB::transaction(function () use ($request) {
@@ -430,7 +429,7 @@ class CashierController extends Controller
             'user_id' => auth()->id(),
             'paid' => 0,
             // 'is_cashier' => 1,
-            // 'order_state_id' => 300 الاستلم من الفرع
+            'order_state_id' => 201// الاستلم من الفرع
         ];
     }
 

@@ -19,7 +19,8 @@ class WalletLog extends Model
         'message_ar',
         'message_en',
         'expired_days',
-        'expired_at'
+        'expired_at',
+        'is_active'
     ];
 
     public function order()
