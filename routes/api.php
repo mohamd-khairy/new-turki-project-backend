@@ -55,27 +55,27 @@ use App\Services\TabbyApiService;
 Route::prefix("v2")->group(function () {
 
 
-    // Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::group(['middleware' => 'auth:sanctum'], function () {
 
-    Route::get('cashier-categories', [CashierController::class, 'cashierCategories'])->name('cashier-categories');
-    Route::get('cashier-subcategories/{category_id}', [CashierController::class, 'cashierSubCategories'])->name('cashier-subcategories');
-    Route::get('cashier-products/{subcategory_id}', [CashierController::class, 'cashierProducts'])->name('cashier-products');
-    Route::get('cashier-product-code/{product_code}', [CashierController::class, 'cashierProductCode'])->name('cashier-product-code');
-    Route::get('cashier-payment-types', [CashierController::class, 'cashierPaymentMethods'])->name('cashier-payment-types');
-    Route::post('cashier-create-order', [CashierController::class, 'cashierCreateOrder'])->name('cashier-create-order');
-    Route::post('cashier-store-payment', [CashierController::class, 'cashierStorePayment'])->name('cashier-store-payment');
-    Route::delete('cashier-delete-order/{ref_no}', [CashierController::class, 'cashierDeleteOrder'])->name('cashier-delete-order');
-    Route::post('cashier-discount-code-details', [CashierController::class, 'cashierDiscountCodeDetails'])->name('cashier-discount-code-details');
-    Route::get('cashier-user-sales-details', [CashierController::class, 'cashierUserSalesDetails'])->name('cashier-user-sales-details');
-    Route::get('cashier-orders', [CashierController::class, 'cashierOrders'])->name('cashier-orders');
-    Route::get('cashier-order-details/{ref_no}', [CashierController::class, 'cashierOrderDetails'])->name('cashier-order-details');
-    Route::put('cashier-order-update/{ref_no}', [CashierController::class, 'cashierOrderUpdate'])->name('cashier-order-update');
+        Route::get('cashier-categories', [CashierController::class, 'cashierCategories'])->name('cashier-categories');
+        Route::get('cashier-subcategories/{category_id}', [CashierController::class, 'cashierSubCategories'])->name('cashier-subcategories');
+        Route::get('cashier-products/{subcategory_id}', [CashierController::class, 'cashierProducts'])->name('cashier-products');
+        Route::get('cashier-product-code/{product_code}', [CashierController::class, 'cashierProductCode'])->name('cashier-product-code');
+        Route::get('cashier-payment-types', [CashierController::class, 'cashierPaymentMethods'])->name('cashier-payment-types');
+        Route::post('cashier-create-order', [CashierController::class, 'cashierCreateOrder'])->name('cashier-create-order');
+        Route::post('cashier-store-payment', [CashierController::class, 'cashierStorePayment'])->name('cashier-store-payment');
+        Route::delete('cashier-delete-order/{ref_no}', [CashierController::class, 'cashierDeleteOrder'])->name('cashier-delete-order');
+        Route::post('cashier-discount-code-details', [CashierController::class, 'cashierDiscountCodeDetails'])->name('cashier-discount-code-details');
+        Route::get('cashier-user-sales-details', [CashierController::class, 'cashierUserSalesDetails'])->name('cashier-user-sales-details');
+        Route::get('cashier-orders', [CashierController::class, 'cashierOrders'])->name('cashier-orders');
+        Route::get('cashier-order-details/{ref_no}', [CashierController::class, 'cashierOrderDetails'])->name('cashier-order-details');
+        Route::put('cashier-order-update/{ref_no}', [CashierController::class, 'cashierOrderUpdate'])->name('cashier-order-update');
 
-    /************************************* branch routes ******************************************************** */
-    Route::apiResource('branch', BranchController::class);
-    Route::get('active-branches', [BranchController::class, 'activeBranches']);
-    Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
-    // });
+        /************************************* branch routes ******************************************************** */
+        Route::apiResource('branch', BranchController::class);
+        Route::get('active-branches', [BranchController::class, 'activeBranches']);
+        Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
+    });
 
 
 
