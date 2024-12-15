@@ -251,7 +251,7 @@ class CashierController extends Controller
                 $query->whereBetween('orders.created_at', [$request->start_date, $request->end_date]);
             })
             ->when(empty($request->start_date) && empty($request->end_date), function ($query) use ($request) {
-                $query->where('orders.created_at', date('Y-m-d'));
+                $query->whereDate('orders.created_at', date('Y-m-d'));
             })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
