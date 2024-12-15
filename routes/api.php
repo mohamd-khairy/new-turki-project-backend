@@ -75,6 +75,8 @@ Route::prefix("v2")->group(function () {
         Route::apiResource('branch', BranchController::class);
         Route::get('active-branches', [BranchController::class, 'activeBranches']);
         Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
+
+        Route::get('stock-logs', [StockController::class, 'stockLogs']);
     });
 
 
@@ -84,14 +86,14 @@ Route::prefix("v2")->group(function () {
 
         Route::prefix('customers')->middleware('auth:sanctum')->group(function () {
 
-            Route::post('/selected-address/{address}', [\App\Http\Controllers\API\AuthenticationController::class, 'selectedAddressCustomer']);
-            Route::get('/get-addresses', [\App\Http\Controllers\API\AuthenticationController::class, 'getAddress']);
-            Route::post('/add-address', [\App\Http\Controllers\API\AuthenticationController::class, 'createAddressCustomer']);
-            Route::post('/delete-address/{address}', [\App\Http\Controllers\API\AuthenticationController::class, 'deleteAddressCustomer']);
-            Route::delete('/delete-customer', [\App\Http\Controllers\API\AuthenticationController::class, 'deleteCustomer']);
-            Route::post('/edit-address/{address}', [\App\Http\Controllers\API\AuthenticationController::class, 'editAddressCustomer']);
-            Route::post('/edit-profile', [\App\Http\Controllers\API\AuthenticationController::class, 'editProfile']);
-            Route::get('/show-profile', [\App\Http\Controllers\API\AuthenticationController::class, 'showProfile']);
+            Route::post('/selected-address/{address}', [AuthenticationController::class, 'selectedAddressCustomer']);
+            Route::get('/get-addresses', [AuthenticationController::class, 'getAddress']);
+            Route::post('/add-address', [AuthenticationController::class, 'createAddressCustomer']);
+            Route::post('/delete-address/{address}', [AuthenticationController::class, 'deleteAddressCustomer']);
+            Route::delete('/delete-customer', [AuthenticationController::class, 'deleteCustomer']);
+            Route::post('/edit-address/{address}', [AuthenticationController::class, 'editAddressCustomer']);
+            Route::post('/edit-profile', [AuthenticationController::class, 'editProfile']);
+            Route::get('/show-profile', [AuthenticationController::class, 'showProfile']);
             Route::post('/tabby-manual-payment/create', [TabbyApiService::class, 'createManualPayment']);
             Route::post('/tabby-manual-payment/update', [TabbyApiService::class, 'manualResponseUpdate']);
             Route::post('/tabby-manual-payment/updatev2', [TabbyApiService::class, 'manualResponseUpdateV2']);

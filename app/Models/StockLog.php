@@ -44,7 +44,7 @@ class StockLog extends Model
 
     public function orderProduct()
     {
-        return $this->belongsTo(OrderProduct::class);
+        return $this->belongsTo(OrderProduct::class)->with('product');
     }
 
     public function order()

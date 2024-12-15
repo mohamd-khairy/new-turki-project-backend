@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\API\Store;
 
 use App\Models\Stock;
+use App\Models\StockLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Expr\FuncCall;
 
 class StockController extends BaseController
 {
@@ -104,5 +106,32 @@ class StockController extends BaseController
         $items = $items->orderBy('id', 'desc')->paginate($per_page ?? 10);
 
         return successResponse($items);
+    }
+
+    public function stockLogs()
+    {
+        $logs = StockLog::with('orderProduct', 'customer');
+
+        $logs->when(request('search'), function ($q) {
+            $q->whereHas('orderProduct', function ($q) {
+                $q->whereHas('product', function ($q) {
+                    $q->where('name_ar', 'like', '%' . request('search') . '%')
+                        ->orWhere('name_en', 'like', '%' . request('search') . '%');
+                });
+            });
+        });
+
+        $logs->when(request('product_id'), function ($q) {
+            $q->whereHas('orderProduct', function ($q) {
+                $q->whereHas('product', function ($q) {
+                    $q->where('id', request('product_id'));
+                });
+            });
+        });
+
+
+        $logs = $logs->paginate(request("per_page", 10));
+
+        return successResponse($logs);
     }
 }
