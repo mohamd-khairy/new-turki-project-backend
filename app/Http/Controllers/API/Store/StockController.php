@@ -130,7 +130,8 @@ class StockController extends BaseController
         });
 
 
-        $logs = $logs->paginate(request("per_page", 10));
+        $logs = $logs->orderBy('id', 'desc')
+            ->paginate(request("per_page", 10));
 
         return successResponse($logs);
     }
