@@ -42,6 +42,12 @@ class StockLog extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'order_product_id', 'id');
+    }
+
+
     public function orderProduct()
     {
         return $this->belongsTo(OrderProduct::class)->with('product');

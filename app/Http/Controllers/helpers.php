@@ -48,7 +48,7 @@ function touchStock($order)
                         ])->exists()) {
                             $log = [
                                 'stock_id' => $stock->id,
-                                'quantity' => $order_product->quantity,
+                                'quantity' => ($order_product->quantity * $size_store->quantity),
                                 'old_quantity' => $stock->quantity,
                                 'new_quantity' => $new_quantity,
                                 'order_ref_no' => $order->ref_no,

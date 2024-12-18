@@ -110,22 +110,18 @@ class StockController extends BaseController
 
     public function stockLogs()
     {
-        $logs = StockLog::with('orderProduct', 'customer');
+        $logs = StockLog::with('product', 'customer');
 
         $logs->when(request('search'), function ($q) {
-            $q->whereHas('orderProduct', function ($q) {
-                $q->whereHas('product', function ($q) {
-                    $q->where('name_ar', 'like', '%' . request('search') . '%')
-                        ->orWhere('name_en', 'like', '%' . request('search') . '%');
-                });
+            $q->whereHas('product', function ($q) {
+                $q->where('name_ar', 'like', '%' . request('search') . '%')
+                    ->orWhere('name_en', 'like', '%' . request('search') . '%');
             });
         });
 
         $logs->when(request('product_id'), function ($q) {
-            $q->whereHas('orderProduct', function ($q) {
-                $q->whereHas('product', function ($q) {
-                    $q->where('id', request('product_id'));
-                });
+            $q->whereHas('product', function ($q) {
+                $q->where('id', request('product_id'));
             });
         });
 
