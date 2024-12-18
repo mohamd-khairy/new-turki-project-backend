@@ -39,7 +39,7 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: almaraacompany.com
-          username: ${{ secrets.server_master_turki_password }}
+          username: ${{ secrets.server_master_turki_name }}
           password: ${{ secrets.server_master_turki_password }}
           server-dir: /public_html/dashboard-api/ # Target directory on the server
           protocol: ftps
