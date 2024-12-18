@@ -30,42 +30,41 @@ function touchStock($order)
 
                 foreach ($size_stores as $size_store) {
 
-
                     $stock = Stock::where('product_id', $size_store->product_id)
                         ->where('store_id', $size_store->store_id)->first();
-                    //$size_store->stock;
 
+                    $qty = ($order_product->quantity * $size_store->quantity);
 
-                    if ($stock->quantity > $order_product->quantity) {
+                    // if ($stock->quantity >= $qty) {
 
-                        $new_quantity = $stock->quantity - ($order_product->quantity * $size_store->quantity);
+                    $new_quantity = $stock->quantity - $qty;
 
-                        if (!StockLog::where([
+                    if (!StockLog::where([
+                        'order_product_id' => $size_store->product_id,
+                        'action' => 'order',
+                        'order_ref_no' => $order->ref_no,
+                        'quantity' => $qty
+                    ])->exists()) {
+                        $log = [
+                            'stock_id' => $stock->id,
+                            'quantity' => $qty,
+                            'old_quantity' => $stock->quantity,
+                            'new_quantity' => $new_quantity,
+                            'order_ref_no' => $order->ref_no,
                             'order_product_id' => $size_store->product_id,
                             'action' => 'order',
-                            'order_ref_no' => $order->ref_no,
-                            'quantity' => $order_product->quantity
-                        ])->exists()) {
-                            $log = [
-                                'stock_id' => $stock->id,
-                                'quantity' => ($order_product->quantity * $size_store->quantity),
-                                'old_quantity' => $stock->quantity,
-                                'new_quantity' => $new_quantity,
-                                'order_ref_no' => $order->ref_no,
-                                'order_product_id' => $size_store->product_id,
-                                'action' => 'order',
-                                'customer_id' => $order->customer_id,
-                                'user_id' => auth()->user()->id,
-                                'size_id' => $order_product->size_id
-                            ];
+                            'customer_id' => $order->customer_id,
+                            'user_id' => auth()->user()->id,
+                            'size_id' => $order_product->size_id
+                        ];
 
-                            StockLog::create($log);
+                        StockLog::create($log);
 
-                            $stock->update([
-                                'quantity' => $new_quantity,
-                            ]);
-                        }
+                        $stock->update([
+                            'quantity' => $new_quantity,
+                        ]);
                     }
+                    // }
                 }
             }
         }
@@ -729,14 +728,14 @@ if (!function_exists('handleRoleOrderState')) {
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105' ,  '204', '208', '202', '203', '205', '206', '207', '209'],
+                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209'],
                 'orders' => ['101', '104', '105', '106', '200', '204', '208', '202'],
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105' ,  '204', '208', '202', '203', '205', '206', '207', '209'],
+                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209'],
                 'orders' => ['101', '104', '105', '106', '200', '204', '208', '202'],
             ];
         }
@@ -767,8 +766,8 @@ if (!function_exists('handleRoleOrderState')) {
         }
         if (in_array('cashier', $roles)) { // 'cashier' => 'مندوب',///////////////////
             $data = [
-                'status' => ['201', '202' , '203' , '206' , '207'],
-                'orders' => ['201', '202' , '203' , '206' , '207'],
+                'status' => ['201', '202', '203', '206', '207'],
+                'orders' => ['201', '202', '203', '206', '207'],
             ];
         }
 
