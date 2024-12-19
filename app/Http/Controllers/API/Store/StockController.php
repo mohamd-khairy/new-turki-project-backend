@@ -44,13 +44,50 @@ class StockController extends BaseController
     {
         $request->validate([
             'stock_id' => 'required|exists:stocks,id',
-            'to_store' => 'required|exists:stores,id',
+            'to_stock_id' => 'required|exists:stocks,id',
+            'transfer_quantity' => 'required',
             'store_id' => 'required|exists:stores,id',
+            'to_store' => 'required|exists:stores,id',
         ]);
 
-        $stock = Stock::where('id', $request->stock_id)->update([
-            'store_id' => $request->to_store,
+        $stock = Stock::where('id', $request->stock_id)
+            ->where('store_id', $request->store_id)
+            ->first();
+
+        if (!$stock) {
+            return failResponse([], 'المخزون غير موجود');
+        }
+
+        if ($stock && $stock->quantity < $request->transfer_quantity) {
+            return failResponse([], 'لا يوجد كمية كافية');
+        }
+
+
+        $stock->update([
+            'quantity' => ($stock->quantity - $request->transfer_quantity) ?? 0,
         ]);
+
+        $to_stock = Stock::where(
+            function ($q) use ($request, $stock) {
+                $q->where('product_id', $stock->product_id)
+                    ->orWhere('product_name', $stock->product_name);
+            }
+        )->where('store_id', $request->to_store)->first();
+
+        if ($to_stock) {
+            $to_stock->update([
+                'quantity' => ($to_stock->quantity + $request->transfer_quantity) ?? 0,
+            ]);
+        } else {
+            $to_stock = Stock::create([
+                'product_id' => $stock->product_id,
+                'store_id' => $request->to_store,
+                'product_name' => $stock->product_name,
+                'quantity' => $request->transfer_quantity,
+                'price' => $stock->price,
+                'invoice_id' => $stock->invoice_id,
+            ]);
+        }
 
         return successResponse($stock);
     }
