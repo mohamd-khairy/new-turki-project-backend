@@ -454,6 +454,8 @@ class ProductController extends Controller
                     "images.*"  => "required|image|mimes:png,jpg,jpeg|max:4048",
                 ]);
 
+                if ($requestData->fails())
+                    return failResponse([], $requestData->errors()->first());
 
 
                 $productCreationData = $request->except('integrate_id', 'preparation_ids', 'size_ids', 'cut_ids', 'payment_type_ids', 'city_ids', 'images');
