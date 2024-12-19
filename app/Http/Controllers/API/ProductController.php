@@ -455,7 +455,7 @@ class ProductController extends Controller
                 ]);
 
                 if ($requestData->fails())
-                    return failResponse([], $requestData->errors()->first());
+                    return response()->json(['errors' => $requestData->errors()], 404);
 
 
                 $productCreationData = $request->except('integrate_id', 'preparation_ids', 'size_ids', 'cut_ids', 'payment_type_ids', 'city_ids', 'images');

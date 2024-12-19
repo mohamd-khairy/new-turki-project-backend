@@ -76,16 +76,23 @@ class StockController extends BaseController
             ]);
 
             $to_stock = Stock::where('id', $request->to_stock_id)->first();
+            if ($to_stock) {
 
-            $new_stock = Stock::create([
-                'product_id' => $to_stock->product_id,
-                'product_name' => $to_stock->product_name,
-                'quantity' => $request->to_quantity,
-                'price' => $request->price,
-                'invoice_id' => $to_stock->invoice_id,
-                'store_id' => $request->store_id ?? $to_stock->store_id,
-            ]);
+                $to_stock->update([
+                    'quantity' => ($to_stock->quantity + $request->to_quantity) ?? 0,
+                ]);
+            }
+            // else {
 
+            //     $new_stock = Stock::create([
+            //         'product_id' => $to_stock->product_id,
+            //         'product_name' => $to_stock->product_name,
+            //         'quantity' => $request->to_quantity,
+            //         'price' => $request->price,
+            //         'invoice_id' => $to_stock->invoice_id,
+            //         'store_id' => $request->store_id ?? $to_stock->store_id,
+            //     ]);
+            // }
             DB::commit();
 
             return successResponse($new_stock);
