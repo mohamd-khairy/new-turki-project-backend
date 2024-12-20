@@ -106,7 +106,8 @@ class CashierController extends Controller
                 'orderState',
                 'user',
                 'salesRepresentative',
-                'deliveryPeriod'
+                'deliveryPeriod',
+                'paidpayment'
             )->first();
 
         $data['order'] = $order;
