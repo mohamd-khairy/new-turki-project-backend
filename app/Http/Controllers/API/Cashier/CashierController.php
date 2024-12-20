@@ -101,11 +101,12 @@ class CashierController extends Controller
         $order = Order::where('ref_no', $ref_no)
             ->with(
                 'paymentType',
-                'customer',
+                'customer.default_addresses.city',
                 'payment',
                 'orderState',
                 'user',
-                'salesRepresentative'
+                'salesRepresentative',
+                'deliveryPeriod'
             )->first();
 
         $data['order'] = $order;

@@ -115,6 +115,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Address::class);
     }
 
+    public function default_addresses()
+    {
+        return $this->hasOne(Address::class)->where('is_default', 1);
+    }
+
     public function uploadAvatar(Request $request)
     {
 
