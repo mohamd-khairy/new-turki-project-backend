@@ -11,6 +11,7 @@ class Branch extends Model
 
     protected $fillable = [
         'name',
+        'city_id',
         'address',
         'mobile',
         'is_active'
@@ -19,4 +20,9 @@ class Branch extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
 }

@@ -12,7 +12,7 @@ class BranchController extends Controller
 {
     public function index()
     {
-        $data = Branch::orderBy('id', 'desc')->get();
+        $data = Branch::with('city')->orderBy('id', 'desc')->get();
 
         return response()->json([
             'success' => 'true',
@@ -48,6 +48,7 @@ class BranchController extends Controller
             'name' => 'required', // need regex here
             'mobile' => 'required',
             'address' => 'required',
+            'city_id' => 'required',
         ]);
 
         $branch = Branch::create($validateData);
@@ -94,6 +95,8 @@ class BranchController extends Controller
             'name' => 'required',
             'mobile' => 'required',
             'address' => 'required',
+            'city_id' => 'required',
+
         ]);
 
         if ($branch->update($validateData)) {
