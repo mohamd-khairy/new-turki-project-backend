@@ -28,7 +28,8 @@ class CashierController extends Controller
         $data =  Category::orderBy('id', 'desc')
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('categoryCities', function ($q) {
-                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()));
+                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()))
+                        ->where('is_active', 1);
                 });
             })->get();
 
@@ -41,7 +42,8 @@ class CashierController extends Controller
             ->where('category_id', $category_id)
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('subCategoryCities', function ($q) {
-                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()));
+                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()))
+                        ->where('is_active', 1);
                 });
             })->get();
 
@@ -54,7 +56,8 @@ class CashierController extends Controller
             ->where('is_active', 1)->where('sub_category_id', $subcategory_id)
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('productCities', function ($q) {
-                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()));
+                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()))
+                        ->where('is_active', 1);
                 });
             })
             ->when(request('search'), function ($q) use ($request) {
