@@ -259,6 +259,9 @@ class CashierController extends Controller
             ->when(empty($request->start_date) && empty($request->end_date), function ($query) use ($request) {
                 $query->whereDate('orders.created_at', date('Y-m-d'));
             })
+            ->when(!auth()->user()->hasRole('admin'), function ($query) {
+                $query->where('user_id', auth()->user()->id);
+            })
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
             ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')

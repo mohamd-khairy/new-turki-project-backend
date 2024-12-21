@@ -23,7 +23,10 @@ class RoleController extends Controller
 
     public function index()
     {
-        $roles = Role::with('permissions')->whereNotIn('id', auth()->user()->roles->pluck('id')->toArray())->get();
+        $roles = Role::with('permissions')
+            ->when(!auth()->user()->hasRole('admin'), function ($query) {
+                $query->whereNotIn('id', auth()->user()->roles->pluck('id')->toArray());
+            })->get();
         return successResponse(RoleResource::collection($roles));
     }
 
