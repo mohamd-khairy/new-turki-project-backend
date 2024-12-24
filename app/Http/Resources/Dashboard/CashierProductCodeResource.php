@@ -8,7 +8,7 @@ class CashierProductCodeResource extends JsonResource
 {
     public function toArray($request)
     {
-        $size = $this->productSizes->where('product_code', $request->product_code)->first();
+        $size = $this->productSizes ? $this->productSizes->where('product_code', $request->product_code)->first() : null;
 
         return [
             'id'  => $this->id,

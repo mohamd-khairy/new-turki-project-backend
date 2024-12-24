@@ -78,11 +78,7 @@ class CashierController extends Controller
             ->whereHas('productSizes', function ($q) use ($product_code) {
                 $q->where('product_code', $product_code);
             })
-            ->when(request('country_id', $this->getAuthCountryCode()), function ($q) {
-                $q->whereHas('productCities', function ($q) {
-                    $q->where('country_id', request('country_id', $this->getAuthCountryCode()));
-                });
-            })
+            ->take(1)
             ->first();
 
         return successResponse(new  CashierProductCodeResource($data), 'success');
