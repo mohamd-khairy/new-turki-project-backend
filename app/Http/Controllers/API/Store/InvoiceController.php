@@ -169,20 +169,30 @@ class InvoiceController extends BaseController
     {
         foreach ($stocks as $key => $stock) {
             $product = $this->createProduct($stock);
-            $data = [
-                'product_id' => $product->id,
-                'product_name' => $stock['product_name'] ?? $product->name_ar,
-                'quantity' => $stock['quantity'],
-                'price' => $stock['price'],
-                'invoice_id' => $invoice->id,
-                'store_id' => $stock['store_id'],
-            ];
 
-            if (isset($stock['id'])) {
-                $stock = Stock::where('id', $stock['id'])->first();
-                $stock->update($data);
+
+            $item = Stock::where('product_id',  $product->id)
+                ->where('store_id', $stock['store_id'])->first();
+
+            if (isset($item)) {
+
+                $data = [
+                    'price' => ($stock['price'] + $item->price) / 2,
+                    'quantity' => $item->quantity + $stock['quantity'],
+                ];
+
+                $item->update($data);
             } else {
-                $stock = Stock::create($data);
+
+                $data = [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name_ar,
+                    'quantity' => $stock['quantity'],
+                    'price' => $stock['price'],
+                    'invoice_id' => $invoice->id,
+                    'store_id' => $stock['store_id'],
+                ];
+                Stock::create($data);
             }
         }
     }
@@ -191,15 +201,10 @@ class InvoiceController extends BaseController
     {
         if (isset($stock['product_id'])) {
             $product = Product::where('id', $stock['product_id'])->first();
+        }
 
-            // $product->update([
-            //     'description_en' => $stock['product_name'],
-            //     'description_ar' => $stock['product_name'],
-            //     'name_ar' => $stock['product_name'],
-            //     'name_en' => $stock['product_name'],
-            //     'price' => $stock['price'],
-            //     'sale_price' => $stock['price'],
-            // ]);
+        if ($product) {
+            return $product;
         } else {
             $product = Product::where(function ($query) use ($stock) {
                 $query->where('name_ar', $stock['product_name'])
@@ -218,9 +223,8 @@ class InvoiceController extends BaseController
                     'category_id' => Category::first('id')->id,
                 ]);
             }
+            return $product->refresh();
         }
-
-        return $product->refresh();
     }
 
     protected function updateSupplierBalance($invoice, $new_invoice_price)
