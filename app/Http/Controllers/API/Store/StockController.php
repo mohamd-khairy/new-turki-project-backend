@@ -44,7 +44,6 @@ class StockController extends BaseController
     {
         $request->validate([
             'stock_id' => 'required|exists:stocks,id',
-            'to_stock_id' => 'required|exists:stocks,id',
             'transfer_quantity' => 'required',
             'store_id' => 'required|exists:stores,id',
             'to_store' => 'required|exists:stores,id',
