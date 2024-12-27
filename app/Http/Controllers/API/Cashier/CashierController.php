@@ -327,6 +327,9 @@ class CashierController extends Controller
 
             // Process the orders
             foreach ($dailyOrders as $order) {
+                $dayData['user_id'] = $order->user_id;
+                $dayData['user_name'] = $order->user_name;
+                $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
                 if (in_array($paymentType, $paymentTypeNames)) {
                     $dayData[$paymentType] += $order->total;
@@ -336,12 +339,16 @@ class CashierController extends Controller
 
             // Process the refunds
             foreach ($dailyRefunds as $order) {
+                $dayData['user_id'] = $order->user_id;
+                $dayData['user_name'] = $order->user_name;
+                $dayData['branch_name'] = $order->branch_name;
                 $dayData['refund'] += $order->total;
                 $dayData['total'] -= $order->total; // Subtract refunds from total
             }
 
-            // Add the day data to the response
-            $data[] = $dayData;
+            if($dayData['total'] != 0){
+                $data[] = $dayData;
+            }
 
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
