@@ -450,7 +450,7 @@ class CashierController extends Controller
     {
         $orderProduct = OrderProduct::where('order_ref_no', $ref_no)
             ->whereIn('id', $request->ids)
-            ->whereNull('refund_date')
+            ->whereNull('refund_at')
             ->get();
 
         foreach ($orderProduct as $product) {
