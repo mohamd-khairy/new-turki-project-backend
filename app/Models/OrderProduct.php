@@ -18,6 +18,8 @@ class OrderProduct extends Model
         'preparation_id',
         'size_id',
         'cut_id',
+        'is_refund',
+        'refund_at',
         'shalwata_id',
         'is_kwar3',
         'is_Ras',
@@ -32,6 +34,7 @@ class OrderProduct extends Model
         'is_kwar3' => 'boolean',
         'is_Ras' => 'boolean',
         'is_lyh' => 'boolean',
+        'is_refund' => 'boolean',
     ];
 
     public function order()

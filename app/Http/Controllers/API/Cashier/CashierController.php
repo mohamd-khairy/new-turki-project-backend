@@ -18,6 +18,8 @@ use App\Models\Product;
 use App\Models\Size;
 use App\Models\SubCategory;
 use App\Models\WalletLog;
+use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -239,29 +241,31 @@ class CashierController extends Controller
 
     public function cashierUserSalesDetails(Request $request)
     {
-        DB::statement('SET sql_mode = " "');
+        // Set SQL mode for MySQL
+        DB::statement('SET sql_mode = ""');
 
+        // Validate input
         $request->validate([
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
         ]);
 
+        // Fetch active payment types
+        $paymentTypes = PaymentType::where('active', 1)->get(['id', 'name_en', 'name_ar']);
 
-        $data = DB::table('orders')
+        // Determine date range
+        $start_date = $request->start_date ?? date('Y-m-d');
+        $end_date = $request->end_date ?? date('Y-m-d');
+
+        // Fetch orders with filters
+        $ordersQuery = DB::table('orders')
             ->whereNull('orders.address_id')
             ->where('paid', 1)
-            ->when($request->user_id, function ($query) use ($request) {
-                $query->where('user_id', $request->user_id);
-            })
-            ->when($request->start_date && $request->end_date, function ($query) use ($request) {
-                $query->whereBetween('orders.created_at', [$request->start_date, $request->end_date]);
-            })
-            ->when(empty($request->start_date) && empty($request->end_date), function ($query) use ($request) {
-                $query->whereDate('orders.created_at', date('Y-m-d'));
-            })
-            ->when(!auth()->user()->hasRole('admin'), function ($query) {
-                $query->where('user_id', auth()->user()->id);
-            })
+            ->when($request->user_id, fn($query) => $query->where('user_id', $request->user_id))
+            ->when($request->start_date, fn($query) => $query->whereDate('orders.created_at', '>=', $request->start_date))
+            ->when($request->end_date, fn($query) => $query->whereDate('orders.created_at', '<=', $request->end_date))
+            ->when(empty($request->start_date) && empty($request->end_date), fn($query) => $query->whereDate('orders.created_at', date('Y-m-d')))
+            ->when(!auth()->user()->hasRole('admin'), fn($query) => $query->where('user_id', auth()->user()->id))
             ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
             ->join('users', 'orders.user_id', '=', 'users.id')
             ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
@@ -270,35 +274,61 @@ class CashierController extends Controller
                 'users.username as user_name',
                 'branches.name as branch_name',
                 'payment_types.name_en as payment_type_en',
-                'payment_types.name_ar as payment_type_ar'
+                'payment_types.name_ar as payment_type_ar',
+                'orders.created_at as order_date'
             )
             ->selectRaw('SUM(orders.total_amount_after_discount) as total')
-            ->groupBy('user_id', 'user_name', 'branch_name', 'payment_type_en', 'payment_type_ar')
-            ->get();
+            ->groupBy('user_id', 'user_name', 'branch_name', 'payment_type_en', 'payment_type_ar');
 
-        $groupedData = $data->groupBy('user_id')->map(function ($userOrders, $userId) {
-            $data = [
-                'user_id' => $userId,
-                'user_name' => $userOrders->first()->user_name,
-                'branch_name' => $userOrders->first()->branch_name, // Assuming all rows for this user have the same name
+        $orders = $ordersQuery->get();
+
+        // Initialize response data
+        $data = [];
+
+        // Process each day in the date range
+        for ($date = $start_date; $date <= $end_date; $date = date('Y-m-d', strtotime($date . ' +1 day'))) {
+            $dailyOrders = $orders->filter(fn($order) => date('Y-m-d', strtotime($order->order_date)) == $date);
+
+            // Initialize daily data
+            $dailyData = [
+                'date' => $date,
+                'user_id' => $dailyOrders->isNotEmpty() ? $dailyOrders->first()->user_id : null,
+                'user_name' => $dailyOrders->isNotEmpty() ? $dailyOrders->first()->user_name : null,
+                'branch_name' => $dailyOrders->isNotEmpty() ? $dailyOrders->first()->branch_name : null,
             ];
-            $total = 0;
-            PaymentType::where('active', 1)->get()->map(function ($type) use ($userOrders, &$data, &$total) {
-                $total += $data[$type->name_en] = isset($userOrders->where('payment_type_en', $type->name_en)->first()->total) ?
-                    $userOrders->where('payment_type_en', $type->name_en)->first()->total : 0;
-            });
-            $data['total'] = round($total, 2);
-            return $data;
-        })->values();
 
+            // Calculate totals by payment type
+            $total = 0;
+            $paymentData = $paymentTypes->mapWithKeys(function ($type) use ($dailyOrders, &$total) {
+                $typeTotal = $dailyOrders->where('payment_type_en', $type->name_en)->sum('total');
+                $total += $typeTotal;
+                return [$type->name_en => $typeTotal];
+            });
+
+            // Calculate refunds
+            $refund = $dailyOrders->isNotEmpty() ? OrderProduct::where('is_refund', 1)
+                ->whereHas('order', fn($query) => $query->where('user_id', $dailyOrders->first()->user_id))
+                ->whereDate('refund_at', $date)
+                ->sum('total_price') : 0;
+
+            // Add refund and total to daily data
+            $dailyData['refund'] = $refund;
+            $dailyData['total'] = $total - $refund;
+            $dailyData += $paymentData->toArray();
+
+            $data[] = $dailyData;
+        }
+
+        // Prepare response
         return response()->json([
             'success' => true,
-            'data' => $groupedData,
-            'payment_types' => PaymentType::where('active', 1)->select('id', 'name_en', 'name_ar')->get(),
+            'data' => $data,
+            'payment_types' => $paymentTypes,
             'description' => 'success',
-            'code' => '200',
+            'code' => 200,
         ], 200);
     }
+
 
     public function cashierOrders(Request $request)
     {
@@ -381,6 +411,24 @@ class CashierController extends Controller
             'code' => '200',
         ], 200);
     }
+
+    public function cashierOrderRefund($ref_no, Request $request)
+    {
+        $orderProduct = OrderProduct::where('order_ref_no', $ref_no)
+            ->whereIn('id', $request->ids)
+            ->whereNull('refund_date')
+            ->get();
+
+        foreach ($orderProduct as $product) {
+            $product->update([
+                'is_refund' => 1,
+                'refund_at' => date('Y-m-d'),
+            ]);
+        }
+
+        return successResponse(true);
+    }
+
     /********************************************************************************************** */
 
     private function validateOrderRequest(Request $request)
