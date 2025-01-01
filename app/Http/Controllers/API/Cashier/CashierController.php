@@ -137,6 +137,7 @@ class CashierController extends Controller
     {
         $order = Order::where('ref_no', $ref_no)->first();
 
+        // dd($order);
         if (!$order) {
             return failResponse('Order not found');
         }
@@ -385,6 +386,7 @@ class CashierController extends Controller
                 'u.username as driver_name',
                 'u.id as driver_id'
             )
+            ->whereNull('orders.deleted_at')
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->leftJoin('users as u', 'u.id', '=', 'orders.user_id')
             ->leftJoin('users', 'users.id', '=', 'orders.sales_representative_id')

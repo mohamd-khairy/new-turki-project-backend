@@ -662,7 +662,7 @@ class OrderController extends Controller
             $walletAmountUsed = 0;
             $customer = Customer::find($request->customer_id);
             $country = Country::find($request->country_id);
-            $lastOrder = Order::latest("id")->first();
+            $lastOrder = Order::withTrashed()->latest("id")->first();
             $wallet = $customer->wallet ?? 0;
 
             if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
@@ -1381,9 +1381,7 @@ class OrderController extends Controller
             }
         }
 
-        // TraceError::create(['class_name' => "Create Order", 'method_name' => "after discountProcess", 'error_desc' => json_encode($applicableProductIds)]);
-
-        $lastOrder = Order::latest("id")->first();
+        $lastOrder = Order::withTrashed()->latest("id")->first();
         $order = [
             'ref_no' => GetNextOrderRefNo($country->code, $lastOrder != null ? $lastOrder->id + 1 : 1),
             'delivery_fee' => $delivery,
