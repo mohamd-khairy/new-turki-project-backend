@@ -137,7 +137,6 @@ class CashierController extends Controller
     {
         $order = Order::where('ref_no', $ref_no)->first();
 
-        // dd($order);
         if (!$order) {
             return failResponse('Order not found');
         }
