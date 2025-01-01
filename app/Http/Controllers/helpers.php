@@ -894,7 +894,7 @@ if (!function_exists('GetNextOrderRefNo')) {
      */
     function GetNextOrderRefNo($countryCode, $id)
     {
-        $genId = str_pad($id, 9, "0", STR_PAD_LEFT);
+        $genId = date('y') . str_pad($id, 9, "0", STR_PAD_LEFT);
         return $countryCode . 'O' . $genId;
     }
 }
@@ -905,7 +905,7 @@ if (!function_exists('GetNextPaymentRefNo')) {
      */
     function GetNextPaymentRefNo($countryCode, $id)
     {
-        $genId = str_pad($id, 9, "0", STR_PAD_LEFT);
+        $genId = date('y') . str_pad($id, 9, "0", STR_PAD_LEFT);
         return $countryCode . 'P' . $genId;
     }
 }
