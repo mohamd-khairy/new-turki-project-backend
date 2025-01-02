@@ -88,7 +88,7 @@ class CashierController extends Controller
 
     public function cashierPaymentMethods()
     {
-        $data = PaymentType::where('active', 1)
+        $data = PaymentType::query()//where('active', 1)
             ->whereIn('code',  [
                 'POS',
                 'COD',
@@ -96,7 +96,9 @@ class CashierController extends Controller
                 'Transfer',
                 'tamara',
                 'Tabby',
-                'compensation'
+                'compensation',
+                'ARB',
+                'Sadqa'
             ])->get();
         return successResponse($data, 'success');
     }
