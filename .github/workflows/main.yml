@@ -29,7 +29,6 @@ jobs:
           tests/
           vendor/ # Unless your server has Composer installed
 
-
   deploy_live_test:
       runs-on: ubuntu-latest
 
