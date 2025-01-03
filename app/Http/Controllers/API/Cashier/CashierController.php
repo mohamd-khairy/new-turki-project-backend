@@ -377,6 +377,7 @@ class CashierController extends Controller
                 'orders.*',
                 'customers.name as customer_name',
                 'customers.mobile as customer_mobile',
+                DB::raw('LEFT(customers.mobile, 4) as mobile_prefix'),
                 'order_states.state_ar as order_state_ar',
                 'order_states.state_en as order_state_en',
                 'payment_types.name_ar as payment_type_name',
@@ -384,8 +385,6 @@ class CashierController extends Controller
                 'payments.price as payment_price',
                 'payments.status as payment_status',
                 'users.username as sales_officer_name',
-                'u.username as driver_name',
-                'u.id as driver_id'
             )
             ->whereNull('orders.deleted_at')
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
@@ -396,6 +395,9 @@ class CashierController extends Controller
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->whereNull('orders.address_id')
             ->orderBy('orders.id', 'desc')
+            ->when(request('country_ids'), function ($query) {
+                $query->having('mobile_prefix', '=', request('country_ids') == 1 ? '+966' : '+971');
+            })
             ->when(request('order_state_ids'), function ($query) {
                 $query->whereIn('orders.order_state_id', request('order_state_ids'));
             })
