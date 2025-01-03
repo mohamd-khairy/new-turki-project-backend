@@ -88,7 +88,7 @@ class CashierController extends Controller
 
     public function cashierPaymentMethods()
     {
-        $data = PaymentType::query()//where('active', 1)
+        $data = PaymentType::query() //where('active', 1)
             ->whereIn('code',  [
                 'POS',
                 'COD',
@@ -348,7 +348,7 @@ class CashierController extends Controller
                 $dayData['total'] -= $order->total; // Subtract refunds from total
             }
 
-            if($dayData['total'] != 0){
+            if ($dayData['total'] != 0) {
                 $data[] = $dayData;
             }
 
@@ -396,14 +396,11 @@ class CashierController extends Controller
             ->leftJoin('payments', 'payments.id', '=', 'orders.payment_id')
             ->whereNull('orders.address_id')
             ->orderBy('orders.id', 'desc')
-            ->when(request()->header('Type') != 'dashboard' && auth()->check(), function ($query) {
-                $query->where('orders.customer_id', auth()->user()->id);
-            })
             ->when(request('order_state_ids'), function ($query) {
                 $query->whereIn('orders.order_state_id', request('order_state_ids'));
             })
             ->when(request('date_from') && request('date_to'), function ($query) {
-                $query->whereBetween('orders.delivery_date', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
+                $query->whereBetween('orders.created_at', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
             })
             ->when(request('customer_id'), function ($query) {
                 $query->where('orders.customer_id', request('customer_id'));
@@ -432,13 +429,9 @@ class CashierController extends Controller
             });
 
 
-        if (request('export', null) == 1 && $orders->count() > 0) {
-            return $this->exportCsv($orders);
-        } else {
-            $total = $orders->sum('total_amount');
+        $total = $orders->sum('total_amount');
 
-            $orders = $orders->paginate($perPage);
-        }
+        $orders = $orders->paginate($perPage);
 
         return response()->json([
             'success' => true,
