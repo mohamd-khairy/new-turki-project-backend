@@ -612,12 +612,12 @@ class CashierController extends Controller
     private function getAuthCountryCode()
     {
         // return null;
-        return auth()->user()->mobile_country_code === '+966' ? 1 : 4;
+        return auth()->user()->mobile_country_code != '+966' ? 4 : 1;
     }
 
     private function getCountryCode($customer)
     {
-        return $customer->mobile_country_code === '+966' ? 'SA' : 'AE';
+        return  substr($customer->mobile, 0, 4) === '+966' ? 'SA' : 'AE';
     }
 
     private function ensureWalletBalance($validated, $customer)
