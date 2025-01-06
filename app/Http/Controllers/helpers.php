@@ -7,6 +7,7 @@ use App\Models\OrderProduct;
 use App\Models\OrderState;
 use App\Models\Stock;
 use App\Models\StockLog;
+use App\Models\Store;
 use App\Models\WalletLog;
 use App\Models\WelcomeMoney;
 use GuzzleHttp\Client;
@@ -30,12 +31,26 @@ function touchStock($order)
 
                 foreach ($size_stores as $size_store) {
 
+                    $store_id = null;
+                    if (isset($order->selectedAddress->city_id) && $order->selectedAddress->city_id != null) {
+                        $store = Store::where('city_id', $order->selectedAddress->city_id)->first();
+                        $store_id = $store ? $store->id : null;
+                    } elseif (isset($order->user->city_id) && $order->user->city_id != null) {
+                        $store = Store::where('city_id', $order->user->city_id)->first();
+                        $store_id = $store ? $store->id : null;
+                    }
+
+                    if ($store_id == null) {
+                        $store_id = $size_store->store_id;
+                    }
+
                     $stock = Stock::where('product_id', $size_store->product_id)
-                        ->where('store_id', $size_store->store_id)->first();
+                        ->where('store_id', $store_id)->first();
+
+                    // $stock = Stock::where('product_id', $size_store->product_id)
+                    //         ->where('store_id', $size_store->store_id)->first();
 
                     $qty = ($order_product->quantity * $size_store->quantity);
-
-                    // if ($stock->quantity >= $qty) {
 
                     $new_quantity = $stock->quantity - $qty;
 

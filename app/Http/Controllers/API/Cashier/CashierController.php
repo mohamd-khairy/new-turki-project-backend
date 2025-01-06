@@ -521,7 +521,6 @@ class CashierController extends Controller
             'sales_representative_id' => auth()->id(),
             'user_id' => auth()->id(),
             'paid' => 0,
-            // 'is_cashier' => 1,
             'order_state_id' => 202 // الاستلم من الفرع
         ];
     }
