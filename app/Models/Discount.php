@@ -262,19 +262,19 @@ class Discount extends Model
         }
 
         $validSizeIds = [];
-        // if ($coupon->is_by_size) {
-        if ($coupon->size_ids != null) {
-            $validSizeIds = is_array($coupon->size_ids) ? $coupon->size_ids : explode(',', trim($coupon->size_ids));
-            // products in cart
-            foreach ($validSizeIds as $sizeId) {
-                if (!in_array($sizeId, $validSizeIds)) {
-                    return [8, "coupon is not valid for some sizes"];
-                } else {
-                    $entryCount = $entryCount + 1;
+        if ($coupon->is_by_size) {
+            if ($coupon->size_ids != null) {
+                $validSizeIds = is_array($coupon->size_ids) ? $coupon->size_ids : explode(',', trim($coupon->size_ids));
+                // products in cart
+                foreach ($validSizeIds as $sizeId) {
+                    if (!in_array($sizeId, $validSizeIds)) {
+                        return [8, "coupon is not valid for some sizes"];
+                    } else {
+                        $entryCount = $entryCount + 1;
+                    }
                 }
             }
         }
-        // }
 
 
         $notApplicableProducts = [];
