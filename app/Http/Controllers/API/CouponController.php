@@ -289,7 +289,7 @@ class CouponController extends Controller
             'code' => 'required|exists:discounts,code',
         ]);
 
-        TraceError::create(['class_name' => "CouponController::consumer sent data200", 'method_name' => "checkValidation", 'error_desc' => json_encode($request->all())]);
+        // TraceError::create(['class_name' => "CouponController::consumer sent data200", 'method_name' => "checkValidation", 'error_desc' => json_encode($request->all())]);
 
         $point = $request->query('longitude') . " " . $request->query('latitude');
         $countryId = $request->query('countryId');
@@ -340,11 +340,13 @@ class CouponController extends Controller
 
         list($cartProduct, $discountCode, $totalAddonsAmount, $totalItemsAmount, $orderProducts)
             = app(OrderController::class)->calculateProductsAmount($cart, $validate['code'], $shalwata, $totalAddonsAmount, $totalItemsAmount, $orderProducts);
-        TraceError::create(['class_name' => "CouponController::consumer sent data239", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
+        // TraceError::create(['class_name' => "CouponController::consumer sent data239", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
 
         $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount;
 
-        list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = $this->discountProcess($discountCode, $cart, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
+        list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse) = $this->discountProcess($discountCode, $cart, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
+
+        // dd($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse);
         if ($couponValid == null) {
             return response()->json([
                 'success' => false,
@@ -355,7 +357,7 @@ class CouponController extends Controller
             ], 400);
         }
 
-        TraceError::create(['class_name' => "CouponController::consumer sent data248", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
+        // TraceError::create(['class_name' => "CouponController::consumer sent data248", 'method_name' => "checkValidation", 'error_desc' => json_encode($discountCode)]);
 
         return response()->json([
             'success' => true,

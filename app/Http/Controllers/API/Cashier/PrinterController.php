@@ -9,7 +9,7 @@ use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 
 class PrinterController extends Controller
 {
-    public function print(Request $request)
+    public function print2(Request $request)
     {
         $printerIP = '192.168.100.17'; // Replace with your BIXOLON printer's IP
         $printerPort = 9100; // Default port for RAW printing
@@ -42,7 +42,7 @@ class PrinterController extends Controller
         }
     }
 
-    public function print2(Request $request)
+    public function print(Request $request)
     {
         $printerIP = '192.168.100.17'; // Replace with your printer's IP
         $printerPort = 9100; // Default port for RAW printing
@@ -71,6 +71,34 @@ class PrinterController extends Controller
             if ($closeResult === false) {
                 return response()->json(['error' => 'Could not close socket: ' . socket_strerror(socket_last_error($socket))], 500);
             }
+
+            return response()->json(['message' => 'Print job sent successfully!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function print3(Request $request)
+    {
+        $printerIP = '192.168.100.17'; // Replace with your printer's IP
+        $printerPort = 9100; // Default port for RAW printing
+        $data = $request->input('data', "Hello, BIXOLON SRP-E300!\n"); // Data to print
+
+        try {
+            // Create a socket connection
+            $socket = fsockopen($printerIP, $printerPort, $errno, $errstr, 10);
+
+            if (!$socket) {
+                return response()->json([
+                    'error' => "Failed to connect to printer: $errstr ($errno)"
+                ], 500);
+            }
+
+            // Send data to the printer
+            fwrite($socket, $data);
+
+            // Close the connection
+            fclose($socket);
 
             return response()->json(['message' => 'Print job sent successfully!'], 200);
         } catch (\Exception $e) {
