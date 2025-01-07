@@ -5,6 +5,7 @@ use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\CashbackController;
 use App\Http\Controllers\API\Cashier\BranchController;
 use App\Http\Controllers\API\Cashier\CashierController;
+use App\Http\Controllers\API\Cashier\PrinterController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CityController;
 use App\Http\Controllers\API\CountryController;
@@ -77,6 +78,7 @@ Route::prefix("v2")->group(function () {
         Route::get('active-branches', [BranchController::class, 'activeBranches']);
         Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
 
+        Route::post('print', [PrinterController::class, 'print']);
         Route::get('stock-logs', [StockController::class, 'stockLogs']);
     });
 
