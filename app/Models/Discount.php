@@ -24,6 +24,7 @@ class Discount extends Model
         'name',
         'code',
         'product_ids',
+        'size_ids',
         'discount_amount_percent',
         'min_applied_amount',
         'max_discount',
@@ -42,6 +43,7 @@ class Discount extends Model
         'is_by_category',
         'is_by_subcategory',
         'is_by_product',
+        'is_by_size',
         // new field
         'client_ids',
         'for_clients_only',
@@ -83,6 +85,11 @@ class Discount extends Model
     public function getProductIdsAttribute()
     {
         return $this->attributes['product_ids']  ? array_map('intval', explode(',', $this->attributes['product_ids']) ?? null) : null;
+    }
+
+    public function getSizeIdsAttribute()
+    {
+        return $this->attributes['size_ids']  ? array_map('intval', explode(',', $this->attributes['size_ids']) ?? null) : null;
     }
 
 
@@ -140,6 +147,9 @@ class Discount extends Model
             if ($coupon->product_ids != null)
                 $validProductIds = explode(',', $coupon->product_ids);
 
+            if ($coupon->size_ids != null)
+                $validSizeIds = explode(',', $coupon->size_ids);
+
             if ($coupon->category_parent_ids != null)
                 $validCategoryIds = explode(',', $coupon->category_parent_ids);
 
@@ -156,6 +166,7 @@ class Discount extends Model
             foreach ($productIds as $productId) {
                 $product = Product::where('id', $productId)->active()->get()->first();
                 $cities = $product->cities;
+                $sizes = $product->sizes;
 
                 $validCity = false;
                 $validCountry = false;
@@ -188,6 +199,17 @@ class Discount extends Model
                     return null;
                 }
 
+                foreach ($sizes as $size) {
+
+                    if (count($validSizeIds) != 0 && in_array($size->id, $validSizeIds)) {
+                        $validSize = true;
+                        break;
+                    }
+                }
+
+                if (count($validSizeIds) != 0 && !$validSize) {
+                    return null;
+                }
 
                 //if one not valid reject
                 if (count($validCategoryIds) != 0 && !in_array($product->category_id, $validCategoryIds)) {
@@ -204,7 +226,7 @@ class Discount extends Model
         return $coupon;
     }
 
-    public static function isValidV2($coupon, $code, $productIds, $total, $countryId, $cityId)
+    public static function isValidV2($coupon, $code, $productIds, $total, $countryId, $cityId, $sizeIds)
     {
         if ($productIds == null || $productIds == [])
             return [1, "add items to cart"];
@@ -266,7 +288,7 @@ class Discount extends Model
             if ($coupon->size_ids != null) {
                 $validSizeIds = is_array($coupon->size_ids) ? $coupon->size_ids : explode(',', trim($coupon->size_ids));
                 // products in cart
-                foreach ($validSizeIds as $sizeId) {
+                foreach ($sizeIds as $sizeId) {
                     if (!in_array($sizeId, $validSizeIds)) {
                         return [8, "coupon is not valid for some sizes"];
                     } else {

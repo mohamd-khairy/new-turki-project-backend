@@ -157,6 +157,7 @@ class CouponController extends Controller
             'is_by_category' => 'required|boolean',
             'is_by_subcategory' => 'required|boolean',
             'is_by_product' => 'required|boolean',
+            'is_by_size' => 'required|boolean',
             'for_clients_only' => 'required|boolean',
             'is_percent' => 'required|boolean',
             'is_active' => 'required|boolean',
@@ -165,6 +166,7 @@ class CouponController extends Controller
 
             // 'product_ids' => array('array'),
             'product_ids.*' => array('required_with:product_ids', 'exists:products,id'),
+            'size_ids.*' => array('required_with:size_ids', 'exists:sizes,id'),
             // 'category_parent_ids' => array('array'),
             'category_parent_ids.*' => array('required_with:category_parent_ids', 'exists:categories,id'),
             // 'category_child_ids' => array('array'),
@@ -180,6 +182,9 @@ class CouponController extends Controller
 
         $product_ids = isset($request->product_ids) && is_array($request->product_ids) ? $request->product_ids : json_decode($request->product_ids);
         $validatedData['product_ids'] = $product_ids ? implode(",", $product_ids) : null;
+
+        $size_ids = isset($request->size_ids) && is_array($request->size_ids) ? $request->size_ids : json_decode($request->size_ids);
+        $validatedData['size_ids'] = $size_ids ? implode(",", $size_ids) : null;
 
         $city_ids = isset($request->city_ids) && is_array($request->city_ids) ? $request->city_ids : json_decode($request->city_ids);
         $validatedData['city_ids'] = $city_ids ? implode(",", $city_ids) : null;
@@ -222,6 +227,7 @@ class CouponController extends Controller
             'is_by_subcategory' => 'nullable|boolean',
             'for_clients_only' => 'nullable|boolean',
             'is_by_product' => 'nullable|boolean',
+            'is_by_size' => 'nullable|boolean',
             'is_percent' => 'sometimes|boolean',
             'is_active' => 'sometimes|boolean',
             'expire_at' => array('sometimes', 'date'),
@@ -229,6 +235,7 @@ class CouponController extends Controller
 
             // 'product_ids' => array('array'),
             'product_ids.*' => array('required_with:product_ids', 'exists:products,id'),
+            'size_ids.*' => array('required_with:size_ids', 'exists:sizes,id'),
             // 'category_parent_ids' => array('nullable', 'array'),
             'category_parent_ids.*' => array('required_with:category_parent_ids', 'exists:categories,id'),
             // 'category_child_ids' => array('nullable', 'array'),
@@ -244,6 +251,9 @@ class CouponController extends Controller
 
         $product_ids = isset($request->product_ids) && is_array($request->product_ids) ? $request->product_ids : json_decode($request->product_ids);
         $validatedData['product_ids'] = $product_ids ? implode(",", $product_ids) : null;
+
+        $size_ids = isset($request->size_ids) && is_array($request->size_ids) ? $request->size_ids : json_decode($request->size_ids);
+        $validatedData['size_ids'] = $size_ids ? implode(",", $size_ids) : null;
 
         $city_ids = isset($request->city_ids) && is_array($request->city_ids) ? $request->city_ids : json_decode($request->city_ids);
         $validatedData['city_ids'] = $city_ids ? implode(",", $city_ids) : null;
@@ -380,7 +390,8 @@ class CouponController extends Controller
     {
         $coupon = Discount::where([['code', $discountCode], ['is_active', 1]])->get()->first();
         $productIds = $cart->pluck('product_id')->toArray();
-        $couponValidatingResponse = Discount::isValidV2($coupon, $discountCode, $productIds, $TotalAmountBeforeDiscount, $countryId, $cityId);
+        $sizeIds = $cart->pluck('size_id')->toArray();
+        $couponValidatingResponse = Discount::isValidV2($coupon, $discountCode, $productIds, $TotalAmountBeforeDiscount, $countryId, $cityId , $sizeIds);
 
         $couponValid = null;
         $notApplicableProductIds = [];
