@@ -1000,7 +1000,7 @@ class OrderController extends Controller
                 if ($discount->is_percent) {
                     $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
                 } else {
-                    $value = ($TotalAmountBeforeDiscount - $discount->discount_amount_percent) ?? 0;
+                    $value = ($discount->discount_amount_percent) ?? 0;
                 }
 
                 if ($value > $discount->max_discount) {
