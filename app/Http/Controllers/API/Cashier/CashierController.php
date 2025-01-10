@@ -238,7 +238,12 @@ class CashierController extends Controller
 
         $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount);
 
-        return successResponse($discount, 'order updated successfully');
+        if ($discount > $request->total_amount) {
+            return failResponse('Discount amount is greater than total amount');
+        } else {
+            $amount = $request->total_amount - $discount;
+        }
+        return successResponse($amount, 'order updated successfully');
     }
 
     public function cashierUserSalesDetails(Request $request)
