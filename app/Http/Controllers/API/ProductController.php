@@ -425,8 +425,8 @@ class ProductController extends Controller
             return DB::transaction(function () use ($request, $product) {
 
                 $requestData = Validator::make($request->post(), [
-                    'name_ar' => 'string|max:255|unique:products,name_ar,' . $product->id,
-                    'name_en' => 'string|max:255|unique:products,name_en,' . $product->id,
+                    'name_ar' => 'string|max:255',//|unique:products,name_ar,' . $product->id,
+                    'name_en' => 'string|max:255',//|unique:products,name_en,' . $product->id,
                     'description_ar' => 'string|max:255',
                     'description_en' => 'string|max:255',
                     'weight' => 'nullable|string|max:255',
