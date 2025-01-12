@@ -258,7 +258,7 @@ class CashierController extends Controller
         ]);
 
         // Payment types
-        $paymentTypes = PaymentType::get(['id', 'name_en', 'name_ar', 'code']);
+        $paymentTypes = PaymentType::whereNotIn('code',['COD' , 'Wallet' , 'Sadqa'])->get(['id', 'name_en', 'name_ar', 'code']);
 
         // Determine date range
         $start_date = $request->start_date ?? date('Y-m-d');
