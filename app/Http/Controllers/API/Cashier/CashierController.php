@@ -161,7 +161,7 @@ class CashierController extends Controller
 
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
-            $discountAmount = $this->handleDiscountAmount($validated['discount_code'] ?? null, $totalBeforeDiscount);
+            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount);
             $finalTotal = $totalBeforeDiscount; // $finalTotal = $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
@@ -239,9 +239,9 @@ class CashierController extends Controller
         $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount);
 
         if ($discount > $request->total_amount) {
-            return failResponse('Discount amount is greater than total amount');
+            $amount = 0;
         } else {
-            $amount = $request->total_amount - $discount;
+            $amount = $discount;
         }
         return successResponse($amount, 'order updated successfully');
     }
@@ -473,7 +473,7 @@ class CashierController extends Controller
         return $request->validate([
             "customer_mobile" => 'required|min:13',
             "comment" => 'nullable|string',
-            'discount_code' => 'nullable',
+            'applied_discount_code' => 'nullable',
             'notes' => 'nullable',
             'using_wallet' => 'nullable|in:1,0',
             'total_amount' => 'required|min:1',
@@ -513,7 +513,7 @@ class CashierController extends Controller
             'delivery_fee' => 0,
             'order_subtotal' => $totalBeforeDiscount,
             'total_amount' => $finalTotal,
-            'total_amount_after_discount' => $finalTotal,
+            'total_amount_after_discount' => $finalTotal - ($discountAmount ?? 0),
             'total_amount_before_discount' => $totalBeforeDiscount,
             'discount_applied' => $discountAmount,
             'delivery_date' => now()->toDateString(),
@@ -521,7 +521,7 @@ class CashierController extends Controller
             'wallet_amount_used' => $walletAmountUsed,
             'customer_id' => $customer->id,
             'payment_type_id' => 1,
-            'applied_discount_code' => $validated['discount_code'] ?? null,
+            'applied_discount_code' => $validated['applied_discount_code'] ?? null,
             'comment' => $validated['notes'] ?? null,
             'sales_representative_id' => auth()->id(),
             'user_id' => auth()->id(),
@@ -571,7 +571,7 @@ class CashierController extends Controller
                 if ($discount->is_percent) {
                     $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
                 } else {
-                    $value = ($TotalAmountBeforeDiscount - $discount->discount_amount_percent) ?? 0;
+                    $value = ($discount->discount_amount_percent) ?? 0;
                 }
 
                 if ($value > $discount->max_discount) {
