@@ -162,7 +162,7 @@ class CashierController extends Controller
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
             $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount);
-            $finalTotal = $totalBeforeDiscount; // $finalTotal = $totalBeforeDiscount - $discountAmount;
+            $finalTotal =  $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
 
@@ -513,7 +513,7 @@ class CashierController extends Controller
             'delivery_fee' => 0,
             'order_subtotal' => $totalBeforeDiscount,
             'total_amount' => $finalTotal,
-            'total_amount_after_discount' => $finalTotal - ($discountAmount ?? 0),
+            'total_amount_after_discount' => $finalTotal,
             'total_amount_before_discount' => $totalBeforeDiscount,
             'discount_applied' => $discountAmount,
             'delivery_date' => now()->toDateString(),
