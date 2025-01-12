@@ -258,7 +258,7 @@ class CashierController extends Controller
         ]);
 
         // Payment types
-        $paymentTypes = PaymentType::get(['id', 'name_en', 'name_ar','code']);
+        $paymentTypes = PaymentType::get(['id', 'name_en', 'name_ar', 'code']);
 
         // Determine date range
         $start_date = $request->start_date ?? date('Y-m-d');
@@ -311,6 +311,8 @@ class CashierController extends Controller
         // Loop through each day in the range
         while ($currentDate <= $endDate) {
             $dateString = date('Y-m-d', $currentDate);
+
+
             $dayData = [
                 'date' => $dateString,
                 'user_id' => null,
@@ -325,6 +327,9 @@ class CashierController extends Controller
                 'Wallet' => 0
             ];
 
+            foreach ($paymentTypes as $paymentType) {
+                $dayData[$paymentType->name_en] = 0;
+            }
             // Filter orders and refunds for the current date
             $dailyOrders = $orders->filter(fn($order) => date('Y-m-d', strtotime($order->order_date)) == $dateString);
             $dailyRefunds = $refund->filter(fn($order) => date('Y-m-d', strtotime($order->order_date)) == $dateString);
@@ -336,8 +341,8 @@ class CashierController extends Controller
                 $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
                 // if (in_array($paymentType, $paymentTypeNames)) {
-                    $dayData[$paymentType] = isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total;
-                    $dayData['total'] += $order->total;
+                $dayData[$paymentType] = isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total;
+                $dayData['total'] += $order->total;
                 // }
             }
 
@@ -354,6 +359,11 @@ class CashierController extends Controller
                 $data[] = $dayData;
             }
 
+            foreach ($paymentTypes as $paymentType) {
+                if (!isset($dayData[$paymentType->name_en])) {
+                    $dayData[$paymentType->name_en] = 0;
+                }
+            }
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
