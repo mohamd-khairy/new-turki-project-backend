@@ -258,9 +258,7 @@ class CashierController extends Controller
         ]);
 
         // Payment types
-        $paymentTypes = PaymentType::where('active', 1)->get(['id', 'name_en', 'name_ar']);
-        $paymentTypeNames = $paymentTypes->pluck('name_en')->toArray();
-        $paymentTypeNames[] = 'refund'; // Add refund as a payment type
+        $paymentTypes = PaymentType::get(['id', 'name_en', 'name_ar','code']);
 
         // Determine date range
         $start_date = $request->start_date ?? date('Y-m-d');
@@ -290,7 +288,6 @@ class CashierController extends Controller
             ->groupBy('user_id', 'user_name', 'branch_name', 'payment_type_en', 'orders.created_at');
 
         $orders = $ordersQuery->get();
-
         // Fetch refunds
         $refund = OrderProduct::where('order_products.is_refund', 1)
             ->when($request->user_id, fn($query) => $query->where('orders.user_id', $request->user_id))
@@ -338,10 +335,10 @@ class CashierController extends Controller
                 $dayData['user_name'] = $order->user_name;
                 $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
-                if (in_array($paymentType, $paymentTypeNames)) {
-                    $dayData[$paymentType] += $order->total;
+                // if (in_array($paymentType, $paymentTypeNames)) {
+                    $dayData[$paymentType] = isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total;
                     $dayData['total'] += $order->total;
-                }
+                // }
             }
 
             // Process the refunds
