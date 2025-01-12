@@ -89,15 +89,9 @@ class CashierController extends Controller
     public function cashierPaymentMethods()
     {
         $data = PaymentType::query() //where('active', 1)
-            ->whereIn('code',  [
-                'POS',
+            ->whereNotIn('code',  [
                 'COD',
-                'later',
-                'Transfer',
-                'tamara',
-                'Tabby',
-                'compensation',
-                'ARB',
+                'Wallet',
                 'Sadqa'
             ])->get();
         return successResponse($data, 'success');
