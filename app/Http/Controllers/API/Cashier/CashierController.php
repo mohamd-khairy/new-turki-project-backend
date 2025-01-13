@@ -336,7 +336,7 @@ class CashierController extends Controller
                 $paymentType = $order->payment_type_en;
                 // if (in_array($paymentType, $paymentTypeNames)) {
                 $dayData[$paymentType] = round(isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total, 2);
-                $dayData['total'] += round($order->total, 2);
+                $dayData['total'] += $order->total;
                 // }
             }
 
@@ -358,6 +358,9 @@ class CashierController extends Controller
                     $dayData[$paymentType->name_en] = 0;
                 }
             }
+
+            $dayData['total'] = round($dayData['total'], 2);
+
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
