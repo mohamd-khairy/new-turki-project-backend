@@ -359,16 +359,19 @@ class CashierController extends Controller
                 }
             }
 
-            $dayData['total'] = round($dayData['total'], 2);
 
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
 
+
         // Prepare response
         return response()->json([
             'success' => true,
-            'data' => $data,
+            'data' => collect($data)->map(function ($item) {
+                $item->total = round($item->total, 2);
+                return $item;
+            }),
             'payment_types' => $paymentTypes,
             'description' => 'success',
             'code' => 200,
