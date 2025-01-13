@@ -369,7 +369,9 @@ class CashierController extends Controller
         return response()->json([
             'success' => true,
             'data' => collect($data)->map(function ($item) {
-                $item->total = round($item->total, 2);
+                if (isset($item->total)) {
+                    $item->total = round($item->total, 2);
+                }
                 return $item;
             }),
             'payment_types' => $paymentTypes,
