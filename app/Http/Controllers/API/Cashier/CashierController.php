@@ -252,7 +252,7 @@ class CashierController extends Controller
         ]);
 
         // Payment types
-        $paymentTypes = PaymentType::whereNotIn('code',['COD' , 'Wallet' , 'Sadqa'])->get(['id', 'name_en', 'name_ar', 'code']);
+        $paymentTypes = PaymentType::whereNotIn('code', ['COD', 'Wallet', 'Sadqa'])->get(['id', 'name_en', 'name_ar', 'code']);
 
         // Determine date range
         $start_date = $request->start_date ?? date('Y-m-d');
@@ -335,8 +335,8 @@ class CashierController extends Controller
                 $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
                 // if (in_array($paymentType, $paymentTypeNames)) {
-                $dayData[$paymentType] = isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total;
-                $dayData['total'] += $order->total;
+                $dayData[$paymentType] = round(isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total, 2);
+                $dayData['total'] += round($order->total, 2);
                 // }
             }
 
