@@ -312,6 +312,7 @@ class CashierController extends Controller
                 'user_id' => null,
                 'user_name' => null,
                 'branch_name' => null,
+                'total' => 0
             ];
 
             foreach ($paymentTypes as $paymentType) {
@@ -347,6 +348,8 @@ class CashierController extends Controller
             foreach ($paymentTypes as $paymentType) {
                 if (!isset($dayData[$paymentType->name_en])) {
                     $dayData[$paymentType->name_en] = 0;
+                }else{
+                    $dayData[$paymentType->name_en] = round($dayData[$paymentType->name_en], 2);
                 }
             }
 
