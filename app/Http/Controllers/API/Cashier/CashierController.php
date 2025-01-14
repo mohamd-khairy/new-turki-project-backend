@@ -312,7 +312,8 @@ class CashierController extends Controller
                 'user_id' => null,
                 'user_name' => null,
                 'branch_name' => null,
-                'total' => 0
+                'total' => 0,
+                'refund' => 0
             ];
 
             foreach ($paymentTypes as $paymentType) {
