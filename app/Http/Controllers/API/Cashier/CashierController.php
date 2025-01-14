@@ -350,9 +350,6 @@ class CashierController extends Controller
                 }
             }
 
-            $dayData['refund'] = round($dayData['refund'], 2);
-            $dayData['total'] = round($dayData['total'], 2);
-
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
