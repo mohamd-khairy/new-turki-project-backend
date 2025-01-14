@@ -35,6 +35,9 @@ class CashierController extends Controller
                         ->where('is_active', 1);
                 });
             })
+            ->when(request('search'), function ($q) use ($request) {
+                $q->where('type_ar', 'like', '%' . $request->search . '%');
+            })
             ->get();
 
         return successResponse(CashierCategoryResource::collection($data), 'success');
@@ -50,6 +53,9 @@ class CashierController extends Controller
                         ->where('city_id', auth()->user()->branch->city_id)
                         ->where('is_active', 1);
                 });
+            })
+            ->when(request('search'), function ($q) use ($request) {
+                $q->where('type_ar', 'like', '%' . $request->search . '%');
             })->get();
 
         return successResponse(CashierSubcategoryResource::collection($data), 'success');
