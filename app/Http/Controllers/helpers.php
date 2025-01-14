@@ -20,73 +20,73 @@ use Illuminate\Support\Str;
 
 function touchStock($order)
 {
-    try {
-        $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+    // try {
+    //     $order_products = OrderProduct::where('order_ref_no', $order->ref_no)->get();
 
-        foreach ($order_products as $order_product) {
+    //     foreach ($order_products as $order_product) {
 
-            if ($order_product->size) {
+    //         if ($order_product->size) {
 
-                $size_stores = $order_product->size->size_store;
+    //             $size_stores = $order_product->size->size_store;
 
-                foreach ($size_stores as $size_store) {
+    //             foreach ($size_stores as $size_store) {
 
-                    $store_id = null;
-                    if (isset($order->selectedAddress->city_id) && $order->selectedAddress->city_id != null) {
-                        $store = Store::where('city_id', $order->selectedAddress->city_id)->first();
-                        $store_id = $store ? $store->id : null;
-                    } elseif (isset($order->user->city_id) && $order->user->city_id != null) {
-                        $store = Store::where('city_id', $order->user->city_id)->first();
-                        $store_id = $store ? $store->id : null;
-                    }
+    //                 $store_id = null;
+    //                 if (isset($order->selectedAddress->city_id) && $order->selectedAddress->city_id != null) {
+    //                     $store = Store::where('city_id', $order->selectedAddress->city_id)->first();
+    //                     $store_id = $store ? $store->id : null;
+    //                 } elseif (isset($order->user->city_id) && $order->user->city_id != null) {
+    //                     $store = Store::where('city_id', $order->user->city_id)->first();
+    //                     $store_id = $store ? $store->id : null;
+    //                 }
 
-                    if ($store_id == null) {
-                        $store_id = $size_store->store_id;
-                    }
+    //                 if ($store_id == null) {
+    //                     $store_id = $size_store->store_id;
+    //                 }
 
-                    $stock = Stock::where('product_id', $size_store->product_id)
-                        ->where('store_id', $store_id)->first();
+    //                 $stock = Stock::where('product_id', $size_store->product_id)
+    //                     ->where('store_id', $store_id)->first();
 
-                    // $stock = Stock::where('product_id', $size_store->product_id)
-                    //         ->where('store_id', $size_store->store_id)->first();
+    //                 // $stock = Stock::where('product_id', $size_store->product_id)
+    //                 //         ->where('store_id', $size_store->store_id)->first();
 
-                    $qty = ($order_product->quantity * $size_store->quantity);
+    //                 $qty = ($order_product->quantity * $size_store->quantity);
 
-                    $new_quantity = $stock->quantity - $qty;
+    //                 $new_quantity = $stock->quantity - $qty;
 
-                    if (!StockLog::where([
-                        'order_product_id' => $size_store->product_id,
-                        'action' => 'order',
-                        'order_ref_no' => $order->ref_no,
-                        'quantity' => $qty
-                    ])->exists()) {
-                        $log = [
-                            'stock_id' => $stock->id,
-                            'quantity' => $qty,
-                            'old_quantity' => $stock->quantity,
-                            'new_quantity' => $new_quantity,
-                            'order_ref_no' => $order->ref_no,
-                            'order_product_id' => $size_store->product_id,
-                            'action' => 'order',
-                            'customer_id' => $order->customer_id,
-                            'user_id' => auth()->user()->id,
-                            'size_id' => $order_product->size_id
-                        ];
+    //                 if (!StockLog::where([
+    //                     'order_product_id' => $size_store->product_id,
+    //                     'action' => 'order',
+    //                     'order_ref_no' => $order->ref_no,
+    //                     'quantity' => $qty
+    //                 ])->exists()) {
+    //                     $log = [
+    //                         'stock_id' => $stock->id,
+    //                         'quantity' => $qty,
+    //                         'old_quantity' => $stock->quantity,
+    //                         'new_quantity' => $new_quantity,
+    //                         'order_ref_no' => $order->ref_no,
+    //                         'order_product_id' => $size_store->product_id,
+    //                         'action' => 'order',
+    //                         'customer_id' => $order->customer_id,
+    //                         'user_id' => auth()->user()->id,
+    //                         'size_id' => $order_product->size_id
+    //                     ];
 
-                        StockLog::create($log);
+    //                     StockLog::create($log);
 
-                        $stock->update([
-                            'quantity' => $new_quantity,
-                        ]);
-                    }
-                    // }
-                }
-            }
-        }
-    } catch (\Throwable $th) {
-        // throw $th;
-        info($th->getMessage());
-    }
+    //                     $stock->update([
+    //                         'quantity' => $new_quantity,
+    //                     ]);
+    //                 }
+    //                 // }
+    //             }
+    //         }
+    //     }
+    // } catch (\Throwable $th) {
+    //     // throw $th;
+    //     info($th->getMessage());
+    // }
 }
 
 function welcome($customer)
