@@ -312,13 +312,6 @@ class CashierController extends Controller
                 'user_id' => null,
                 'user_name' => null,
                 'branch_name' => null,
-                'refund' => 0,
-                'total' => 0,
-                'cash' => 0,
-                'online' => 0,
-                'tamara' => 0,
-                'Tabby' => 0,
-                'Wallet' => 0
             ];
 
             foreach ($paymentTypes as $paymentType) {
@@ -334,10 +327,8 @@ class CashierController extends Controller
                 $dayData['user_name'] = $order->user_name;
                 $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
-                // if (in_array($paymentType, $paymentTypeNames)) {
                 $dayData[$paymentType] = round(isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total, 2);
-                $dayData['total'] += $order->total;
-                // }
+                $dayData['total'] += round($order->total, 2);
             }
 
             // Process the refunds
@@ -345,8 +336,8 @@ class CashierController extends Controller
                 $dayData['user_id'] = $order->user_id;
                 $dayData['user_name'] = $order->user_name;
                 $dayData['branch_name'] = $order->branch_name;
-                $dayData['refund'] += $order->total;
-                $dayData['total'] -= $order->total; // Subtract refunds from total
+                $dayData['refund'] += round($order->total, 2);
+                $dayData['total'] -= round($order->total, 2); // Subtract refunds from total
             }
 
             if ($dayData['total'] != 0) {
@@ -359,6 +350,8 @@ class CashierController extends Controller
                 }
             }
 
+            $dayData['refund'] = round($dayData['refund'], 2);
+            $dayData['total'] = round($dayData['total'], 2);
 
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
@@ -368,12 +361,7 @@ class CashierController extends Controller
         // Prepare response
         return response()->json([
             'success' => true,
-            'data' => collect($data)->map(function ($item) {
-                if (isset($item->total)) {
-                    $item->total = round($item->total, 2);
-                }
-                return $item;
-            }),
+            'data' => $data,
             'payment_types' => $paymentTypes,
             'description' => 'success',
             'code' => 200,
