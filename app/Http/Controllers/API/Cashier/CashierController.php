@@ -340,7 +340,7 @@ class CashierController extends Controller
                 $dayData['total'] = round(isset($dayData['total']) ? $dayData['total'] - $order->total : $order->total, 2);
             }
 
-            if ($dayData['total'] != 0) {
+            if (isset($dayData['total']) && $dayData['total'] != 0) {
                 $data[] = $dayData;
             }
 
