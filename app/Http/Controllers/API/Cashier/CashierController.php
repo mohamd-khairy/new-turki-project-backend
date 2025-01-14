@@ -27,7 +27,7 @@ class CashierController extends Controller
 {
     public function cashierCategories(Request $request)
     {
-        $data =  Category::orderBy('id', 'desc')
+        $data =  Category::whereHas('subCategories')->orderBy('id', 'desc')
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('categoryCities', function ($q) {
                     $q->where('country_id', request('country_id', $this->getAuthCountryCode()))
@@ -45,7 +45,7 @@ class CashierController extends Controller
 
     public function cashierSubCategories($category_id, Request $request)
     {
-        $data =  SubCategory::orderBy('id', 'desc')
+        $data =  SubCategory::whereHas('products')->orderBy('id', 'desc')
             ->where('category_id', $category_id)
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('subCategoryCities', function ($q) {
