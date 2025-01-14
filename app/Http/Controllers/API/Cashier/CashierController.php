@@ -341,10 +341,6 @@ class CashierController extends Controller
                 $dayData['total'] = round(isset($dayData['total']) ? $dayData['total'] - $order->total : $order->total, 2);
             }
 
-            if (isset($dayData['total']) && $dayData['total'] != 0) {
-                $data[] = $dayData;
-            }
-
             foreach ($paymentTypes as $paymentType) {
                 if (!isset($dayData[$paymentType->name_en])) {
                     $dayData[$paymentType->name_en] = 0;
@@ -353,6 +349,9 @@ class CashierController extends Controller
                 }
             }
 
+            if (isset($dayData['total']) && $dayData['total'] != 0) {
+                $data[] = $dayData;
+            }
             // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
