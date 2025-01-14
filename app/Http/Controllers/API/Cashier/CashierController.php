@@ -328,7 +328,7 @@ class CashierController extends Controller
                 $dayData['branch_name'] = $order->branch_name;
                 $paymentType = $order->payment_type_en;
                 $dayData[$paymentType] = round(isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total, 2);
-                $dayData['total'] += round($order->total, 2);
+                $dayData['total'] += $order->total;
             }
 
             // Process the refunds
@@ -336,8 +336,8 @@ class CashierController extends Controller
                 $dayData['user_id'] = $order->user_id;
                 $dayData['user_name'] = $order->user_name;
                 $dayData['branch_name'] = $order->branch_name;
-                $dayData['refund'] += round($order->total, 2);
-                $dayData['total'] -= round($order->total, 2); // Subtract refunds from total
+                $dayData['refund'] += $order->total;
+                $dayData['total'] -= $order->total; // Subtract refunds from total
             }
 
             if ($dayData['total'] != 0) {
