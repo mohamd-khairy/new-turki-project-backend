@@ -64,13 +64,16 @@ class CashierController extends Controller
     public function cashierProducts($subcategory_id, Request $request)
     {
         $data =  Product::with('productSizes', 'productCuts', 'productPreparations')
-            ->where('is_active', 1)->where('sub_category_id', $subcategory_id)
+            ->where('is_active', 1)
             ->when(request('country_id', $this->getAuthCountryCode()), function ($q) use ($request) {
                 $q->whereHas('productCities', function ($q) {
                     $q->where('country_id', request('country_id', $this->getAuthCountryCode()))
                         ->where('city_id', auth()->user()->branch->city_id)
                         ->where('is_active', 1);
                 });
+            })
+            ->when(empty(request('search')), function ($q) use ($subcategory_id) {
+                $q->where('sub_category_id', $subcategory_id);
             })
             ->when(request('search'), function ($q) use ($request) {
                 $q->where('name_ar', 'like', '%' . $request->search . '%');
@@ -351,7 +354,7 @@ class CashierController extends Controller
             foreach ($paymentTypes as $paymentType) {
                 if (!isset($dayData[$paymentType->name_en])) {
                     $dayData[$paymentType->name_en] = 0;
-                }else{
+                } else {
                     $dayData[$paymentType->name_en] = round($dayData[$paymentType->name_en], 2);
                 }
             }
