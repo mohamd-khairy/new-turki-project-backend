@@ -623,6 +623,13 @@ class CashierController extends Controller
         return  substr($customer->mobile, 0, 4) === '+966' ? 'SA' : 'AE';
     }
 
+
+    private function getAuthCityCode()
+    {
+        // return null;
+        return auth()->user()->branch->city->id  ?? 165;
+    }
+
     private function ensureWalletBalance($validated, $customer)
     {
         if ($validated["using_wallet"] == 1 && $customer->wallet == 0) {
