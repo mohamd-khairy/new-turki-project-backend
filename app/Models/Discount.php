@@ -404,6 +404,8 @@ class Discount extends Model
             } else if (isset($item->size_id)) {
                 $size = Size::find($item->size_id);
                 $item_amount = $size->sale_price * $item->quantity;
+            }else{
+                $item_amount = 0;
             }
 
             if ($coupon->is_for_all) {
