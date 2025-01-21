@@ -55,7 +55,9 @@ class Order extends Model
         'sales_representative_id',
         'driver_name',
         'printed_at',
-        'foodics_integrate_id'
+        'foodics_integrate_id',
+        'later',
+        'payment_types'
     ];
 
     protected $hidden = ['address'];
@@ -97,6 +99,9 @@ class Order extends Model
         'is_printed',
         'final_amount'
     ];
+
+    public $casts = ['payment_types' => 'array'];
+
     public function getIsPrintedAttribute()
     {
         return  $this->printed_at ?  true : false;

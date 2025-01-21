@@ -18,7 +18,17 @@ class Payment extends Model
 
     protected static $logOnlyDirty = true;
 
-    protected $fillable = ['ref_no', 'customer_id', 'payment_type_id', 'order_ref_no', 'bank_ref_no', 'price', 'description', 'status', 'manual'];
+    protected $fillable = [
+        'ref_no',
+        'customer_id',
+        'payment_type_id',
+        'order_ref_no',
+        'bank_ref_no',
+        'price',
+        'description',
+        'status',
+        'manual',
+    ];
 
     public function order()
     {

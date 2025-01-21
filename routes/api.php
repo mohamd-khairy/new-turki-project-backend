@@ -70,8 +70,10 @@ Route::prefix("v2")->group(function () {
         Route::get('cashier-user-sales-details', [CashierController::class, 'cashierUserSalesDetails'])->name('cashier-user-sales-details');
         Route::get('cashier-orders', [CashierController::class, 'cashierOrders'])->name('cashier-orders');
         Route::get('cashier-order-details/{ref_no}', [CashierController::class, 'cashierOrderDetails'])->name('cashier-order-details');
+        Route::put('cashier-edit-order', [CashierController::class, 'cashierEditOrder'])->name('cashier-edit-order');
         Route::put('cashier-order-update/{ref_no}', [CashierController::class, 'cashierOrderUpdate'])->name('cashier-order-update');
         Route::post('cashier-refund-order/{ref_no}', [CashierController::class, 'cashierOrderRefund'])->name('cashier-order-refund');
+        Route::get('cashier-later-orders', [CashierController::class, 'cashierLaterOrder'])->name('cashier-later-orders');
 
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);

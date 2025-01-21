@@ -381,6 +381,84 @@ class Discount extends Model
     }
 
 
+    public static function isValidForCashier($coupon, $cart, $total, $countryId, $cityId)
+    {
+        $expire_at = Carbon::make($coupon->expire_at)->timestamp;
+        $currentTimestamp = Carbon::now()->timestamp;
+        $total = 0;
+
+        if ((int)$expire_at < (int)$currentTimestamp) {
+            return "coupon is expired";
+        }
+
+        if ($coupon->min_applied_amount > $total)
+            return  "coupon not met minimum value " . $coupon->min_applied_amount;
+
+        foreach ($cart['products'] as $key => $item) {
+            $item = (object)$item;
+            $item_amount = $item->price * $item->quantity;
+
+            if ($coupon->is_for_all) {
+                if ($coupon->is_percent) {
+                    $total = $total + ($item_amount * $coupon->discount_amount_percent / 100);
+                } else {
+                    $total = $total + $coupon->discount_amount_percent;
+                }
+            } else {
+                if ($coupon->is_by_size) {
+                    if ($coupon->size_ids != null) {
+                        $validSizeIds = is_array($coupon->size_ids) ? $coupon->size_ids : explode(',', trim($coupon->size_ids));
+                        if (in_array($item->size_id, $validSizeIds)) {
+                            if ($coupon->is_percent) {
+                                $total = $total + ($item_amount * $coupon->discount_amount_percent / 100);
+                            } else {
+                                $total = $total + $coupon->discount_amount_percent;
+                            }
+                        }
+                    }
+                } else if ($coupon->is_by_product) {
+
+                    if ($coupon->product_ids != null) {
+                        $validProductIds = is_array($coupon->product_ids) ? $coupon->product_ids : explode(',', trim($coupon->product_ids));
+
+                        if (in_array($item->product_id, $validProductIds)) {
+
+                            if ($coupon->is_percent) {
+                                $total = $total + ($item_amount * $coupon->discount_amount_percent / 100);
+                            } else {
+                                $total = $total + $coupon->discount_amount_percent;
+                            }
+                        }
+                    }
+                } else if ($coupon->is_by_country) {
+                    if ($coupon->country_ids != null) {
+                        $validCountryIds = is_array($coupon->country_ids) ? $coupon->country_ids : explode(',', trim($coupon->country_ids));
+                        if (in_array($countryId, $validCountryIds)) {
+                            if ($coupon->is_percent) {
+                                $total = $total + ($item_amount * $coupon->discount_amount_percent / 100);
+                            } else {
+                                $total = $total + $coupon->discount_amount_percent;
+                            }
+                        }
+                    }
+                } else if ($coupon->is_by_city) {
+                    if ($coupon->city_ids != null) {
+                        $validCityIds = is_array($coupon->city_ids) ? $coupon->city_ids :  explode(',', trim($coupon->city_ids));
+                        if (in_array($cityId, $validCityIds)) {
+                            if ($coupon->is_percent) {
+                                $total = $total + ($item_amount * $coupon->discount_amount_percent / 100);
+                            } else {
+                                $total = $total + $coupon->discount_amount_percent;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $total;
+    }
+
     public function product()
     {
         return $this->belongsToMany(Product::class);

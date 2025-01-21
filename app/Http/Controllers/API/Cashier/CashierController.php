@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API\Cashier;
 
+use App\Http\Controllers\API\CouponController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Dashboard\CashierCategoryResource;
 use App\Http\Resources\Dashboard\CashierProductCodeResource;
@@ -9,12 +11,15 @@ use App\Http\Resources\Dashboard\CashierProductResource;
 use App\Http\Resources\Dashboard\CashierSubcategoryResource;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Cut;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Payment;
 use App\Models\PaymentType;
+use App\Models\Preparation;
 use App\Models\Product;
+use App\Models\Shalwata;
 use App\Models\Size;
 use App\Models\SubCategory;
 use App\Models\WalletLog;
@@ -128,6 +133,9 @@ class CashierController extends Controller
                 return $i;
             });
 
+        $ids = count($order->payment_types ?? []) > 0 ? $order->payment_types : [$order->payment_type_id];
+        $data['paid_payment_types'] = implode(' - ',  PaymentType::whereIn('id', $ids)->pluck('name_ar')->toArray());
+
         return \successResponse($data);
     }
 
@@ -136,6 +144,45 @@ class CashierController extends Controller
         $order = Order::where('ref_no', $ref_no)->delete();
 
         return \successResponse($order);
+    }
+
+    public function cashierEditOrder(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            $validated = $this->validateEditOrderRequest($request);
+
+            $order = Order::with('customer')->where('ref_no', $request->ref_no)->first();
+
+            if (!$order) {
+                return failResponse('Order not found');
+            }
+
+            OrderProduct::where('order_ref_no', $order->ref_no)->delete();
+            Payment::where('order_ref_no', $order->ref_no)->delete();
+
+            $customer = $this->getCustomer($validated['customer_mobile']);
+            $totalBeforeDiscount = $request->total_amount;
+            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount, $request);
+            $finalTotal =  $totalBeforeDiscount - $discountAmount;
+            $walletAmountUsed = 0;
+            $orderData = $this->prepareEditOrderData(
+                $validated,
+                $customer,
+                $totalBeforeDiscount,
+                $discountAmount,
+                $finalTotal,
+                $walletAmountUsed,
+            );
+
+            $AllOrderData = $this->handleWalletUsage($validated, $customer, $finalTotal, $walletAmountUsed, $orderData);
+            $order->update($AllOrderData);
+            $order->refresh();
+
+            $this->handleWalletLog($order);
+            $this->storeOrderProducts($validated['products'], $order);
+
+            return successResponse($order, 'success');
+        });
     }
 
     public function cashierOrderUpdate($ref_no)
@@ -148,6 +195,10 @@ class CashierController extends Controller
 
         if (request('order_state_id')) {
             $order->update(['order_state_id' => request('order_state_id')]);
+        }
+
+        if (request('paid')) {
+            $order->update(['paid' => request('paid')]);
         }
 
         if (request('order_state_id') && request('order_state_id') == '203') {
@@ -164,7 +215,7 @@ class CashierController extends Controller
 
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
-            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount);
+            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount, $request);
             $finalTotal =  $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
@@ -200,31 +251,46 @@ class CashierController extends Controller
         return DB::transaction(function () use ($request) {
             $request->validate([
                 'order_ref_no' => 'required|exists:orders,ref_no',
-                'payment_type_id' => 'required|exists:payment_types,id',
+                'payment_type_id' => 'nullable|exists:payment_types,id',
                 'comment' => 'nullable|string',
+                'later' => 'nullable|boolean',
+                'payment_types' => 'nullable|array',
             ]);
 
-            $order = Order::where('ref_no', $request->order_ref_no)->first();
+            $order = Order::with('customer')->where('ref_no', $request->order_ref_no)->first();
 
-            $lastPaymentId = Payment::max('id') ?? 0;
+            if (!$request->later) {
 
-            $payment = Payment::create([
-                'ref_no' => GetNextPaymentRefNo('SA', $lastPaymentId + 1),
-                'customer_id' => $order->customer_id,
-                'order_ref_no' => $order->ref_no,
-                'payment_type_id' =>  $request->payment_type_id,
-                'price' => $order->total_amount_after_discount,
-                'status' => 'Paid',
-                'manual' => 1,
-                'description' => 'Payment Created',
-            ]);
+                $lastPaymentId = Payment::max('id') ?? 0;
 
-            $order->update([
-                'payment_id' => $payment->id,
-                'payment_type_id' => $request->payment_type_id,
-                'comment' => $request->comment,
-                'paid' => 1,
-            ]);
+                $payment = Payment::create([
+                    'ref_no' => GetNextPaymentRefNo('SA', $lastPaymentId + 1),
+                    'customer_id' => $order->customer_id,
+                    'order_ref_no' => $order->ref_no,
+                    'payment_type_id' => $request->payment_type_id,
+                    'price' => $order->total_amount_after_discount,
+                    'status' => 'Paid',
+                    'manual' => 1,
+                    'description' => 'Payment Created',
+                ]);
+
+                $order->update([
+                    'payment_id' => $payment->id,
+                    'payment_type_id' => $request->payment_type_id,
+                    'comment' => $request->comment,
+                    'paid' => 1,
+                    'later' => 0,
+                    'payment_types' => $request->payment_types ?? []
+                ]);
+            } else {
+                $order->update([
+                    'payment_id' => null,
+                    'payment_type_id' => null,
+                    'comment' => $request->comment,
+                    'later' => 1,
+                    'payment_types' => $request->payment_types ?? []
+                ]);
+            }
 
             $order = $order->refresh();
 
@@ -232,14 +298,21 @@ class CashierController extends Controller
         });
     }
 
+    public function cashierLaterOrder()
+    {
+        $orders = Order::select('id', 'ref_no')->where('later', 1)->latest()->take(4)->get();
+        return successResponse($orders, 'success');
+    }
+
     public function cashierDiscountCodeDetails(Request $request)
     {
         $request->validate([
             'discount_code' => 'required|exists:discounts,code',
             'total_amount' => 'required|min:1',
+            'products' => 'required|array',
         ]);
 
-        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount);
+        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount, $request);
 
         if ($discount > $request->total_amount) {
             $amount = 0;
@@ -498,6 +571,31 @@ class CashierController extends Controller
         ]);
     }
 
+    private function validateEditOrderRequest(Request $request)
+    {
+        return $request->validate([
+            "ref_no" => 'required|exists:orders,ref_no',
+            "customer_mobile" => 'required|min:13',
+            "comment" => 'nullable|string',
+            'applied_discount_code' => 'nullable',
+            'notes' => 'nullable',
+            'using_wallet' => 'nullable|in:1,0',
+            'total_amount' => 'required|min:1',
+            'products' => 'required|array',
+            'products.*.total_price' => 'required|min:1',
+            'products.*.quantity' => 'required|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.preparation_id' => 'nullable|exists:preparations,id',
+            'products.*.size_id' => 'nullable|exists:sizes,id',
+            'products.*.cut_id' => 'nullable|exists:cuts,id',
+            'products.*.is_kwar3' => 'nullable|in:1,0',
+            'products.*.is_Ras' =>  'nullable|in:1,0',
+            'products.*.is_lyh' =>  'nullable|in:1,0',
+            'products.*.is_karashah' =>  'nullable|in:1,0',
+            'products.*.shalwata' => 'nullable|in:1,0',
+        ]);
+    }
+
     private function getCustomer($customer_mobile)
     {
         $customer = Customer::where('mobile', $customer_mobile)->first();
@@ -536,6 +634,24 @@ class CashierController extends Controller
         ];
     }
 
+    private function prepareEditOrderData($validated, $customer, $totalBeforeDiscount, $discountAmount, $finalTotal, $walletAmountUsed)
+    {
+        return [
+            'order_subtotal' => $totalBeforeDiscount,
+            'total_amount' => $finalTotal,
+            'total_amount_after_discount' => $finalTotal,
+            'total_amount_before_discount' => $totalBeforeDiscount,
+            'discount_applied' => $discountAmount,
+            'delivery_date' => now()->toDateString(),
+            'wallet_amount_used' => $walletAmountUsed,
+            'customer_id' => $customer->id,
+            'payment_type_id' => 1,
+            'applied_discount_code' => $validated['applied_discount_code'] ?? null,
+            'comment' => $validated['notes'] ?? null,
+            'order_state_id' => 202 // الاستلم من الفرع
+        ];
+    }
+
     private function handleWalletUsage($validated, $customer, &$finalTotal, &$walletAmountUsed, $orderData)
     {
         if ($validated['using_wallet'] && $customer->wallet) {
@@ -546,7 +662,9 @@ class CashierController extends Controller
 
             $orderData['wallet_amount_used'] = $walletAmountUsed;
             $orderData['total_amount_after_discount'] = $finalTotal;
-            $orderData['paid'] = $finalTotal == 0 ? 1 : 0;
+            if ($finalTotal == 0) {
+                $orderData['paid'] = 1;
+            }
         }
 
         return $orderData;
@@ -568,25 +686,16 @@ class CashierController extends Controller
         }
     }
 
-    private function handleDiscountAmount($code, $TotalAmountBeforeDiscount)
+    private function handleDiscountAmount($code, $TotalAmountBeforeDiscount, $data)
     {
-        $value = 0;
-        if ($code) {
-            $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
-            if ($discount && $TotalAmountBeforeDiscount > 0) {
-                if ($discount->is_percent) {
-                    $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
-                } else {
-                    $value = ($discount->discount_amount_percent) ?? 0;
-                }
-
-                if ($value > $discount->max_discount) {
-                    $value = $discount->max_discount;
-                }
-            }
+        $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
+        if(!$discount) {
+            return 0;
         }
 
-        return $value;
+        $discountAmount = Discount::isValidForCashier($discount, $data, $TotalAmountBeforeDiscount, $this->getAuthCountryCode(), $this->getAuthCityCode());
+
+        return $discountAmount ?? 0;
     }
 
     private function storeOrderProducts($products, $order)
@@ -628,6 +737,12 @@ class CashierController extends Controller
     private function getCountryCode($customer)
     {
         return  substr($customer->mobile, 0, 4) === '+966' ? 'SA' : 'AE';
+    }
+
+    private function getAuthCityCode()
+    {
+        // return null;
+        return auth()->user()->branch->city->id  ?? 165;
     }
 
     private function ensureWalletBalance($validated, $customer)
