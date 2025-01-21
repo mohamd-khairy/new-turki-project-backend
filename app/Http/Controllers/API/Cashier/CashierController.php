@@ -164,7 +164,7 @@ class CashierController extends Controller
 
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
-            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount);
+            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount , $request);
             $finalTotal =  $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
@@ -237,14 +237,15 @@ class CashierController extends Controller
         $request->validate([
             'discount_code' => 'required|exists:discounts,code',
             'total_amount' => 'required|min:1',
+            'products' => 'required|array',
         ]);
 
-        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount);
+        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount , $request);
 
         if ($discount > $request->total_amount) {
             $amount = 0;
         } else {
-            $amount = $discount;
+            $amount = $discount ?? 0;
         }
         return successResponse($amount, 'order updated successfully');
     }
@@ -568,26 +569,18 @@ class CashierController extends Controller
         }
     }
 
-    private function handleDiscountAmount($code, $TotalAmountBeforeDiscount)
+    private function handleDiscountAmount($code, $TotalAmountBeforeDiscount, $data)
     {
-        $value = 0;
-        if ($code) {
-            $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
-            if ($discount && $TotalAmountBeforeDiscount > 0) {
-                if ($discount->is_percent) {
-                    $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
-                } else {
-                    $value = ($discount->discount_amount_percent) ?? 0;
-                }
-
-                if ($value > $discount->max_discount) {
-                    $value = $discount->max_discount;
-                }
-            }
+        $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
+        if(!$discount) {
+            return 0;
         }
 
-        return $value;
+        $discountAmount = Discount::isValidForCashier($discount, $data, $TotalAmountBeforeDiscount, $this->getAuthCountryCode(), $this->getAuthCityCode());
+
+        return $discountAmount ?? 0;
     }
+
 
     private function storeOrderProducts($products, $order)
     {
