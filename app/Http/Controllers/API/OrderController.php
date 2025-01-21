@@ -508,7 +508,11 @@ class OrderController extends Controller
                     $order = $order->refresh();
                 }
 
-                $discount = $this->handleDiscountAmount($request->discount_code, $order->total_amount);
+                $items['products'] = OrderProduct::where('order_ref_no', $order->ref_no)->get();
+                $city_id = isset($order->selectedAddress->city_id) ? $order->selectedAddress->city_id : null;
+                $country_id = isset($order->selectedAddress->country_id) ? $order->selectedAddress->country_id : null;
+
+                $discount = $this->handleDiscountAmount($request->discount_code, $order->total_amount, $items, $country_id, $city_id);
 
                 $data['applied_discount_code'] = $request->discount_code;
                 $data['discount_applied'] = $discount;
@@ -655,7 +659,7 @@ class OrderController extends Controller
             $app = ($request->query('app') == 1 ? 1 : 0);
             $totalItemsAmount = $this->handleOrderProducts($request->products) ?? 0.0;
             $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount ?? 0.0;
-            $discountAmount = $this->handleDiscountAmount($request->discount_code ?? null, $TotalAmountBeforeDiscount);
+            $discountAmount = $this->handleDiscountAmount($request->discount_code ?? null, $TotalAmountBeforeDiscount, $request, $request->country_id, $request->city_id);
             $TotalAmountAfterDiscount = round($TotalAmountBeforeDiscount - $discountAmount, 2) ?? 0.0;
             $finalTotal = $TotalAmountAfterDiscount + $delivery;
             $discountCode = $request->discount_code ?? null;
@@ -991,26 +995,39 @@ class OrderController extends Controller
         return $sum;
     }
 
-    public function handleDiscountAmount($code, $TotalAmountBeforeDiscount)
+    private function handleDiscountAmount($code, $TotalAmountBeforeDiscount, $data, $country_id, $city_id)
     {
-        $value = 0;
-        if ($code) {
-            $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
-            if ($discount && $TotalAmountBeforeDiscount > 0) {
-                if ($discount->is_percent) {
-                    $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
-                } else {
-                    $value = ($discount->discount_amount_percent) ?? 0;
-                }
 
-                if ($value > $discount->max_discount) {
-                    $value = $discount->max_discount;
-                }
-            }
+        $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
+        if (!$discount) {
+            return 0;
         }
 
-        return $value;
+        $discountAmount = Discount::isValidForCashier($discount, $data, $TotalAmountBeforeDiscount, $country_id, $city_id);
+
+        return $discountAmount ?? 0;
     }
+
+    // public function handleDiscountAmount($code, $TotalAmountBeforeDiscount)
+    // {
+    //     $value = 0;
+    //     if ($code) {
+    //         $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
+    //         if ($discount && $TotalAmountBeforeDiscount > 0) {
+    //             if ($discount->is_percent) {
+    //                 $value = (($TotalAmountBeforeDiscount * $discount->discount_amount_percent) / 100) ?? 0;
+    //             } else {
+    //                 $value = ($discount->discount_amount_percent) ?? 0;
+    //             }
+
+    //             if ($value > $discount->max_discount) {
+    //                 $value = $discount->max_discount;
+    //             }
+    //         }
+    //     }
+
+    //     return $value;
+    // }
 
     public function getUserOrdersDashboard(Request $request)
     {

@@ -387,15 +387,24 @@ class Discount extends Model
         $total = 0;
 
         if ((int)$expire_at < (int)$currentTimestamp) {
-            return "coupon is expired";
+            return 0;
         }
 
         if ($coupon->min_applied_amount > $total)
-            return  "coupon not met minimum value " . $coupon->min_applied_amount;
+            return 0;
+
 
         foreach ($cart['products'] as $key => $item) {
             $item = (object)$item;
-            $item_amount = $item->price * $item->quantity;
+
+            if (isset($item->total_price)) {
+                $item_amount = $item->total_price;
+            } else if (isset($item->price)) {
+                $item_amount = $item->price * $item->quantity;
+            } else if (isset($item->size_id)) {
+                $size = Size::find($item->size_id);
+                $item_amount = $size->sale_price * $item->quantity;
+            }
 
             if ($coupon->is_for_all) {
                 if ($coupon->is_percent) {
