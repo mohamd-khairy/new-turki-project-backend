@@ -5,6 +5,7 @@ use App\Http\Controllers\API\BannerController;
 use App\Http\Controllers\API\CashbackController;
 use App\Http\Controllers\API\Cashier\BranchController;
 use App\Http\Controllers\API\Cashier\CashierController;
+use App\Http\Controllers\API\Cashier\CashierMoneyController;
 use App\Http\Controllers\API\Cashier\PrinterController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CityController;
@@ -74,6 +75,8 @@ Route::prefix("v2")->group(function () {
         Route::put('cashier-order-update/{ref_no}', [CashierController::class, 'cashierOrderUpdate'])->name('cashier-order-update');
         Route::post('cashier-refund-order/{ref_no}', [CashierController::class, 'cashierOrderRefund'])->name('cashier-order-refund');
         Route::get('cashier-later-orders', [CashierController::class, 'cashierLaterOrder'])->name('cashier-later-orders');
+
+        Route::apiResource('cashier-moneys', CashierMoneyController::class);
 
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);
