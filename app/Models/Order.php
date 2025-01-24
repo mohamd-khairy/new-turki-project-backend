@@ -57,7 +57,7 @@ class Order extends Model
         'printed_at',
         'foodics_integrate_id',
         'later',
-        'payment_types'
+        'other_discount'
     ];
 
     protected $hidden = ['address'];

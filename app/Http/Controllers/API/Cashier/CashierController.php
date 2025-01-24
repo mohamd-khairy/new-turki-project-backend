@@ -9,6 +9,7 @@ use App\Http\Resources\Dashboard\CashierCategoryResource;
 use App\Http\Resources\Dashboard\CashierProductCodeResource;
 use App\Http\Resources\Dashboard\CashierProductResource;
 use App\Http\Resources\Dashboard\CashierSubcategoryResource;
+use App\Models\CashierPayment;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Cut;
@@ -134,8 +135,8 @@ class CashierController extends Controller
                 return $i;
             });
 
-        $ids = count($order->payment_types ?? []) > 0 ? $order->payment_types : [$order->payment_type_id];
-        $data['paid_payment_types'] = implode(' - ',  PaymentType::whereIn('id', $ids)->pluck('name_ar')->toArray());
+        $data['paid_payment_types'] = implode(' - ',  CashierPayment::with('payment_type')->where('order_ref_no', $order->ref_no)
+            ->get()->pluck('payment_type.name_ar')->toArray());
 
         return \successResponse($data);
     }
@@ -286,7 +287,6 @@ class CashierController extends Controller
                     'comment' => $request->comment,
                     'paid' => 1,
                     'later' => 0,
-                    'payment_types' => $request->payment_types ?? []
                 ]);
             } else {
                 $order->update([
@@ -294,22 +294,30 @@ class CashierController extends Controller
                     'payment_type_id' => null,
                     'comment' => $request->comment,
                     'later' => 1,
-                    'payment_types' => $request->payment_types ?? []
                 ]);
             }
 
-            if ($request->has('prices')) {
+            if ($request->has('prices') && $request->prices) {
+                DB::table('cashier_payments')->where('order_ref_no', $order->ref_no)->delete();
                 foreach ($request->prices as $payment_id => $payment_value) {
-                    DB::table('cashier_payments')->insert([
+                    $payments[] = [
                         'order_ref_no' => $order->ref_no,
                         'payment_id' => $payment_id,
                         'payment_value' => $payment_value,
                         'created_at' => now(),
                         'updated_at' => now(),
-                    ]);
+                    ];
                 }
+                DB::table('cashier_payments')->insert($payments);
             }
 
+            if ($request->other_discount) {
+                $order->update([
+                    'total_amount_after_discount' => $order->total_amount_after_discount - $request->other_discount,
+                    'total_amount' => $order->total_amount - $request->other_discount,
+                    'other_discount' => $request->other_discount,
+                ]);
+            }
             $order = $order->refresh();
 
             return successResponse($order, 'success');
@@ -375,8 +383,9 @@ class CashierController extends Controller
             'branches.name as branch_name',
             'payment_types.name_en as payment_type_en',
             'cashier_payments.order_ref_no',
-            DB::raw('DATE(cashier_payments.created_at) as date'), // Extract date part
+            DB::raw('DATE(cashier_payments.created_at) as date'),
             DB::raw('SUM(cashier_payments.payment_value) as total'),
+            DB::raw('COUNT(DISTINCT cashier_payments.order_ref_no) as order_count'),
         ];
 
         foreach ($paymentTypes as $paymentType) {
