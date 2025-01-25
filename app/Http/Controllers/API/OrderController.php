@@ -343,11 +343,11 @@ class OrderController extends Controller
 
                 if ($row->payment_status == 'Paid') {
                     $payment_price = round($row->payment_price + $row->wallet_amount_used, 2);
-                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied - $row->other_discount, 2);
                     $remain_amount = round($final_amount - $payment_price, 2);
                 } else {
                     $payment_price = round($row->wallet_amount_used, 2);
-                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied - $row->other_discount, 2);
                     $remain_amount = round($final_amount - $payment_price, 2);
                 }
 
@@ -408,7 +408,7 @@ class OrderController extends Controller
     {
         if ($order->payment_status == 'Paid') {
             $order->payment_price = round($order->payment_price + $order->wallet_amount_used, 2);
-            $order->final_amount = round($order->order_subtotal - $order->discount_applied, 2);
+            $order->final_amount = round($order->order_subtotal - $order->discount_applied - $order->other_discount, 2);
             $order->remain_amount = round($order->final_amount - $order->payment_price, 2);
 
             if (!$order->paid && $order->remain_amount <= 0) {
@@ -417,7 +417,7 @@ class OrderController extends Controller
             }
         } else {
             $order->payment_price = round($order->wallet_amount_used, 2);
-            $order->final_amount = round($order->order_subtotal - $order->discount_applied, 2);
+            $order->final_amount = round($order->order_subtotal - $order->discount_applied - $order->other_discount, 2);
             $order->remain_amount = round($order->final_amount - $order->payment_price, 2);
         }
     }

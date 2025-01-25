@@ -55,7 +55,9 @@ class Order extends Model
         'sales_representative_id',
         'driver_name',
         'printed_at',
-        'foodics_integrate_id'
+        'foodics_integrate_id',
+        'later',
+        'other_discount'
     ];
 
     protected $hidden = ['address'];
@@ -97,6 +99,9 @@ class Order extends Model
         'is_printed',
         'final_amount'
     ];
+
+    public $casts = ['payment_types' => 'array'];
+
     public function getIsPrintedAttribute()
     {
         return  $this->printed_at ?  true : false;
@@ -104,7 +109,7 @@ class Order extends Model
 
     public function getFinalAmountAttribute()
     {
-        return round(($this->order_subtotal - $this->discount_applied),2) ?? 0;
+        return round(($this->order_subtotal - $this->discount_applied - $this->other_discount),2) ?? 0;
     }
 
     public function getRemainAmountAttribute()

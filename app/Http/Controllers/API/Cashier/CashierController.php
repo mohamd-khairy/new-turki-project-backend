@@ -2,25 +2,32 @@
 
 namespace App\Http\Controllers\API\Cashier;
 
+use App\Http\Controllers\API\CouponController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Dashboard\CashierCategoryResource;
 use App\Http\Resources\Dashboard\CashierProductCodeResource;
 use App\Http\Resources\Dashboard\CashierProductResource;
 use App\Http\Resources\Dashboard\CashierSubcategoryResource;
+use App\Models\CashierPayment;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Cut;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Payment;
 use App\Models\PaymentType;
+use App\Models\Preparation;
 use App\Models\Product;
+use App\Models\Shalwata;
 use App\Models\Size;
 use App\Models\SubCategory;
 use App\Models\WalletLog;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class CashierController extends Controller
@@ -128,6 +135,9 @@ class CashierController extends Controller
                 return $i;
             });
 
+        $data['paid_payment_types'] = implode(' - ',  CashierPayment::with('payment_type')->where('order_ref_no', $order->ref_no)
+            ->get()->pluck('payment_type.name_ar')->toArray());
+
         return \successResponse($data);
     }
 
@@ -136,6 +146,48 @@ class CashierController extends Controller
         $order = Order::where('ref_no', $ref_no)->delete();
 
         return \successResponse($order);
+    }
+
+    public function cashierEditOrder(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            $validated = $this->validateEditOrderRequest($request);
+
+            $order = Order::with('customer')->where('ref_no', $request->ref_no)->first();
+
+            if (!$order) {
+                return failResponse('Order not found');
+            }
+
+            OrderProduct::where('order_ref_no', $order->ref_no)->delete();
+            Payment::where('order_ref_no', $order->ref_no)->delete();
+            DB::table('cashier_payments')->where('order_ref_no', $order->ref_no)->delete();
+
+            $customer = $this->getCustomer($validated['customer_mobile']);
+            $totalBeforeDiscount = $request->total_amount;
+            $otherDiscount = $order->other_discount ?? 0;
+            $discountAmount = $validated['applied_discount_code'] ?
+                $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount, $request) : 0;
+            $finalTotal =  $totalBeforeDiscount - $discountAmount - $otherDiscount;
+            $walletAmountUsed = 0;
+            $orderData = $this->prepareEditOrderData(
+                $validated,
+                $customer,
+                $totalBeforeDiscount,
+                $discountAmount,
+                $finalTotal,
+                $walletAmountUsed,
+            );
+
+            $AllOrderData = $this->handleWalletUsage($validated, $customer, $finalTotal, $walletAmountUsed, $orderData);
+            $order->update($AllOrderData);
+            $order->refresh();
+
+            $this->handleWalletLog($order);
+            $this->storeOrderProducts($validated['products'], $order);
+
+            return successResponse($order, 'success');
+        });
     }
 
     public function cashierOrderUpdate($ref_no)
@@ -148,6 +200,28 @@ class CashierController extends Controller
 
         if (request('order_state_id')) {
             $order->update(['order_state_id' => request('order_state_id')]);
+        }
+
+        if (request()->has('paid')) {
+            $order->update(['paid' => request('paid')]);
+        }
+
+        if (request()->has('other_discount')) {
+            if (request('other_discount') <= $order->total_amount_after_discount && empty($order->other_discount)) {
+                $order->update([
+                    'total_amount_after_discount' => $order->total_amount_after_discount - request('other_discount'),
+                    'total_amount' => $order->total_amount - request('other_discount'),
+                    'other_discount' => request('other_discount'),
+                ]);
+            } elseif (request('other_discount') <= $order->total_amount_after_discount && $order->other_discount > 0) {
+                $order->update([
+                    'total_amount_after_discount' => ($order->total_amount_after_discount + $order->other_discount) - request('other_discount'),
+                    'total_amount' => ($order->total_amount + $order->other_discount) - request('other_discount'),
+                    'other_discount' => request('other_discount'),
+                ]);
+            } else {
+                return failResponse('Discount amount is greater than total amount');
+            }
         }
 
         if (request('order_state_id') && request('order_state_id') == '203') {
@@ -164,7 +238,9 @@ class CashierController extends Controller
 
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
-            $discountAmount = $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount , $request);
+            $discountAmount = $validated['applied_discount_code'] ?
+                $this->handleDiscountAmount($validated['applied_discount_code'] ?? null, $totalBeforeDiscount, $request)
+                : 0;
             $finalTotal =  $totalBeforeDiscount - $discountAmount;
 
             $walletAmountUsed = 0;
@@ -200,36 +276,71 @@ class CashierController extends Controller
         return DB::transaction(function () use ($request) {
             $request->validate([
                 'order_ref_no' => 'required|exists:orders,ref_no',
-                'payment_type_id' => 'required|exists:payment_types,id',
+                'payment_type_id' => 'nullable|exists:payment_types,id',
                 'comment' => 'nullable|string',
+                'later' => 'nullable|boolean',
+                'payment_types' => 'nullable|array',
+                'prices' => 'nullable|array',
             ]);
 
-            $order = Order::where('ref_no', $request->order_ref_no)->first();
+            $order = Order::with('customer')->where('ref_no', $request->order_ref_no)->first();
 
-            $lastPaymentId = Payment::max('id') ?? 0;
+            if (!$request->later) {
 
-            $payment = Payment::create([
-                'ref_no' => GetNextPaymentRefNo('SA', $lastPaymentId + 1),
-                'customer_id' => $order->customer_id,
-                'order_ref_no' => $order->ref_no,
-                'payment_type_id' =>  $request->payment_type_id,
-                'price' => $order->total_amount_after_discount,
-                'status' => 'Paid',
-                'manual' => 1,
-                'description' => 'Payment Created',
-            ]);
+                $lastPaymentId = Payment::max('id') ?? 0;
 
-            $order->update([
-                'payment_id' => $payment->id,
-                'payment_type_id' => $request->payment_type_id,
-                'comment' => $request->comment,
-                'paid' => 1,
-            ]);
+                $payment = Payment::create([
+                    'ref_no' => GetNextPaymentRefNo('SA', $lastPaymentId + 1),
+                    'customer_id' => $order->customer_id,
+                    'order_ref_no' => $order->ref_no,
+                    'payment_type_id' => $request->payment_type_id,
+                    'price' => $order->total_amount_after_discount,
+                    'status' => 'Paid',
+                    'manual' => 1,
+                    'description' => 'Payment Created',
+                ]);
+
+                $order->update([
+                    'payment_id' => $payment->id,
+                    'payment_type_id' => $request->payment_type_id,
+                    'comment' => $request->comment,
+                    'paid' => 1,
+                    'later' => 0,
+                ]);
+            } else {
+                $order->update([
+                    'payment_id' => null,
+                    'payment_type_id' => null,
+                    'comment' => $request->comment,
+                    'later' => 1,
+                ]);
+            }
+
+            if ($request->has('prices') && $request->prices) {
+                DB::table('cashier_payments')->where('order_ref_no', $order->ref_no)->delete();
+                foreach ($request->prices as $payment_id => $payment_value) {
+                    $payments[] = [
+                        'order_ref_no' => $order->ref_no,
+                        'payment_id' => $payment_id,
+                        'payment_value' => $payment_value,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                DB::table('cashier_payments')->insert($payments);
+            }
+
 
             $order = $order->refresh();
 
             return successResponse($order, 'success');
         });
+    }
+
+    public function cashierLaterOrder()
+    {
+        $orders = Order::select('id', 'ref_no')->where('later', 1)->latest()->take(4)->get();
+        return successResponse($orders, 'success');
     }
 
     public function cashierDiscountCodeDetails(Request $request)
@@ -240,7 +351,7 @@ class CashierController extends Controller
             'products' => 'required|array',
         ]);
 
-        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount , $request);
+        $discount = $this->handleDiscountAmount($request->discount_code, $request->total_amount, $request);
 
         if ($discount > $request->total_amount) {
             $amount = 0;
@@ -268,110 +379,53 @@ class CashierController extends Controller
         $start_date = $request->start_date ?? date('Y-m-d');
         $end_date = $request->end_date ?? date('Y-m-d');
 
-        // Fetch orders with filters
-        $ordersQuery = DB::table('orders')
-            ->whereNull('orders.address_id')
-            ->where('paid', 1)
-            ->when($request->user_id, fn($query) => $query->where('user_id', $request->user_id))
-            ->when($request->start_date, fn($query) => $query->whereDate('orders.created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn($query) => $query->whereDate('orders.created_at', '<=', $request->end_date))
-            ->when(empty($request->start_date) && empty($request->end_date), fn($query) => $query->whereDate('orders.created_at', date('Y-m-d')))
-            ->when(!auth()->user()->hasRole('admin'), fn($query) => $query->where('user_id', auth()->user()->id))
-            ->join('payment_types', 'orders.payment_type_id', '=', 'payment_types.id')
-            ->join('users', 'orders.user_id', '=', 'users.id')
-            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
-            ->orderBy('orders.created_at', 'desc')
-            ->select(
-                'users.id as user_id',
-                'users.username as user_name',
-                'branches.name as branch_name',
-                'payment_types.name_en as payment_type_en',
-                'orders.created_at as order_date'
-            )
-            ->selectRaw('SUM(orders.total_amount_after_discount) as total')
-            ->groupBy('user_id', 'user_name', 'branch_name', 'payment_type_en', 'orders.created_at');
-
-        $orders = $ordersQuery->get();
-        // Fetch refunds
-        $refund = OrderProduct::where('order_products.is_refund', 1)
-            ->when($request->user_id, fn($query) => $query->where('orders.user_id', $request->user_id))
-            ->when($request->start_date, fn($query) => $query->whereDate('order_products.refund_at', '>=', $request->start_date))
-            ->when($request->end_date, fn($query) => $query->whereDate('order_products.refund_at', '<=', $request->end_date))
-            ->when(empty($request->start_date) && empty($request->end_date), fn($query) => $query->whereDate('order_products.refund_at', date('Y-m-d')))
-            ->leftJoin('orders', 'orders.ref_no', '=', 'order_products.order_ref_no')
-            ->leftJoin('users', 'users.id', '=', 'orders.user_id')
-            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
-            ->selectRaw('order_products.refund_at as order_date , orders.user_id , users.username as user_name,branches.name as branch_name,order_products.order_ref_no, SUM(order_products.total_price) as total')
-            ->groupBy('order_ref_no')
-            ->get();
-
-        // Initialize response data
         $data = [];
+        $orders = DB::table('cashier_payments')
+            ->when($start_date, fn($query) => $query->whereDate('cashier_payments.created_at', '>=', $start_date))
+            ->when($end_date, fn($query) => $query->whereDate('cashier_payments.created_at', '<=', $end_date))
+            ->when(empty($start_date) && empty($end_date), fn($query) => $query->whereDate('cashier_payments.created_at', date('Y-m-d')))
+            ->leftJoin('orders', 'orders.ref_no', '=', 'cashier_payments.order_ref_no')
+            ->leftJoin('payment_types', 'cashier_payments.payment_id', '=', 'payment_types.id')
+            ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+            ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
+            ->where('orders.paid', 1);
 
-        // Iterate through the date range
+        $selectColumns = [
+            'users.id as user_id',
+            'users.username as user_name',
+            'branches.name as branch_name',
+            'payment_types.name_en as payment_type_en',
+            'cashier_payments.order_ref_no',
+            DB::raw('DATE(cashier_payments.created_at) as date'),
+            DB::raw('SUM(cashier_payments.payment_value) as total'),
+            DB::raw('COUNT(DISTINCT cashier_payments.order_ref_no) as order_count'),
+        ];
+
+        foreach ($paymentTypes as $paymentType) {
+            $selectColumns[] = DB::raw('SUM(IF(cashier_payments.payment_id = ' . $paymentType->id . ', cashier_payments.payment_value, 0)) as ' . $paymentType->name_en);
+        }
+
+        //for refund remove it when add it to pyments_types
+        $selectColumns[] = DB::raw('SUM(IF(cashier_payments.payment_id = 1000 , cashier_payments.payment_value, 0)) as refund');
+
+        $orders->select($selectColumns);
+
+        $orders = $orders->groupBy('user_id', 'date')->get();
+
         $currentDate = strtotime($start_date);
         $endDate = strtotime($end_date);
 
-        // Loop through each day in the range
         while ($currentDate <= $endDate) {
             $dateString = date('Y-m-d', $currentDate);
 
+            $data[] = $orders->filter(fn($order) => date('Y-m-d', strtotime($order->date)) == $dateString);
 
-            $dayData = [
-                'date' => $dateString,
-                'user_id' => null,
-                'user_name' => null,
-                'branch_name' => null,
-                'total' => 0,
-                'refund' => 0
-            ];
-
-            foreach ($paymentTypes as $paymentType) {
-                $dayData[$paymentType->name_en] = 0;
-            }
-            // Filter orders and refunds for the current date
-            $dailyOrders = $orders->filter(fn($order) => date('Y-m-d', strtotime($order->order_date)) == $dateString);
-            $dailyRefunds = $refund->filter(fn($order) => date('Y-m-d', strtotime($order->order_date)) == $dateString);
-
-            // Process the orders
-            foreach ($dailyOrders as $order) {
-                $dayData['user_id'] = $order->user_id;
-                $dayData['user_name'] = $order->user_name;
-                $dayData['branch_name'] = $order->branch_name;
-                $paymentType = $order->payment_type_en;
-                $dayData[$paymentType] = round(isset($dayData[$paymentType]) ? $dayData[$paymentType] + $order->total : $order->total, 2);
-                $dayData['total'] = round(isset($dayData['total']) ? $dayData['total'] + $order->total : $order->total, 2);
-            }
-
-            // Process the refunds
-            foreach ($dailyRefunds as $order) {
-                $dayData['user_id'] = $order->user_id;
-                $dayData['user_name'] = $order->user_name;
-                $dayData['branch_name'] = $order->branch_name;
-                $dayData['refund'] = round(isset($dayData['refund']) ? $dayData['refund'] + $order->total : $order->total, 2);
-                $dayData['total'] = round(isset($dayData['total']) ? $dayData['total'] - $order->total : $order->total, 2);
-            }
-
-            foreach ($paymentTypes as $paymentType) {
-                if (!isset($dayData[$paymentType->name_en])) {
-                    $dayData[$paymentType->name_en] = 0;
-                } else {
-                    $dayData[$paymentType->name_en] = round($dayData[$paymentType->name_en], 2);
-                }
-            }
-
-            if (isset($dayData['total']) && $dayData['total'] != 0) {
-                $data[] = $dayData;
-            }
-            // Move to the next day
             $currentDate = strtotime("+1 day", $currentDate);
         }
 
-
-        // Prepare response
         return response()->json([
             'success' => true,
-            'data' => $data,
+            'data' => Arr::flatten($data),
             'payment_types' => $paymentTypes,
             'description' => 'success',
             'code' => 200,
@@ -499,6 +553,31 @@ class CashierController extends Controller
         ]);
     }
 
+    private function validateEditOrderRequest(Request $request)
+    {
+        return $request->validate([
+            "ref_no" => 'required|exists:orders,ref_no',
+            "customer_mobile" => 'required|min:13',
+            "comment" => 'nullable|string',
+            'applied_discount_code' => 'nullable',
+            'notes' => 'nullable',
+            'using_wallet' => 'nullable|in:1,0',
+            'total_amount' => 'required|min:1',
+            'products' => 'required|array',
+            'products.*.total_price' => 'required|min:1',
+            'products.*.quantity' => 'required|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.preparation_id' => 'nullable|exists:preparations,id',
+            'products.*.size_id' => 'nullable|exists:sizes,id',
+            'products.*.cut_id' => 'nullable|exists:cuts,id',
+            'products.*.is_kwar3' => 'nullable|in:1,0',
+            'products.*.is_Ras' =>  'nullable|in:1,0',
+            'products.*.is_lyh' =>  'nullable|in:1,0',
+            'products.*.is_karashah' =>  'nullable|in:1,0',
+            'products.*.shalwata' => 'nullable|in:1,0',
+        ]);
+    }
+
     private function getCustomer($customer_mobile)
     {
         $customer = Customer::where('mobile', $customer_mobile)->first();
@@ -537,6 +616,24 @@ class CashierController extends Controller
         ];
     }
 
+    private function prepareEditOrderData($validated, $customer, $totalBeforeDiscount, $discountAmount, $finalTotal, $walletAmountUsed)
+    {
+        return [
+            'order_subtotal' => $totalBeforeDiscount,
+            'total_amount' => $finalTotal,
+            'total_amount_after_discount' => $finalTotal,
+            'total_amount_before_discount' => $totalBeforeDiscount,
+            'discount_applied' => $discountAmount,
+            'delivery_date' => now()->toDateString(),
+            'wallet_amount_used' => $walletAmountUsed,
+            'customer_id' => $customer->id,
+            'payment_type_id' => 1,
+            'applied_discount_code' => $validated['applied_discount_code'] ?? null,
+            'comment' => $validated['notes'] ?? null,
+            'order_state_id' => 202 // الاستلم من الفرع
+        ];
+    }
+
     private function handleWalletUsage($validated, $customer, &$finalTotal, &$walletAmountUsed, $orderData)
     {
         if ($validated['using_wallet'] && $customer->wallet) {
@@ -547,7 +644,9 @@ class CashierController extends Controller
 
             $orderData['wallet_amount_used'] = $walletAmountUsed;
             $orderData['total_amount_after_discount'] = $finalTotal;
-            $orderData['paid'] = $finalTotal == 0 ? 1 : 0;
+            if ($finalTotal == 0) {
+                $orderData['paid'] = 1;
+            }
         }
 
         return $orderData;
@@ -572,7 +671,7 @@ class CashierController extends Controller
     private function handleDiscountAmount($code, $TotalAmountBeforeDiscount, $data)
     {
         $discount = Discount::where('code', 'like', '%' . $code . '%')->where('is_active', 1)->first();
-        if(!$discount) {
+        if (!$discount) {
             return 0;
         }
 
@@ -622,7 +721,6 @@ class CashierController extends Controller
     {
         return  substr($customer->mobile, 0, 4) === '+966' ? 'SA' : 'AE';
     }
-
 
     private function getAuthCityCode()
     {
