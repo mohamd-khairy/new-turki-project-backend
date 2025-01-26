@@ -387,11 +387,11 @@ class Discount extends Model
         $total = 0;
 
         if ((int)$expire_at < (int)$currentTimestamp) {
-            return "coupon is expired";
+            return 0;
         }
 
         if ($coupon->min_applied_amount > $total)
-            return  "coupon not met minimum value " . $coupon->min_applied_amount;
+            return  0;//"coupon not met minimum value " . $coupon->min_applied_amount;
 
         foreach ($cart['products'] as $key => $item) {
             $item = (object)$item;
