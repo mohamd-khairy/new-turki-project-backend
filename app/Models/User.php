@@ -52,6 +52,13 @@ class User extends Authenticatable
         'mobile_verified_at' => 'datetime',
     ];
 
+    public $appends = ['display_roles'];
+
+    public function getDisplayRolesAttribute()
+    {
+        return $this->roles->count() > 0 ? $this->roles->pluck('display_name')->implode(', ') : '-';
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);
