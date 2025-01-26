@@ -140,7 +140,7 @@ class CashierController extends Controller
 
             $data['paid_payment_types'] = implode(' - ',  $payments->pluck('payment_type.name_ar')->toArray());
         } else {
-            $data['paid_payment_types'] = $order->paymentType->name_ar;
+            $data['paid_payment_types'] = isset($order->paymentType->name_ar) ? $order->paymentType->name_ar : null;
         }
 
         return \successResponse($data);
