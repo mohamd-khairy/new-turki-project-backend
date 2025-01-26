@@ -412,7 +412,7 @@ class CashierController extends Controller
         }
 
         //for refund remove it when add it to pyments_types
-        $selectColumns[] = DB::raw('SUM(IF(cashier_payments.payment_id = 1000 , cashier_payments.payment_value, 0)) as refund');
+        // $selectColumns[] = DB::raw('SUM(IF(cashier_payments.payment_id = 1000 , cashier_payments.payment_value, 0)) as refund');
 
         $orders->select($selectColumns);
 
