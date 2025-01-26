@@ -135,8 +135,13 @@ class CashierController extends Controller
                 return $i;
             });
 
-        $data['paid_payment_types'] = implode(' - ',  CashierPayment::with('payment_type')->where('order_ref_no', $order->ref_no)
-            ->get()->pluck('payment_type.name_ar')->toArray());
+        $payments = CashierPayment::with('payment_type')->where('order_ref_no', $order->ref_no)->get();
+        if ($payments->count() > 0) {
+
+            $data['paid_payment_types'] = implode(' - ',  $payments->pluck('payment_type.name_ar')->toArray());
+        } else {
+            $data['paid_payment_types'] = $order->paymentType->name_ar;
+        }
 
         return \successResponse($data);
     }
