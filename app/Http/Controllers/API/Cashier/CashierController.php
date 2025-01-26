@@ -393,7 +393,8 @@ class CashierController extends Controller
             ->leftJoin('payment_types', 'cashier_payments.payment_id', '=', 'payment_types.id')
             ->leftJoin('users', 'orders.user_id', '=', 'users.id')
             ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
-            ->where('orders.paid', 1);
+            ->where('orders.paid', 1)
+            ->whereNotIn('orders.order_state_id', [206, 207, 208, 209 , 4000 , 4001 , 102 , 103]);
 
         $selectColumns = [
             'users.id as user_id',
