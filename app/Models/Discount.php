@@ -395,7 +395,17 @@ class Discount extends Model
 
         foreach ($cart['products'] as $key => $item) {
             $item = (object)$item;
-            $item_amount = $item->price * $item->quantity;
+            if (isset($item->price)) {
+                $item_amount = $item->price * $item->quantity;
+            } else if (isset($item->size_id)) {
+                $size = Size::find($item->size_id);
+                $item_amount = $size->sale_price * $item->quantity;
+            }else if(isset($item->total_price)){
+                $item_amount = $item->total_price;
+            } else {
+                $product = Product::find($item->product_id);
+                $item_amount = $product->sale_price * $item->quantity;
+            }
 
             if ($coupon->is_for_all) {
                 if ($coupon->is_percent) {
