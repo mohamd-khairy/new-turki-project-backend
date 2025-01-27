@@ -124,7 +124,8 @@ class CashierController extends Controller
                 'user',
                 'salesRepresentative',
                 'deliveryPeriod',
-                'paidpayment'
+                'paidpayment',
+                'cashier_payments'
             )->first();
 
         $data['order'] = $order;
@@ -158,15 +159,15 @@ class CashierController extends Controller
         return DB::transaction(function () use ($request) {
             $validated = $this->validateEditOrderRequest($request);
 
-            $order = Order::with('customer')->where('ref_no', $request->ref_no)->first();
+            $order = Order::with('customer' , 'cashier_payments')->where('ref_no', $request->ref_no)->first();
 
             if (!$order) {
                 return failResponse('Order not found');
             }
 
             OrderProduct::where('order_ref_no', $order->ref_no)->delete();
-            Payment::where('order_ref_no', $order->ref_no)->delete();
-            DB::table('cashier_payments')->where('order_ref_no', $order->ref_no)->delete();
+            // Payment::where('order_ref_no', $order->ref_no)->delete();
+            // DB::table('cashier_payments')->where('order_ref_no', $order->ref_no)->delete();
 
             $customer = $this->getCustomer($validated['customer_mobile']);
             $totalBeforeDiscount = $request->total_amount;
@@ -272,6 +273,7 @@ class CashierController extends Controller
             $this->handleWalletLog($order);
             $this->storeOrderProducts($validated['products'], $order);
 
+            $order->load('cashier_payments');
             return successResponse($order, 'success');
         });
     }
@@ -289,6 +291,8 @@ class CashierController extends Controller
             ]);
 
             $order = Order::with('customer')->where('ref_no', $request->order_ref_no)->first();
+
+            Payment::where('order_ref_no', $order->ref_no)->delete();
 
             if (!$request->later) {
 
@@ -394,7 +398,7 @@ class CashierController extends Controller
             ->leftJoin('users', 'orders.user_id', '=', 'users.id')
             ->leftJoin('branches', 'branches.id', '=', 'users.branch_id')
             ->where('orders.paid', 1)
-            ->whereNotIn('orders.order_state_id', [206, 207, 208, 209 , 4000 , 4001 , 102 , 103]);
+            ->whereNotIn('orders.order_state_id', [206, 207, 208, 209, 4000, 4001, 102, 103]);
 
         $selectColumns = [
             'users.id as user_id',

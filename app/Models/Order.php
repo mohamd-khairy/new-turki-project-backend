@@ -109,12 +109,12 @@ class Order extends Model
 
     public function getFinalAmountAttribute()
     {
-        return round(($this->order_subtotal - $this->discount_applied - $this->other_discount),2) ?? 0;
+        return round(($this->order_subtotal - $this->discount_applied - $this->other_discount), 2) ?? 0;
     }
 
     public function getRemainAmountAttribute()
     {
-        return round(($this->final_amount - (($this->payment && $this->payment->status == 'Paid' ? $this->payment->price : 0) + ($this->wallet_amount_used ?? 0))),2);
+        return round(($this->final_amount - (($this->payment && $this->payment->status == 'Paid' ? $this->payment->price : 0) + ($this->wallet_amount_used ?? 0))), 2);
     }
 
     public function getTotalAmountAfterTaxAttribute()
@@ -219,5 +219,10 @@ class Order extends Model
     public function salesRepresentative()
     {
         return $this->belongsTo(User::class, 'sales_representative_id');
+    }
+
+    public function cashier_payments()
+    {
+        return $this->hasMany(CashierPayment::class, 'order_ref_no' , 'ref_no');
     }
 }
