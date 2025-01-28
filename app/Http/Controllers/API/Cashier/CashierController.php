@@ -159,7 +159,7 @@ class CashierController extends Controller
         return DB::transaction(function () use ($request) {
             $validated = $this->validateEditOrderRequest($request);
 
-            $order = Order::with('customer' , 'cashier_payments')->where('ref_no', $request->ref_no)->first();
+            $order = Order::with('customer', 'cashier_payments')->where('ref_no', $request->ref_no)->first();
 
             if (!$order) {
                 return failResponse('Order not found');
@@ -392,7 +392,7 @@ class CashierController extends Controller
         $orders = DB::table('cashier_payments')
             ->when($start_date, fn($query) => $query->whereDate('cashier_payments.created_at', '>=', $start_date))
             ->when($end_date, fn($query) => $query->whereDate('cashier_payments.created_at', '<=', $end_date))
-            ->when(empty($start_date) && empty($end_date), fn($query) => $query->whereDate('cashier_payments.created_at', date('Y-m-d')))
+            ->when((empty($start_date) && empty($end_date)), fn($query) => $query->whereDate('cashier_payments.created_at', date('Y-m-d')))
             ->leftJoin('orders', 'orders.ref_no', '=', 'cashier_payments.order_ref_no')
             ->leftJoin('payment_types', 'cashier_payments.payment_id', '=', 'payment_types.id')
             ->leftJoin('users', 'orders.user_id', '=', 'users.id')
@@ -477,9 +477,7 @@ class CashierController extends Controller
             ->when(request('order_state_ids'), function ($query) {
                 $query->whereIn('orders.order_state_id', request('order_state_ids'));
             })
-            ->when(request('date_from') && request('date_to'), function ($query) {
-                $query->whereBetween('orders.created_at', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
-            })
+
             ->when(request('customer_id'), function ($query) {
                 $query->where('orders.customer_id', request('customer_id'));
             })
@@ -505,6 +503,14 @@ class CashierController extends Controller
             ->when(request('ref_no'), function ($query) {
                 $query->where('orders.ref_no', request('ref_no'));
             });
+
+        if ((!empty(request('date_from')) && !empty(request('date_to'))) && (request('date_from') == request('date_to'))) {
+            $orders->whereDate('orders.created_at', request('date_from'));
+        } else if (!empty(request('date_from')) && !empty(request('date_to'))) {
+            $orders->when(request('date_from') && request('date_to'), function ($query) {
+                $query->whereBetween('orders.created_at', [date('Y-m-d', strtotime(request('date_from'))), date('Y-m-d', strtotime(request('date_to')))]);
+            });
+        }
 
 
         $total = $orders->sum('total_amount');

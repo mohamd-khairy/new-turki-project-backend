@@ -223,6 +223,6 @@ class Order extends Model
 
     public function cashier_payments()
     {
-        return $this->hasMany(CashierPayment::class, 'order_ref_no' , 'ref_no');
+        return $this->hasMany(CashierPayment::class, 'order_ref_no' , 'ref_no')->with('payment_type');
     }
 }
