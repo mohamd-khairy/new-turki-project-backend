@@ -9,15 +9,21 @@ use Illuminate\Http\Request;
 class CashierMoneyController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $cashierMoney = CashierMoney::with('user.branch')->latest()->paginate(request("per_page", 10));
+        $start_date = $request->start_date ?? date('Y-m-d', strtotime('-1 year'));
+        $end_date = $request->end_date ?? date('Y-m-d', strtotime('+1 year'));
+
+        $cashierMoney = CashierMoney::with('user.branch')
+            ->when($start_date, fn($query) => $query->whereDate('date', '>=', $start_date))
+            ->when($end_date, fn($query) => $query->whereDate('date', '<=', $end_date))
+            ->latest()->paginate(request("per_page", 10));
         return successResponse($cashierMoney);
     }
 
     public function store(Request $request)
     {
-        $data=$request->all();
+        $data = $request->all();
         $data['user_id'] = auth()->id();
         $cashierMoney = CashierMoney::create($data);
         return successResponse($cashierMoney);
