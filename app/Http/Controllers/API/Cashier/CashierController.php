@@ -385,14 +385,15 @@ class CashierController extends Controller
         $paymentTypes = PaymentType::whereNotIn('code', ['COD', 'Wallet', 'Sadqa'])->get(['id', 'name_en', 'name_ar', 'code']);
 
         // Determine date range
-        $start_date = $request->start_date ?? date('Y-m-d');
-        $end_date = $request->end_date ?? date('Y-m-d');
+        $start_date = $request->start_date ?? date('Y-m-d' , strtotime('-1 year'));
+        $end_date = $request->end_date ?? date('Y-m-d' , strtotime('+1 year'));
+
 
         $data = [];
         $orders = DB::table('cashier_payments')
             ->when($start_date, fn($query) => $query->whereDate('cashier_payments.created_at', '>=', $start_date))
             ->when($end_date, fn($query) => $query->whereDate('cashier_payments.created_at', '<=', $end_date))
-            ->when((empty($start_date) && empty($end_date)), fn($query) => $query->whereDate('cashier_payments.created_at', date('Y-m-d')))
+            // ->when((empty($start_date) && empty($end_date)), fn($query) => $query->whereDate('cashier_payments.created_at', date('Y-m-d')))
             ->leftJoin('orders', 'orders.ref_no', '=', 'cashier_payments.order_ref_no')
             ->leftJoin('payment_types', 'cashier_payments.payment_id', '=', 'payment_types.id')
             ->leftJoin('users', 'orders.user_id', '=', 'users.id')
