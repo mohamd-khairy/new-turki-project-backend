@@ -164,7 +164,7 @@ class OrderController extends Controller
 
 
         if (request()->header('Type') == 'dashboard') {
-            $total = $orders->sum('total_amount');
+            $total = $orders->sum('total_amount_after_discount');
         }
 
         if (request('export', null) == 1 && $orders->count() > 0) {
