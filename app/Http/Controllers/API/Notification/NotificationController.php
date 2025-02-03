@@ -85,7 +85,7 @@ class NotificationController extends Controller
         })->pluck('id')->toArray();
 
         $title = 'Complete Your Purchase!';
-        $body = "Love your recent purchase of {{product_name}}? Pair it with {{complementary_product}} for just $X more!";
+        $body = "Love your recent purchase of {{product_name}}? Pair it with {{complementary_product}} for just {{X}} more!";
         $data = ['product_id' => 1, 'complementary_product_id' => 2];
 
         $this->saveNotification($crossSellUserIds, $title, $body, $request->scheduled_at, $data);
@@ -125,6 +125,25 @@ class NotificationController extends Controller
         $data = ['store_location' => 'New York'];
 
         $this->saveNotification($locationBasedUserIds, $title, $body, $request->scheduled_at, $data);
+    }
+
+    public function sendDirectNotification(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'required|exists:users,id',
+            'title' => 'required',
+            'body' => 'required',
+            'scheduled_at' => 'nullable|date',
+            'data' => 'nullable|array',
+        ]);
+
+        $userIds = $request->user_ids;
+        $title = $request->title;
+        $body = $request->body;
+        $data = $request->data;
+
+        $this->saveNotification($userIds, $title, $body, $request->scheduled_at, $data);
     }
 
     // Private method to save notifications
