@@ -29,8 +29,8 @@ class HomeController extends Controller
     public function dashboard()
     {
         $product_count = Product::where('is_active', 1)->count();
-        $customer_count = Customer::count();
-        $customer_wallet_sum = Customer::sum('wallet');
+        $customer_count = Customer::where('is_active', 1)->count();
+        $customer_wallet_sum = Customer::where('is_active', 1)->sum('wallet');
         $order_count = Order::where('paid', 1)->count(); //where('order_state_id', 100)->
         $payment_sum = Order::where('paid', 1)->sum('total_amount_after_discount'); //Payment::where('status', 'Paid')->sum('price');
         $orders = Order::with('orderState', 'paymentType')->where('order_state_id', 100)->orderBy('id', 'desc')->take(6)->get();
