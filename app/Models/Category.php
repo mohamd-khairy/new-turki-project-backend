@@ -74,7 +74,7 @@ class Category extends Model
 
     public function getBannerUrlAttribute()
     {
-        return config('app.url') . Storage::url($this->banner);
+        return config('app.url') . Storage::url($this->image);
     }
 
     public function getThumbnailUrlAttribute()
