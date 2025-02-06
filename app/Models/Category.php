@@ -50,6 +50,7 @@ class Category extends Model
 
             $validatedData['image'] = 'category_images/img_' . $extension;
             $validatedData['thumbnail'] = 'category_images/thumb_' . $extension;
+            $validatedData['banner'] =   'category_images/thumb_' . $extension;
 
             return $validatedData;
         }
