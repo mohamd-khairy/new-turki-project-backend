@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Customer;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\FirebaseService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class NotificationSend extends Command
 {
@@ -24,49 +26,47 @@ class NotificationSend extends Command
     protected $description = 'send notification to user devices';
 
     /**
-     * Summary of firebase
-     * @var
-     */
-    protected $firebase;
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct(FirebaseService $firebase)
-    {
-        $this->firebase = $firebase;
-    }
-
-    /**
      * Execute the console command.
      *
      * @return int
      */
     public function handle()
     {
-        $notifications = Notification::where('scheduled_at', '<=', now())
+        $notifications = DB::table('notifications')
+            ->select(
+                'notifications.id',
+                'notifications.title',
+                'notifications.body',
+                'notifications.data',
+                'notifications.customer_id',
+                'customers.device_token'
+            )
+            ->join('customers', 'customers.id', '=', 'notifications.customer_id')
+            ->where('scheduled_at', '<=', now())
             ->whereNull('sent_at')
-            ->whereNotNull('user_id')
+            ->whereNotNull('customer_id')
+            ->whereNotNull('device_token')
             ->get();
 
-        foreach ($notifications as $notification) {
-            $user = User::find($notification->user_id);
+        $firebase = new FirebaseService();
 
-            if ($user && $user->device_token) {
+        if ($notifications->count() > 0) {
+            foreach ($notifications as $notification) {
                 try {
-                    $this->firebase->sendNotification(
-                        $user->device_token,
+                    $firebase->sendNotification(
+                        $notification->device_token,
                         $notification->title,
                         $notification->body,
                         $notification->data
                     );
 
                     // Mark the notification as sent
-                    $notification->update(['sent_at' => now()]);
+                    Notification::where('id', $notification->id)->update(['sent_at' => now()]);
+
+                    info('filter_notification');
+                    info(json_encode($notification));
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    // throw $th;
                 }
             }
         }

@@ -83,7 +83,7 @@ class CustomerController extends Controller
             'name' => 'required',
             'email' => 'nullable|unique:customers,email',
             'mobile' => 'required|unique:customers,mobile',
-            'foodics_integrate_id' => 'nullable',
+            'device_token' => 'nullable',
         ]);
 
         $data = $request->except('avatar');
@@ -109,8 +109,8 @@ class CustomerController extends Controller
             'name' => 'required',
             'email' => 'nullable', //|unique:customers,email,' . $customer->id,
             'mobile' => 'required|unique:customers,mobile,' . $customer->id,
-            'foodics_integrate_id' => 'nullable',
-            'wallet' => 'nullable|numeric|min:1'
+            'device_token' => 'nullable',
+            'wallet' => 'nullable|numeric'
         ]);
 
         $data = $request->except('avatar');

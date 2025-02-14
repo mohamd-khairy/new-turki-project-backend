@@ -2,6 +2,7 @@
 
 use App\Models\Cashback;
 use App\Models\Discount;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderState;

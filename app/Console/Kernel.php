@@ -26,6 +26,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('expired:wallet')->daily();
+        $schedule->command('notification:send')->everyMinute();
+        $schedule->command('cart-notification:send')->everyMinute();
+        $schedule->command('new-customer-notification:send')->everyMinute();
+        $schedule->command('old-customer-notification:send')->daily();
     }
 
     /**

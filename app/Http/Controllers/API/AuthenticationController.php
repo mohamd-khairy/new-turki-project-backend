@@ -85,6 +85,7 @@ class AuthenticationController extends Controller
         $validated = $request->validate([
             'mobile' => 'required',
             'mobile_verification_code' => 'required',
+            'device_token' => 'nullable'
         ]);
 
         $customerOtpLog = CustomerOtpLog::where('mobile', $validated['mobile'])->get()->last();
@@ -110,16 +111,27 @@ class AuthenticationController extends Controller
 
             CustomerOtpLog::where('mobile', $validated['mobile'])->delete();
 
+            if (request('device_token')) {
+                $customer->device_token = request('device_token');
+                $customer->save();
+            }
+
             return response()->json([
                 'message' => 'Customer retrieved successfully',
-                'data' => $customer, 'description' => '', 'code' => '200', 'success' => true
+                'data' => $customer,
+                'description' => '',
+                'code' => '200',
+                'success' => true
             ], 200);
         } else if ($customerOtpLog != null) {
 
             if ($validated['mobile'] == '+966561051956' || $validated['mobile'] == '+966507452527' || $validated['mobile'] == '+966571436900') {
                 return response()->json([
                     'message' => 'code mismatch!, please try again.',
-                    'data' => null, 'description' => 'dev mode, your code is: ' . $customerOtpLog->mobile_verification_code, 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => 'dev mode, your code is: ' . $customerOtpLog->mobile_verification_code,
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
 
@@ -149,7 +161,10 @@ class AuthenticationController extends Controller
 
                 return response()->json([
                     'message' => 'code mismatch!, please try again.',
-                    'data' => null, 'description' => 'no_attempts: ' .  $customerOtpLog->no_attempts, 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => 'no_attempts: ' .  $customerOtpLog->no_attempts,
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
 
@@ -159,14 +174,20 @@ class AuthenticationController extends Controller
 
                 return response()->json([
                     'message' => 'your account is active now, get new code!',
-                    'data' => null, 'description' => '', 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => '',
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
         }
 
         return response()->json([
             'message' => 'get code first!',
-            'data' => null, 'description' => '', 'code' => '400', 'success' => false
+            'data' => null,
+            'description' => '',
+            'code' => '400',
+            'success' => false
         ], 400);
     }
 
@@ -175,6 +196,7 @@ class AuthenticationController extends Controller
         $validated = $request->validate([
             'mobile' => 'required',
             'mobile_verification_code' => 'required',
+            'device_token' => 'nullable'
         ]);
 
         $customerOtpLog = CustomerOtpLog::where('mobile', $validated['mobile'])->get()->last();
@@ -202,16 +224,27 @@ class AuthenticationController extends Controller
 
             CustomerOtpLog::where('mobile', $validated['mobile'])->delete();
 
+            if (request('device_token')) {
+                $customer->device_token = request('device_token');
+                $customer->save();
+            }
+
             return response()->json([
                 'message' => 'Customer retrieved successfully',
-                'data' => $customer, 'description' => '', 'code' => '200', 'success' => true
+                'data' => $customer,
+                'description' => '',
+                'code' => '200',
+                'success' => true
             ], 200);
         } else if ($customerOtpLog != null) {
 
             if ($validated['mobile'] == '+966561051956' || $validated['mobile'] == '+966507452527' || $validated['mobile'] == '+966571436900') {
                 return response()->json([
                     'message' => 'code mismatch!, please try again.',
-                    'data' => null, 'description' => 'dev mode, your code is: ' . $customerOtpLog->mobile_verification_code, 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => 'dev mode, your code is: ' . $customerOtpLog->mobile_verification_code,
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
 
@@ -241,7 +274,10 @@ class AuthenticationController extends Controller
 
                 return response()->json([
                     'message' => 'code mismatch!, please try again.',
-                    'data' => null, 'description' => 'no_attempts: ' .  $customerOtpLog->no_attempts, 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => 'no_attempts: ' .  $customerOtpLog->no_attempts,
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
 
@@ -251,14 +287,20 @@ class AuthenticationController extends Controller
 
                 return response()->json([
                     'message' => 'your account is active now, get new code!',
-                    'data' => null, 'description' => '', 'code' => '400', 'success' => false
+                    'data' => null,
+                    'description' => '',
+                    'code' => '400',
+                    'success' => false
                 ], 400);
             }
         }
 
         return response()->json([
             'message' => 'get code first!',
-            'data' => null, 'description' => '', 'code' => '400', 'success' => false
+            'data' => null,
+            'description' => '',
+            'code' => '400',
+            'success' => false
         ], 400);
     }
 
@@ -282,7 +324,7 @@ class AuthenticationController extends Controller
         //     else{
         $digits = 4;
         // $otpCode = str_pad(rand(0, pow(10, $digits) - 1), $digits, '0', STR_PAD_LEFT);
-        $otpCode = rand(1000 , 9999);
+        $otpCode = rand(1000, 9999);
 
         $phone_number = $customerData['mobile'];
 
@@ -393,11 +435,15 @@ class AuthenticationController extends Controller
         if (auth()->user()->token()->revoke()) {
             return response()->json([
                 'message' => 'success',
-                'data' => null, 'description' => '', 'code' => '200', 'success' => true
+                'data' => null,
+                'description' => '',
+                'code' => '200',
+                'success' => true
             ], 200);
         }
         return response()->json([
-            'message' => __('templates.httpCode.401'), 'description' => ''
+            'message' => __('templates.httpCode.401'),
+            'description' => ''
         ], 401);
     }
 
@@ -498,8 +544,11 @@ class AuthenticationController extends Controller
         $address = Address::where('customer_id', auth()->user()->id)->get();
 
         return response()->json([
-            'success' => true, 'data' => $address,
-            'message' => 'Address retrieved successfully', 'description' => 'list Of Products', 'code' => '200'
+            'success' => true,
+            'data' => $address,
+            'message' => 'Address retrieved successfully',
+            'description' => 'list Of Products',
+            'code' => '200'
         ], 200);
     }
 
@@ -523,7 +572,10 @@ class AuthenticationController extends Controller
         if ($country === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'country not found, contact support!', 'code' => '400'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'country not found, contact support!',
+                'code' => '400'
             ], 400);
 
 
@@ -532,7 +584,10 @@ class AuthenticationController extends Controller
         if ($currentCity === null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'city not found!', 'code' => '400'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'city not found!',
+                'code' => '400'
             ], 400);
 
         //  dd($validateData['country_iso_code']);
@@ -566,7 +621,10 @@ class AuthenticationController extends Controller
         if ($request->post() == null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'no data found!', 'code' => '400'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'no data found!',
+                'code' => '400'
             ], 400);
 
         $address = Address::find($address);
@@ -574,7 +632,10 @@ class AuthenticationController extends Controller
         if ($address == null)
             return response()->json([
                 'data' => [],
-                'success' => false, 'message' => 'failed', 'description' => 'address not found!', 'code' => '400'
+                'success' => false,
+                'message' => 'failed',
+                'description' => 'address not found!',
+                'code' => '400'
             ], 400);
 
         $validateData = $request->validate([
@@ -595,7 +656,10 @@ class AuthenticationController extends Controller
             if ($country === null)
                 return response()->json([
                     'data' => [],
-                    'success' => false, 'failed' => 'success', 'description' => 'country not found, contact support!', 'code' => '400'
+                    'success' => false,
+                    'failed' => 'success',
+                    'description' => 'country not found, contact support!',
+                    'code' => '400'
                 ], 400);
 
 
@@ -604,7 +668,10 @@ class AuthenticationController extends Controller
             if ($currentCity === null)
                 return response()->json([
                     'data' => [],
-                    'success' => false, 'failed' => 'success', 'description' => 'city not found!', 'code' => '400'
+                    'success' => false,
+                    'failed' => 'success',
+                    'description' => 'city not found!',
+                    'code' => '400'
                 ], 400);
 
             unset($validateData['country_iso_code']);
@@ -741,12 +808,18 @@ class AuthenticationController extends Controller
             $order->update(['order_state_id' => 200]);
             return response()->json([
                 'message' => 'verified success.',
-                'data' => null, 'description' => '', 'code' => '200', 'success' => true
+                'data' => null,
+                'description' => '',
+                'code' => '200',
+                'success' => true
             ], 200);
         } else {
             return response()->json([
                 'message' => 'wrong otp/not exists!',
-                'data' => null, 'description' => '', 'code' => '400', 'success' => false
+                'data' => null,
+                'description' => '',
+                'code' => '400',
+                'success' => false
             ], 400);
         }
     }

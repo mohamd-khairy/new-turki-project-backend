@@ -29,6 +29,7 @@ use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\Store\BankController;
 use App\Http\Controllers\API\CityDayController;
 use App\Http\Controllers\API\CityDeliveryPeriodController;
+use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\Store\InvoiceController;
 use App\Http\Controllers\API\Store\MoneySafeController;
 use App\Http\Controllers\API\Store\StockController;
@@ -78,12 +79,18 @@ Route::prefix("v2")->group(function () {
 
         Route::apiResource('cashier-moneys', CashierMoneyController::class);
 
+        /************************************* notifications routes ******************************************************** */
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::get('notification', [NotificationController::class, 'show']);
+        Route::delete('notification/{id}', [NotificationController::class, 'destroy']);
+        Route::post('update-notifications', [NotificationController::class, 'updateStaticNotification']);
+        Route::post('direct-notifications', [NotificationController::class, 'sendDirectNotification']);
+
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);
         Route::get('active-branches', [BranchController::class, 'activeBranches']);
         Route::post('update-branch-status/{branch}', [BranchController::class, 'updateStatus']);
 
-        Route::post('print', [PrinterController::class, 'print']);
         Route::get('stock-logs', [StockController::class, 'stockLogs']);
     });
 

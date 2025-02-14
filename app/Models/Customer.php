@@ -41,6 +41,7 @@ class Customer extends Authenticatable
         'deleted_at',
         'loyalty_points',
         'foodics_integrate_id',
+        'device_token',
     ];
 
     protected $hidden = [

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateNotificationsTable extends Migration
+class CreateStaticNotificationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,14 @@ class CreateNotificationsTable extends Migration
      */
     public function up()
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('static_notifications', function (Blueprint $table) {
             $table->id();
+            $table->string('type')->nullable();
             $table->string('title')->nullable();
             $table->text('body')->nullable();
             $table->text('data')->nullable();
-            $table->dateTime('scheduled_at')->nullable();
-            $table->dateTime('sent_at')->nullable();
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->string('config')->nullable();
+            $table->boolean('is_active')->default(1);
             $table->timestamps();
         });
     }
@@ -32,6 +32,6 @@ class CreateNotificationsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('static_notifications');
     }
 }

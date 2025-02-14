@@ -34,13 +34,20 @@ Route::group(
 );
 
 Route::get('/', function () {
-    // Artisan::call('migrate');
+    Artisan::call('migrate');
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
     dd(PHP_VERSION, 'here');
     return view('welcome');
+
+
+    // Artisan::call('notification:send');
+    // Artisan::call('cart-notification:send');
+    // Artisan::call('new-customer-notification:send');
+    // Artisan::call('old-customer-notification:send');
+
 
     // $f = new FirebaseService();
     // $token = 'fB8uIgdmBUFTrlje45faPW:APA91bFtyf2b7KKaUls4bM-rvWnWhQ6x0q3HACla1N4c_FmWgLBYAwcqYx2zJwTVYiKAs-BU7k981WuDIzwW8rObaogPz2NqNzMkICbMNl7gA7HRd4OxgBI';
