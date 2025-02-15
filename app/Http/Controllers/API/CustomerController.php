@@ -71,7 +71,7 @@ class CustomerController extends Controller
             $customers = $customers->where('mobile_country_code','!=', '+966');
         }
 
-        $customers = request('per_page') == -1 ? $customers->get() : $customers->paginate($perPage);
+        $customers = request('per_page') == -1 || request('pageSize') == -1 ? $customers->get() : $customers->paginate($perPage);
 
 
         return successResponse($customers);
