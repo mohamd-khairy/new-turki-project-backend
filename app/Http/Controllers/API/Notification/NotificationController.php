@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Notification;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Cart;
+use App\Models\Customer;
 use App\Models\Notification;
 use App\Models\StaticNotification;
 use Illuminate\Http\Request;
@@ -190,6 +191,19 @@ class NotificationController extends Controller
         $data = 'custom';
 
         $this->saveNotification($userIds, $title, $body, $request->scheduled_at, $data);
+
+        return successResponse(['done']);
+    }
+
+    public function updateDeviceToken(Request $request)
+    {
+        $request->validate([
+            'device_token' => 'required|string',
+        ]);
+
+        Customer::where('id', $request->customer_id)->update([
+            'device_token' => $request->device_token,
+        ]);
 
         return successResponse(['done']);
     }

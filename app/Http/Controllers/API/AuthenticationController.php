@@ -85,7 +85,6 @@ class AuthenticationController extends Controller
         $validated = $request->validate([
             'mobile' => 'required',
             'mobile_verification_code' => 'required',
-            'device_token' => 'nullable'
         ]);
 
         $customerOtpLog = CustomerOtpLog::where('mobile', $validated['mobile'])->get()->last();
@@ -110,11 +109,6 @@ class AuthenticationController extends Controller
             $customer->access_token = $accessToken->plainTextToken;
 
             CustomerOtpLog::where('mobile', $validated['mobile'])->delete();
-
-            if (request('device_token')) {
-                $customer->device_token = request('device_token');
-                $customer->save();
-            }
 
             return response()->json([
                 'message' => 'Customer retrieved successfully',
@@ -196,7 +190,6 @@ class AuthenticationController extends Controller
         $validated = $request->validate([
             'mobile' => 'required',
             'mobile_verification_code' => 'required',
-            'device_token' => 'nullable'
         ]);
 
         $customerOtpLog = CustomerOtpLog::where('mobile', $validated['mobile'])->get()->last();
@@ -223,11 +216,6 @@ class AuthenticationController extends Controller
             $customer->access_token = $accessToken->plainTextToken;
 
             CustomerOtpLog::where('mobile', $validated['mobile'])->delete();
-
-            if (request('device_token')) {
-                $customer->device_token = request('device_token');
-                $customer->save();
-            }
 
             return response()->json([
                 'message' => 'Customer retrieved successfully',

@@ -85,6 +85,7 @@ Route::prefix("v2")->group(function () {
         Route::delete('notification/{id}', [NotificationController::class, 'destroy']);
         Route::post('update-notifications', [NotificationController::class, 'updateStaticNotification']);
         Route::post('direct-notifications', [NotificationController::class, 'sendDirectNotification']);
+        Route::post('update-device-token/{customer_id}', [NotificationController::class, 'updateDeviceToken']);
 
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);

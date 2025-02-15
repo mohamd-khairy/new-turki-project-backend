@@ -30,13 +30,24 @@ class FirebaseService
 
     public function sendNotification($deviceToken, $title, $body, $data = [])
     {
-        // $notification = Notification::create($title, $body);
         $message = CloudMessage::withTarget('token', $deviceToken)
             ->withNotification([
                 'title' => $title,
                 'body' => $body,
             ])
-            ->withData($data);
+            ->withData($data)
+            ->withAndroidConfig([
+                'notification' => [
+                    'sound' => 'default', // Sound for Android
+                ],
+            ])
+            ->withApnsConfig([
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default', // Sound for iOS
+                    ],
+                ],
+            ]);
 
         return $this->messaging->send($message);
     }
