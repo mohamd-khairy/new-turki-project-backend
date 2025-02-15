@@ -214,6 +214,7 @@ class NotificationController extends Controller
             Notification::updateOrCreate([
                 'customer_id' => $userId,
                 'data' =>  $data,
+                'send_at' => null
             ], [
                 'title' => $title,
                 'body' => $body,
