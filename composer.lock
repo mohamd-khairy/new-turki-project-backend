@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "04e97b2b4a7105b93fd25969cbb8ebc6",
+    "content-hash": "6fd3cee5346def2299c690f65a0f27f6",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1206,135 +1206,6 @@
             "time": "2022-02-23T14:25:13+00:00"
         },
         {
-            "name": "giggsey/libphonenumber-for-php",
-            "version": "8.13.46",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/giggsey/libphonenumber-for-php.git",
-                "reference": "b75c463fce43a61cc206ea18cd5f2cc3ed5e6555"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php/zipball/b75c463fce43a61cc206ea18cd5f2cc3ed5e6555",
-                "reference": "b75c463fce43a61cc206ea18cd5f2cc3ed5e6555",
-                "shasum": ""
-            },
-            "require": {
-                "giggsey/locale": "^1.7|^2.0",
-                "php": ">=5.3.2",
-                "symfony/polyfill-mbstring": "^1.17"
-            },
-            "replace": {
-                "giggsey/libphonenumber-for-php-lite": "self.version"
-            },
-            "require-dev": {
-                "pear/pear-core-minimal": "^1.9",
-                "pear/pear_exception": "^1.0",
-                "pear/versioncontrol_git": "^0.5",
-                "phing/phing": "^2.7",
-                "php-coveralls/php-coveralls": "^1.0|^2.0",
-                "symfony/console": "^2.8|^3.0|^v4.4|^v5.2",
-                "symfony/phpunit-bridge": "^4.2 || ^5"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "8.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "libphonenumber\\": "src/"
-                },
-                "exclude-from-classmap": [
-                    "/src/data/",
-                    "/src/carrier/data/",
-                    "/src/geocoding/data/",
-                    "/src/timezone/data/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Joshua Gigg",
-                    "email": "giggsey@gmail.com",
-                    "homepage": "https://giggsey.com/"
-                }
-            ],
-            "description": "PHP Port of Google's libphonenumber",
-            "homepage": "https://github.com/giggsey/libphonenumber-for-php",
-            "keywords": [
-                "geocoding",
-                "geolocation",
-                "libphonenumber",
-                "mobile",
-                "phonenumber",
-                "validation"
-            ],
-            "support": {
-                "issues": "https://github.com/giggsey/libphonenumber-for-php/issues",
-                "source": "https://github.com/giggsey/libphonenumber-for-php"
-            },
-            "time": "2024-09-25T08:54:14+00:00"
-        },
-        {
-            "name": "giggsey/locale",
-            "version": "2.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/giggsey/Locale.git",
-                "reference": "37874fa473131247c348059fb7b8985efc18b5ea"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/giggsey/Locale/zipball/37874fa473131247c348059fb7b8985efc18b5ea",
-                "reference": "37874fa473131247c348059fb7b8985efc18b5ea",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2"
-            },
-            "require-dev": {
-                "ext-json": "*",
-                "pear/pear-core-minimal": "^1.9",
-                "pear/pear_exception": "^1.0",
-                "pear/versioncontrol_git": "^0.5",
-                "phing/phing": "^2.7",
-                "php-coveralls/php-coveralls": "^2.0",
-                "phpunit/phpunit": "^8.5|^9.5",
-                "symfony/console": "^5.0|^6.0",
-                "symfony/filesystem": "^5.0|^6.0",
-                "symfony/finder": "^5.0|^6.0",
-                "symfony/process": "^5.0|^6.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Giggsey\\Locale\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Joshua Gigg",
-                    "email": "giggsey@gmail.com",
-                    "homepage": "https://giggsey.com/"
-                }
-            ],
-            "description": "Locale functions required by libphonenumber-for-php",
-            "support": {
-                "issues": "https://github.com/giggsey/Locale/issues",
-                "source": "https://github.com/giggsey/Locale/tree/2.6"
-            },
-            "time": "2024-04-18T19:31:19+00:00"
-        },
-        {
             "name": "google/apiclient",
             "version": "v2.14.0",
             "source": {
@@ -1508,38 +1379,36 @@
         },
         {
             "name": "google/cloud-core",
-            "version": "v1.49.4",
+            "version": "v1.42.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-cloud-php-core.git",
-                "reference": "6723a3fde6cc7a307a21ddbf7fce9cf6fab61833"
+                "reference": "f3fff3ca4af92c87eb824e5c98aaf003523204a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-cloud-php-core/zipball/6723a3fde6cc7a307a21ddbf7fce9cf6fab61833",
-                "reference": "6723a3fde6cc7a307a21ddbf7fce9cf6fab61833",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-core/zipball/f3fff3ca4af92c87eb824e5c98aaf003523204a2",
+                "reference": "f3fff3ca4af92c87eb824e5c98aaf003523204a2",
                 "shasum": ""
             },
             "require": {
-                "google/auth": "^1.18",
-                "guzzlehttp/guzzle": "^5.3|^6.5.7|^7.4.4",
+                "google/auth": "^1.12",
+                "guzzlehttp/guzzle": "^5.3|^6.0|^7.0",
                 "guzzlehttp/promises": "^1.3",
-                "guzzlehttp/psr7": "^1.7|^2.0",
-                "monolog/monolog": "^1.1|^2.0|^3.0",
-                "php": ">=5.6",
-                "psr/http-message": "^1.0",
+                "guzzlehttp/psr7": "^1.2",
+                "monolog/monolog": "^1.1|^2.0",
+                "php": ">=5.5",
+                "psr/http-message": "1.0.*",
                 "rize/uri-template": "~0.3"
             },
             "require-dev": {
                 "erusev/parsedown": "^1.6",
-                "google/cloud-common-protos": "^0.3",
-                "google/gax": "^1.9",
+                "google/common-protos": "^1.0",
+                "google/gax": "^1.1",
                 "opis/closure": "^3",
-                "phpdocumentor/reflection": "^3.0||^4.0||^5.3",
-                "phpspec/prophecy": "^1.10.3",
-                "phpunit/phpunit": "^4.8|^5.0|^8.0",
-                "squizlabs/php_codesniffer": "2.*",
-                "yoast/phpunit-polyfills": "^1.0"
+                "phpdocumentor/reflection": "^3.0",
+                "phpunit/phpunit": "^4.8|^5.0",
+                "squizlabs/php_codesniffer": "2.*"
             },
             "suggest": {
                 "opis/closure": "May be used to serialize closures to process jobs in the batch daemon. Please require version ^3.",
@@ -1568,37 +1437,35 @@
             ],
             "description": "Google Cloud PHP shared dependency, providing functionality useful to all components.",
             "support": {
-                "source": "https://github.com/googleapis/google-cloud-php-core/tree/v1.49.4"
+                "source": "https://github.com/googleapis/google-cloud-php-core/tree/v1.42.2"
             },
-            "time": "2023-04-07T21:48:59+00:00"
+            "time": "2021-06-30T16:21:40+00:00"
         },
         {
             "name": "google/cloud-storage",
-            "version": "v1.30.2",
+            "version": "v1.24.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-cloud-php-storage.git",
-                "reference": "b7f74ec1b701d56945cbc6c20345e2d21b1b3545"
+                "reference": "440e195a11dbb9a6a98818dc78ba09857fbf7ebd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-cloud-php-storage/zipball/b7f74ec1b701d56945cbc6c20345e2d21b1b3545",
-                "reference": "b7f74ec1b701d56945cbc6c20345e2d21b1b3545",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-storage/zipball/440e195a11dbb9a6a98818dc78ba09857fbf7ebd",
+                "reference": "440e195a11dbb9a6a98818dc78ba09857fbf7ebd",
                 "shasum": ""
             },
             "require": {
-                "google/cloud-core": "^1.43",
+                "google/cloud-core": "^1.39",
                 "google/crc32": "^0.1.0"
             },
             "require-dev": {
                 "erusev/parsedown": "^1.6",
                 "google/cloud-pubsub": "^1.0",
-                "phpdocumentor/reflection": "^3.0||^4.0",
-                "phpseclib/phpseclib": "^2.0||^3.0",
-                "phpspec/prophecy": "^1.10.3",
-                "phpunit/phpunit": "^4.8|^5.0|^8.0",
-                "squizlabs/php_codesniffer": "2.*",
-                "yoast/phpunit-polyfills": "^1.0"
+                "phpdocumentor/reflection": "^3.0",
+                "phpseclib/phpseclib": "^2",
+                "phpunit/phpunit": "^4.8|^5.0",
+                "squizlabs/php_codesniffer": "2.*"
             },
             "suggest": {
                 "google/cloud-pubsub": "May be used to register a topic to receive bucket notifications.",
@@ -1624,9 +1491,9 @@
             ],
             "description": "Cloud Storage Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/google-cloud-php-storage/tree/v1.30.2"
+                "source": "https://github.com/googleapis/google-cloud-php-storage/tree/v1.24.1"
             },
-            "time": "2023-01-27T18:26:22+00:00"
+            "time": "2021-07-05T20:37:04+00:00"
         },
         {
             "name": "google/crc32",
@@ -1738,22 +1605,22 @@
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "7.9.2",
+            "version": "7.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "d281ed313b989f213357e3be1a179f02196ac99b"
+                "reference": "f4152d9eb85c445fe1f992001d1748e8bec070d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/d281ed313b989f213357e3be1a179f02196ac99b",
-                "reference": "d281ed313b989f213357e3be1a179f02196ac99b",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/f4152d9eb85c445fe1f992001d1748e8bec070d2",
+                "reference": "f4152d9eb85c445fe1f992001d1748e8bec070d2",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "guzzlehttp/promises": "^1.5.3 || ^2.0.3",
-                "guzzlehttp/psr7": "^2.7.0",
+                "guzzlehttp/psr7": "^1.9.1 || ^2.6.3",
                 "php": "^7.2.5 || ^8.0",
                 "psr/http-client": "^1.0",
                 "symfony/deprecation-contracts": "^2.2 || ^3.0"
@@ -1844,7 +1711,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/7.9.2"
+                "source": "https://github.com/guzzle/guzzle/tree/7.8.2"
             },
             "funding": [
                 {
@@ -1860,7 +1727,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-24T11:22:20+00:00"
+            "time": "2024-07-18T11:12:18+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1943,44 +1810,38 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.7.0",
+            "version": "1.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "a70f5c95fb43bc83f07c9c948baa0dc1829bf201"
+                "reference": "e4490cabc77465aaee90b20cfc9a770f8c04be6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/a70f5c95fb43bc83f07c9c948baa0dc1829bf201",
-                "reference": "a70f5c95fb43bc83f07c9c948baa0dc1829bf201",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/e4490cabc77465aaee90b20cfc9a770f8c04be6b",
+                "reference": "e4490cabc77465aaee90b20cfc9a770f8c04be6b",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2.5 || ^8.0",
-                "psr/http-factory": "^1.0",
-                "psr/http-message": "^1.1 || ^2.0",
-                "ralouphie/getallheaders": "^3.0"
+                "php": ">=5.4.0",
+                "psr/http-message": "~1.0",
+                "ralouphie/getallheaders": "^2.0.5 || ^3.0.0"
             },
             "provide": {
-                "psr/http-factory-implementation": "1.0",
                 "psr/http-message-implementation": "1.0"
             },
             "require-dev": {
-                "bamarni/composer-bin-plugin": "^1.8.2",
-                "http-interop/http-factory-tests": "0.9.0",
-                "phpunit/phpunit": "^8.5.39 || ^9.6.20"
+                "ext-zlib": "*",
+                "phpunit/phpunit": "~4.8.36 || ^5.7.27 || ^6.5.14 || ^7.5.20 || ^8.5.8 || ^9.3.10"
             },
             "suggest": {
                 "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
             },
             "type": "library",
-            "extra": {
-                "bamarni-bin": {
-                    "bin-links": true,
-                    "forward-command": false
-                }
-            },
             "autoload": {
+                "files": [
+                    "src/functions_include.php"
+                ],
                 "psr-4": {
                     "GuzzleHttp\\Psr7\\": "src/"
                 }
@@ -2019,11 +1880,6 @@
                     "name": "Tobias Schultze",
                     "email": "webmaster@tubo-world.de",
                     "homepage": "https://github.com/Tobion"
-                },
-                {
-                    "name": "Márk Sági-Kazár",
-                    "email": "mark.sagikazar@gmail.com",
-                    "homepage": "https://sagikazarmark.hu"
                 }
             ],
             "description": "PSR-7 message implementation that also provides common utility methods",
@@ -2039,7 +1895,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.7.0"
+                "source": "https://github.com/guzzle/psr7/tree/1.9.1"
             },
             "funding": [
                 {
@@ -2055,7 +1911,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-18T11:15:46+00:00"
+            "time": "2023-04-17T16:00:37+00:00"
         },
         {
             "name": "intervention/image",
@@ -2255,16 +2111,16 @@
         },
         {
             "name": "kreait/firebase-php",
-            "version": "5.9.0",
+            "version": "5.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kreait/firebase-php.git",
-                "reference": "722ba6fb9f138c81f844e1dc1112ba9a5f9a6d64"
+                "reference": "3e056f77c3499e86bfbf9e5af8776c2fb070453d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kreait/firebase-php/zipball/722ba6fb9f138c81f844e1dc1112ba9a5f9a6d64",
-                "reference": "722ba6fb9f138c81f844e1dc1112ba9a5f9a6d64",
+                "url": "https://api.github.com/repos/kreait/firebase-php/zipball/3e056f77c3499e86bfbf9e5af8776c2fb070453d",
+                "reference": "3e056f77c3499e86bfbf9e5af8776c2fb070453d",
                 "shasum": ""
             },
             "require": {
@@ -2272,16 +2128,16 @@
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "ext-openssl": "*",
-                "giggsey/libphonenumber-for-php": "^8.9",
                 "google/auth": "^1.8",
                 "google/cloud-core": "^1.36",
                 "google/cloud-storage": "^1.14",
                 "guzzlehttp/guzzle": "^6.2.1|^7.0",
+                "guzzlehttp/promises": "^1.4",
+                "guzzlehttp/psr7": "^1.7",
                 "kreait/clock": "^1.0.1",
-                "kreait/firebase-tokens": "^1.10",
-                "lcobucci/jwt": "^3.3.1",
+                "kreait/firebase-tokens": "^1.15.0",
                 "mtdowling/jmespath.php": "^2.3",
-                "php": "^7.2|^8.0",
+                "php": "^7.2|~8.0.0",
                 "psr/cache": "^1.0",
                 "psr/http-message": "^1.0",
                 "psr/log": "^1.1",
@@ -2289,23 +2145,23 @@
                 "riverline/multipart-parser": "^2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.16",
+                "giggsey/libphonenumber-for-php": "^8.9",
                 "google/cloud-firestore": "^1.11",
-                "jangregor/phpstan-prophecy": "^0.6.2",
                 "phpstan/extension-installer": "^1.0",
-                "phpstan/phpstan": "^0.12.15",
+                "phpstan/phpstan": "^0.12.53",
                 "phpstan/phpstan-phpunit": "^0.12.6",
                 "phpunit/phpunit": "^8.5",
                 "symfony/var-dumper": "^5.0"
             },
             "suggest": {
+                "giggsey/libphonenumber-for-php": "^8.9 to validate phone numbers before attempting to send them to Firebase",
                 "google/cloud-firestore": "^1.0 to use the Firestore component"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
                     "dev-4.x": "4.x-dev",
-                    "dev-main": "5.x-dev"
+                    "dev-5.x": "5.x-dev"
                 }
             },
             "autoload": {
@@ -2333,6 +2189,7 @@
                 "sdk"
             ],
             "support": {
+                "chat": "https://discord.gg/Yacm7unBsr",
                 "docs": "https://firebase-php.readthedocs.io",
                 "issues": "https://github.com/kreait/firebase-php/issues",
                 "source": "https://github.com/kreait/firebase-php"
@@ -2343,7 +2200,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-04T01:35:09+00:00"
+            "time": "2021-05-08T22:00:31+00:00"
         },
         {
             "name": "kreait/firebase-tokens",
@@ -2421,6 +2278,100 @@
                 }
             ],
             "time": "2021-04-19T00:26:58+00:00"
+        },
+        {
+            "name": "kreait/laravel-firebase",
+            "version": "2.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kreait/laravel-firebase.git",
+                "reference": "6ceb50b05c934e56e12bd70ad9c2a221f54cc4f8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kreait/laravel-firebase/zipball/6ceb50b05c934e56e12bd70ad9c2a221f54cc4f8",
+                "reference": "6ceb50b05c934e56e12bd70ad9c2a221f54cc4f8",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^5.8|^6.0|^7.0|^8.0",
+                "illuminate/support": "^5.8|^6.0|^7.0|^8.0",
+                "kreait/firebase-php": "^5.8.1",
+                "php": "^7.2|^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^3.8.6|^4.8|^5.2|^6.0",
+                "roave/better-reflection": "^3.6|^4.6"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FirebaseAuth": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseAuth",
+                        "FirebaseStorage": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseStorage",
+                        "FirebaseDatabase": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseDatabase",
+                        "FirebaseFirestore": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseFirestore",
+                        "FirebaseMessaging": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseMessaging",
+                        "FirebaseDynamicLinks": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseDynamicLinks",
+                        "FirebaseRemoteConfig": "Kreait\\Laravel\\Firebase\\Facades\\FirebaseRemoteConfig"
+                    },
+                    "providers": [
+                        "Kreait\\Laravel\\Firebase\\ServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Kreait\\Laravel\\Firebase\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jérôme Gamez",
+                    "email": "jerome@gamez.name"
+                }
+            ],
+            "description": "A Laravel package for the Firebase PHP Admin SDK",
+            "keywords": [
+                "FCM",
+                "firebase",
+                "gcm",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/kreait/laravel-firebase/issues",
+                "source": "https://github.com/kreait/laravel-firebase/tree/2.4.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/jeromegamez",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://www.paypal.me/jeromegamez",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/jeromegamez",
+                    "type": "github"
+                },
+                {
+                    "url": "https://ko-fi.com/jeromegamez",
+                    "type": "ko_fi"
+                },
+                {
+                    "url": "https://www.patreon.com/jeromegamez",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2020-10-04T12:17:51+00:00"
         },
         {
             "name": "laravel/framework",
@@ -4109,81 +4060,26 @@
             "time": "2023-09-23T14:17:50+00:00"
         },
         {
-            "name": "psr/http-factory",
-            "version": "1.1.0",
+            "name": "psr/http-message",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/php-fig/http-factory.git",
-                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a"
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
-                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1",
-                "psr/http-message": "^1.0 || ^2.0"
+                "php": ">=5.3.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
                     "dev-master": "1.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Http\\Message\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
-                }
-            ],
-            "description": "PSR-17: Common interfaces for PSR-7 HTTP message factories",
-            "keywords": [
-                "factory",
-                "http",
-                "message",
-                "psr",
-                "psr-17",
-                "psr-7",
-                "request",
-                "response"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/http-factory"
-            },
-            "time": "2024-04-15T12:06:14+00:00"
-        },
-        {
-            "name": "psr/http-message",
-            "version": "1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/http-message.git",
-                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
-                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2 || ^8.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.1.x-dev"
                 }
             },
             "autoload": {
@@ -4212,9 +4108,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/1.1"
+                "source": "https://github.com/php-fig/http-message/tree/master"
             },
-            "time": "2023-04-04T09:50:52+00:00"
+            "time": "2016-08-06T14:39:51+00:00"
         },
         {
             "name": "psr/log",

@@ -5,7 +5,6 @@ namespace App\Services;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
-use Google\Client as GoogleClient;
 use Illuminate\Support\Facades\Http;
 
 class FirebaseService
@@ -30,32 +29,30 @@ class FirebaseService
         $this->messaging = $factory->createMessaging();
     }
 
-    public function sendFcmNotification($deviceToken, $title, $body, $data = [])
-    {
-        $serverKey = 'AAAAg5KibHs:APA91bH3MCxkfFwNzvk46bk4hPPmsQcnRas2549F9K7IxWARe9IC-liRLsTG4PRVprp1MqGdX89YI1YU6KJDXkELxHQH2zq6vJWiUjKm1TmXa1ZTC0o8qnYBkkvLUv2SigpitRsO2eL9'; // Replace with your Firebase Server Key
+    // public function sendFcmNotification($deviceToken, $title, $body, $data = [])
+    // {
+    //     $serverKey = 'AAAAg5KibHs:APA91bH3MCxkfFwNzvk46bk4hPPmsQcnRas2549F9K7IxWARe9IC-liRLsTG4PRVprp1MqGdX89YI1YU6KJDXkELxHQH2zq6vJWiUjKm1TmXa1ZTC0o8qnYBkkvLUv2SigpitRsO2eL9'; // Replace with your Firebase Server Key
 
-        $url = 'https://fcm.googleapis.com/fcm/send';
+    //     $url = 'https://fcm.googleapis.com/fcm/send';
 
-        $payload = [
-            'to' => $deviceToken, // Device token
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-                'sound' => 'default', // Sound for both Android and iOS
-            ],
-            'data' => [],
-        ];
+    //     $payload = [
+    //         'to' => $deviceToken, // Device token
+    //         'notification' => [
+    //             'title' => $title,
+    //             'body' => $body,
+    //             'sound' => 'default', // Sound for both Android and iOS
+    //         ],
+    //         'data' => [],
+    //     ];
 
-        $response = Http::withHeaders([
-            'Authorization' => 'key=' . $serverKey,
-            'Content-Type' => 'application/json',
-        ])->post($url, $payload);
+    //     $response = Http::withHeaders([
+    //         'Authorization' => 'key=' . $serverKey,
+    //         'Content-Type' => 'application/json',
+    //     ])->post($url, $payload);
 
-        dd($response->json());
-        // return $response->json();
-    }
-
-
+    //     dd($response->json());
+    //     // return $response->json();
+    // }
 
     public function sendNotification($deviceToken, $title, $body, $data = [])
     {
