@@ -35,7 +35,7 @@ class FirebaseService
                 'title' => $title,
                 'body' => $body,
             ])
-            ->withData($data)
+            ->withData(is_array($data) ? $data : [])
             ->withAndroidConfig([
                 'notification' => [
                     'sound' => 'default', // Sound for Android
