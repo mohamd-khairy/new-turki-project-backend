@@ -2,9 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Customer;
 use App\Models\Notification;
-use App\Models\User;
 use App\Services\FirebaseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -67,6 +65,8 @@ class NotificationSend extends Command
                     info(json_encode($notification));
                 } catch (\Throwable $th) {
                     // throw $th;
+                    info('filter_notification');
+                    info($th->getMessage());
                 }
             }
         }
