@@ -34,7 +34,7 @@ class OldCustomersNotificationSend extends Command
         $old_customers = StaticNotification::where('type', 'old_customers')->where('is_active', 1)->first();
         if ($old_customers) {
             $notifications = DB::table('customers')
-                ->select('id', 'created_at', 'device_token')
+                ->select('id', 'created_at', 'device_token', 'name')
                 ->whereNotNull('device_token')
                 ->whereRaw('TIMESTAMPDIFF(DAY, created_at, NOW()) = ?', [$old_customers->config]) // <=
                 ->get();
