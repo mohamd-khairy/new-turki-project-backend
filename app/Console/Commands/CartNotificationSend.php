@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Notification;
 use App\Models\StaticNotification;
+use App\Services\FirebaseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,8 @@ class CartNotificationSend extends Command
 
         $cart_notification = StaticNotification::where('type', 'cart')->where('is_active', 1)->first();
         if ($cart_notification) {
-            $userIds = DB::table('carts as c1')
+            $notifications = DB::table('carts as c1')
+                ->select('c1.customer_id', 'customers.device_token', 'c1.created_at')
                 ->join('customers', 'c1.customer_id', '=', 'customers.id')
                 ->whereNotNull('customers.device_token')
                 ->whereNotNull('c1.created_at')
@@ -46,40 +48,36 @@ class CartNotificationSend extends Command
                 ->whereRaw('TIMESTAMPDIFF(MINUTE, c1.created_at, NOW()) = ?', [$cart_notification->config]) // >=
                 ->orderBy('c1.created_at', 'desc')
                 ->groupBy('c1.customer_id')
-                ->pluck('customers.id', 'c1.created_at')
-                ->toArray();
+                ->get();
 
-            $this->saveNotification(
-                $userIds,
-                $cart_notification->title,
-                $cart_notification->body,
-                $cart_notification->config,
-                $cart_notification->type
-            );
+            $firebase = new FirebaseService();
 
-            info('cart_notification');
-            info(json_encode($userIds));
-        }
+            foreach ($notifications as $notification) {
 
-        return true;
-    }
+                try {
+                    $firebase->sendNotification(
+                        $notification->device_token,
+                        $cart_notification->title,
+                        $cart_notification->body,
+                        $cart_notification->data
+                    );
 
-    public function saveNotification($userIds, $title, $body, $config = 1, $data = null)
-    {
-        foreach ($userIds as $date => $userId) {
 
-            if (!Notification::where([
-                'customer_id' => $userId,
-                'data' => $data,
-                'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
-            ])->exists())
-                Notification::create([
-                    'customer_id' => $userId,
-                    'data' => $data,
-                    'title' => $title,
-                    'body' => $body,
-                    'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
-                ]);
+                    Notification::create([
+                        'customer_id' => $notification->customer_id,
+                        'data' => $cart_notification->data,
+                        'title' => $cart_notification->title,
+                        'body' => $cart_notification->body,
+                        'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $cart_notification->config . ' minute')) : now()->addMinutes(1),
+                    ]);
+
+                    info('cart_notification');
+                    info(json_encode($notification));
+                } catch (\Exception $e) {
+                    info('cart_notification');
+                    info($e->getMessage());
+                }
+            }
         }
 
         return true;

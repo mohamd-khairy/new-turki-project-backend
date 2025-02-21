@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Notification;
 use App\Models\StaticNotification;
+use App\Services\FirebaseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -32,43 +33,39 @@ class OldCustomersNotificationSend extends Command
     {
         $old_customers = StaticNotification::where('type', 'old_customers')->where('is_active', 1)->first();
         if ($old_customers) {
-            $userIds = DB::table('customers')
+            $notifications = DB::table('customers')
+                ->select('id', 'created_at', 'device_token')
                 ->whereNotNull('device_token')
                 ->whereRaw('TIMESTAMPDIFF(DAY, created_at, NOW()) = ?', [$old_customers->config]) // <=
-                ->pluck('id', 'created_at')
-                ->toArray();
+                ->get();
 
-            $this->saveNotification(
-                $userIds,
-                $old_customers->title,
-                $old_customers->body,
-                $old_customers->config,
-                $old_customers->type
-            );
+            $firebase = new FirebaseService();
 
-            info('old_customer_notification');
-            info(json_encode($userIds));
-        }
+            foreach ($notifications as $notification) {
 
-        return true;
-    }
+                try {
+                    $firebase->sendNotification(
+                        $notification->device_token,
+                        $old_customers->title,
+                        $old_customers->body,
+                        $old_customers->data
+                    );
 
-    public function saveNotification($userIds, $title, $body, $config = 1, $data = null)
-    {
-        foreach ($userIds as $date => $userId) {
+                    Notification::create([
+                        'customer_id' => $notification->id,
+                        'data' => $old_customers->data,
+                        'title' => $old_customers->title,
+                        'body' => $old_customers->body,
+                        'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $old_customers->config . ' minute')) : now()->addMinutes(1),
+                    ]);
 
-            if (!Notification::where([
-                'customer_id' => $userId,
-                'data' => $data,
-                'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
-            ])->exists())
-            Notification::create([
-                'customer_id' => $userId,
-                'data' => $data,
-                'title' => $title,
-                'body' => $body,
-                'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
-            ]);
+                    info('old_customer_notification');
+                    info(json_encode($notification));
+                } catch (\Exception $e) {
+                    info('old_customer_notification');
+                    info($e->getMessage());
+                }
+            }
         }
 
         return true;
