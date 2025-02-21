@@ -46,14 +46,14 @@ class CartNotificationSend extends Command
                 ->whereRaw('TIMESTAMPDIFF(MINUTE, c1.created_at, NOW()) = ?', [$cart_notification->config]) // >=
                 ->orderBy('c1.created_at', 'desc')
                 ->groupBy('c1.customer_id')
-                ->pluck('customers.id')
+                ->pluck('customers.id', 'c1.created_at')
                 ->toArray();
 
             $this->saveNotification(
                 $userIds,
                 $cart_notification->title,
                 $cart_notification->body,
-                now()->addMinutes(1),
+                $cart_notification->config,
                 $cart_notification->type
             );
 
@@ -64,9 +64,9 @@ class CartNotificationSend extends Command
         return true;
     }
 
-    public function saveNotification($userIds, $title, $body, $scheduled_at = null, $data = null)
+    public function saveNotification($userIds, $title, $body, $config = 1, $data = null)
     {
-        foreach ($userIds as $userId) {
+        foreach ($userIds as $date => $userId) {
 
             if (!Notification::where([
                 'customer_id' => $userId,
@@ -77,7 +77,7 @@ class CartNotificationSend extends Command
                     'data' => $data,
                     'title' => $title,
                     'body' => $body,
-                    'scheduled_at' => $scheduled_at ?? now()->addMinutes(1),
+                    'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
                 ]);
         }
 

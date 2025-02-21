@@ -45,13 +45,13 @@ class NewCustomersNotificationSend extends Command
             $userIds = DB::table('customers')
                 ->whereNotNull('device_token')
                 ->whereRaw('TIMESTAMPDIFF(MINUTE, created_at, NOW()) = ?', [$new_customers->config]) // <=
-                ->pluck('id')->toArray();
+                ->pluck('id', 'created_at')->toArray();
 
             $this->saveNotification(
                 $userIds,
                 $new_customers->title,
                 $new_customers->body,
-                now()->addMinutes(1),
+                $new_customers->config,
                 $new_customers->type
             );
 
@@ -61,9 +61,9 @@ class NewCustomersNotificationSend extends Command
         return true;
     }
 
-    public function saveNotification($userIds, $title, $body, $scheduled_at = null, $data = null)
+    public function saveNotification($userIds, $title, $body, $config = 1, $data = null)
     {
-        foreach ($userIds as $userId) {
+        foreach ($userIds as $date => $userId) {
 
             if (!Notification::where([
                 'customer_id' => $userId,
@@ -74,7 +74,7 @@ class NewCustomersNotificationSend extends Command
                     'data' => $data,
                     'title' => $title,
                     'body' => $body,
-                    'scheduled_at' => $scheduled_at ?? now()->addMinutes(1),
+                    'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
                 ]);
         }
 
