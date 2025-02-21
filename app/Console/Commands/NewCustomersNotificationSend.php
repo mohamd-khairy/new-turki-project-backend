@@ -44,7 +44,7 @@ class NewCustomersNotificationSend extends Command
         $new_customers = StaticNotification::where('type', 'new_customers')->where('is_active', 1)->first();
         if ($new_customers) {
             $notifications = DB::table('customers')
-                ->select('id', 'created_at', 'device_token' , 'name')
+                ->select('id', 'created_at', 'device_token', 'name')
                 ->whereNotNull('device_token')
                 ->whereRaw('TIMESTAMPDIFF(MINUTE, created_at, NOW()) = ?', [$new_customers->config]) // <=
                 ->get();
@@ -65,8 +65,8 @@ class NewCustomersNotificationSend extends Command
                     Notification::create([
                         'customer_id' => $notification->id,
                         'data' => $new_customers->data,
-                        str_replace('{user_name}', $notification->name, $new_customers->title),
-                        str_replace('{user_name}', $notification->name, $new_customers->body),
+                        'title' => str_replace('{user_name}', $notification->name, $new_customers->title),
+                        'body' => str_replace('{user_name}', $notification->name, $new_customers->body),
                         'sent_at' => now(),
                         'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $new_customers->config . ' minute')) : now()->addMinutes(1),
                     ]);

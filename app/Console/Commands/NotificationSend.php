@@ -37,7 +37,8 @@ class NotificationSend extends Command
                 'notifications.body',
                 'notifications.data',
                 'notifications.customer_id',
-                'customers.device_token'
+                'customers.device_token',
+                'customers.name'
             )
             ->join('customers', 'customers.id', '=', 'notifications.customer_id')
             ->where('scheduled_at', '<=', now())
@@ -53,8 +54,8 @@ class NotificationSend extends Command
                 try {
                     $firebase->sendNotification(
                         $notification->device_token,
-                        $notification->title,
-                        $notification->body,
+                        str_replace('{user_name}', $notification->name, $notification->title),
+                        str_replace('{user_name}', $notification->name, $notification->body),
                         $notification->data
                     );
 
