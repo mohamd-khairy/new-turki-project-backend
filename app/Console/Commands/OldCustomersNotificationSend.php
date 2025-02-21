@@ -46,16 +46,16 @@ class OldCustomersNotificationSend extends Command
                 try {
                     $firebase->sendNotification(
                         $notification->device_token,
-                        $old_customers->title,
-                        $old_customers->body,
+                        str_replace('{user_name}', $notification->name, $old_customers->title),
+                        str_replace('{user_name}', $notification->name, $old_customers->body),
                         $old_customers->data
                     );
 
                     Notification::create([
                         'customer_id' => $notification->id,
                         'data' => $old_customers->data,
-                        'title' => $old_customers->title,
-                        'body' => $old_customers->body,
+                        str_replace('{user_name}', $notification->name, $old_customers->title),
+                        str_replace('{user_name}', $notification->name, $old_customers->body),
                         'sent_at' => now(),
                         'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $old_customers->config . ' minute')) : now()->addMinutes(1),
                     ]);

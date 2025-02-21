@@ -54,18 +54,19 @@ class NewCustomersNotificationSend extends Command
             foreach ($notifications as $notification) {
 
                 try {
+
                     $firebase->sendNotification(
                         $notification->device_token,
-                        $new_customers->title,
-                        $new_customers->body,
+                        str_replace('{user_name}', $notification->name, $new_customers->title),
+                        str_replace('{user_name}', $notification->name, $new_customers->body),
                         $new_customers->data
                     );
 
                     Notification::create([
                         'customer_id' => $notification->id,
                         'data' => $new_customers->data,
-                        'title' => $new_customers->title,
-                        'body' => $new_customers->body,
+                        str_replace('{user_name}', $notification->name, $new_customers->title),
+                        str_replace('{user_name}', $notification->name, $new_customers->body),
                         'sent_at' => now(),
                         'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $new_customers->config . ' minute')) : now()->addMinutes(1),
                     ]);
