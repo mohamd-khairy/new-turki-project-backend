@@ -74,6 +74,8 @@ class CartNotificationSend extends Command
                 'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
             ])->exists())
                 Notification::create([
+                    'customer_id' => $userId,
+                    'data' => $data,
                     'title' => $title,
                     'body' => $body,
                     'scheduled_at' => $date ? date('Y-m-d H:i:s', strtotime($date . '+' . $config . ' minute')) : now()->addMinutes(1),
