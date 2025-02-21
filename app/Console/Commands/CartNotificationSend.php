@@ -68,6 +68,7 @@ class CartNotificationSend extends Command
                         'data' => $cart_notification->data,
                         'title' => $cart_notification->title,
                         'body' => $cart_notification->body,
+                        'sent_at' => now(),
                         'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $cart_notification->config . ' minute')) : now()->addMinutes(1),
                     ]);
 

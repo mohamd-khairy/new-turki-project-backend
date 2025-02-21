@@ -56,6 +56,7 @@ class OldCustomersNotificationSend extends Command
                         'data' => $old_customers->data,
                         'title' => $old_customers->title,
                         'body' => $old_customers->body,
+                        'sent_at' => now(),
                         'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $old_customers->config . ' minute')) : now()->addMinutes(1),
                     ]);
 
