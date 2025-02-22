@@ -529,7 +529,10 @@ class AuthenticationController extends Controller
 
     public function getAddress(Request $request)
     {
-        $address = Address::where('customer_id', auth()->user()->id)->get();
+        $address = Address::where('customer_id', auth()->user()->id)
+        ->latest('created_at')
+        ->take(10)
+        ->get();
 
         return response()->json([
             'success' => true,
