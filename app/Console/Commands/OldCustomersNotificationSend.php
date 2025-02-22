@@ -90,7 +90,7 @@ class OldCustomersNotificationSend extends Command
     private function checkIfCustomerHasNotification($customer, $oldCustomersNotification)
     {
         return Notification::where('customer_id', $customer->id)
-            ->where('data', $oldCustomersNotification->data)
+            ->where('data', $oldCustomersNotification->type)
             ->where(function ($query) {
                 $query->whereDate('sent_at', today()->format('Y-m-d'))
                     ->orWhereDate('scheduled_at', today()->format('Y-m-d'));
