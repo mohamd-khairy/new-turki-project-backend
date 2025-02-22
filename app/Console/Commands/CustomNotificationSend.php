@@ -141,11 +141,16 @@ class CustomNotificationSend extends Command
     {
         $customer_data = [];
         foreach ($countryIds as $countryId) {
-            $prefix = match ($countryId) {
-                1 => '+966',
-                4 => '+971',
-                default => null,
-            };
+            switch ($countryId) {
+                case 1:
+                    $prefix = '+966';
+                    break;
+                case 4:
+                    $prefix = '+971';
+                    break;
+                default:
+                    $prefix = null;
+            }
             if ($prefix) {
                 $customer_data += DB::table('customers')
                     ->whereNotNull('device_token')
