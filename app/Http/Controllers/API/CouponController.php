@@ -157,7 +157,7 @@ class CouponController extends Controller
             'is_by_category' => 'required|boolean',
             'is_by_subcategory' => 'required|boolean',
             'is_by_product' => 'required|boolean',
-            'is_by_size' => 'required|boolean',
+            'is_by_size' => 'nullable|boolean',
             'for_clients_only' => 'required|boolean',
             'is_percent' => 'required|boolean',
             'is_active' => 'required|boolean',
