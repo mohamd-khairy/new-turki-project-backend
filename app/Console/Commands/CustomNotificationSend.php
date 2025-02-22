@@ -42,7 +42,6 @@ class CustomNotificationSend extends Command
     {
         // Fetch active custom notifications that are due to be sent
         $customNotifications = CustomNotification::query()
-            ->where('is_active', 1)
             ->where('scheduled_at', '<=', now())
             ->whereNull('sent_at')
             ->get();
