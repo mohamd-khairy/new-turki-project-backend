@@ -65,7 +65,7 @@ class CartNotificationSend extends Command
     private function fetchEligibleCustomers($cartNotification)
     {
         return DB::table('carts as c1')
-            ->select('c1.customer_id', 'customers.device_token', 'c1.created_at')
+            ->select('c1.customer_id', 'customers.device_token', 'c1.created_at' , 'customers.name')
             ->join('customers', 'c1.customer_id', '=', 'customers.id')
             ->whereNotNull('customers.device_token')
             ->whereNotNull('c1.created_at')
