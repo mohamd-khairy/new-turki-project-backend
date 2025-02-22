@@ -81,7 +81,7 @@ class OldCustomersNotificationSend extends Command
                     ->whereColumn('o2.customer_id', 'customers.id');
             })
             ->whereNotNull('customers.device_token')
-            ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) >= ?', [$oldCustomersNotification->config])
+            ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
             ->orderBy('orders.created_at', 'desc')
             ->get();
     }
