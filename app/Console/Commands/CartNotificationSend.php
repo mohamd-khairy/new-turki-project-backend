@@ -94,8 +94,8 @@ class CartNotificationSend extends Command
             // Send the notification via Firebase
             $firebase->sendNotification(
                 $customer->device_token,
-                $cartNotification->title,
-                $cartNotification->body,
+                str_replace('{user_name}', $customer->name, $cartNotification->title),
+                str_replace('{user_name}', $customer->name, $cartNotification->body),
                 $cartNotification->data
             );
 
@@ -122,8 +122,8 @@ class CartNotificationSend extends Command
         $notification = Notification::create([
             'customer_id' => $customer->customer_id,
             'data' => $cartNotification->data,
-            'title' => $cartNotification->title,
-            'body' => $cartNotification->body,
+            'title' => str_replace('{user_name}', $customer->name, $cartNotification->title),
+            'body' => str_replace('{user_name}', $customer->name, $cartNotification->body),
             'sent_at' => now(),
             'scheduled_at' => $scheduledAt,
         ]);
