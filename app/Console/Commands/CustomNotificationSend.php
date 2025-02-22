@@ -56,10 +56,11 @@ class CustomNotificationSend extends Command
             $this->saveNotification($customer_data, $customNotification);
 
             $customNotification->update(['sent_at' => now()]);
+
+            info('custom_notification');
+            info(json_encode($customNotifications));
         }
 
-        info('custom_notification');
-        info(json_encode($customNotifications));
 
         return true;
     }
