@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CustomNotification;
 use App\Models\Notification;
 use App\Services\FirebaseService;
 use Illuminate\Console\Command;
@@ -40,7 +41,7 @@ class CustomNotificationSend extends Command
      */ public function handle()
     {
         // Fetch active custom notifications that are due to be sent
-        $customNotifications = DB::table('custom_notifications')
+        $customNotifications = CustomNotification::query()
             ->where('is_active', 1)
             ->where('scheduled_at', '<=', now())
             ->whereNull('sent_at')
@@ -53,6 +54,8 @@ class CustomNotificationSend extends Command
 
             // Save and send notifications for the targeted users
             $this->saveNotification($customer_data, $customNotification);
+
+            $customNotification->update(['sent_at' => now()]);
         }
 
         info('custom_notification');
@@ -267,7 +270,8 @@ class CustomNotificationSend extends Command
                     $deviceToken,
                     $customNotification->title,
                     $customNotification->body,
-                    $customNotification->data
+                    $customNotification->data,
+                    $customNotification->image
                 );
 
                 // Prepare notification data for bulk insertion

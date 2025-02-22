@@ -54,24 +54,36 @@ class FirebaseService
     //     // return $response->json();
     // }
 
-    public function sendNotification($deviceToken, $title, $body, $data = [])
+    public function sendNotification($deviceToken, $title, $body, $data = [] , $image = null)
     {
+        $notification = [
+            'title' => $title,
+            'body' => $body,
+        ];
+
+        // Add image to notification if provided
+        if ($image) {
+            $notification['image'] = $image;
+        }
+
         $message = CloudMessage::withTarget('token', $deviceToken)
-            ->withNotification([
-                'title' => $title,
-                'body' => $body,
-            ])
+            ->withNotification($notification)
             ->withData(is_array($data) ? $data : [])
             ->withAndroidConfig([
                 'notification' => [
-                    'sound' => 'cowbell', // Sound for Android
+                    'sound' => 'cowbell',
+                    'image' => $image, // Optional: Add image for Android
                 ],
             ])
             ->withApnsConfig([
                 'payload' => [
                     'aps' => [
-                        'sound' => 'cowbell.caf', // Sound for iOS
+                        'sound' => 'cowbell.caf',
+                        'mutable-content' => 1, // Required for rich notifications on iOS
                     ],
+                ],
+                'fcm_options' => [
+                    'image' => $image, // iOS supports images this way
                 ],
             ]);
 
