@@ -79,13 +79,22 @@ Route::prefix("v2")->group(function () {
 
         Route::apiResource('cashier-moneys', CashierMoneyController::class);
 
-        /************************************* notifications routes ******************************************************** */
-        Route::get('notifications', [NotificationController::class, 'index']);
+        /************************************* static notifications routes ******************************************************** */
         Route::get('notification', [NotificationController::class, 'show']);
         Route::delete('notification/{id}', [NotificationController::class, 'destroy']);
         Route::post('update-notifications', [NotificationController::class, 'updateStaticNotification']);
-        Route::post('direct-notifications', [NotificationController::class, 'sendDirectNotification']);
+
+        /************************************* device token routes ******************************************************** */
         Route::post('update-device-token/{customer_id}', [NotificationController::class, 'updateDeviceToken']);
+        Route::post('delete-device-token/{customer_id}', [NotificationController::class, 'deleteDeviceToken']);
+
+        /************************************* custom notifications routes ******************************************************** */
+        Route::get('custom-notifications', [NotificationController::class, 'allCustomNotifications']);
+        Route::post('create-custom-notification', [NotificationController::class, 'createCustomNotification']);
+        Route::post('update-custom-notification/{id}', [NotificationController::class, 'updateCustomNotification']);
+        Route::delete('delete-custom-notification/{id}', [NotificationController::class, 'deleteCustomNotification']);
+
+        Route::get('notifications', [NotificationController::class, 'index']);
 
         /************************************* branch routes ******************************************************** */
         Route::apiResource('branch', BranchController::class);

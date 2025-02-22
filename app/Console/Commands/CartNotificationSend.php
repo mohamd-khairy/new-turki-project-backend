@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Notification;
 use App\Models\StaticNotification;
 use App\Services\FirebaseService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -31,56 +32,116 @@ class CartNotificationSend extends Command
      */
     public function handle()
     {
+        // Disable strict SQL mode
         DB::statement('SET sql_mode = " "');
 
-        $cart_notification = StaticNotification::where('type', 'cart')->where('is_active', 1)->first();
-        if ($cart_notification) {
-            $notifications = DB::table('carts as c1')
-                ->select('c1.customer_id', 'customers.device_token', 'c1.created_at')
-                ->join('customers', 'c1.customer_id', '=', 'customers.id')
-                ->whereNotNull('customers.device_token')
-                ->whereNotNull('c1.created_at')
-                ->where('c1.created_at', function ($query) {
-                    $query->selectRaw('MAX(c2.created_at)')
-                        ->from('carts as c2')
-                        ->whereColumn('c2.customer_id', 'c1.customer_id');
-                })
-                ->whereRaw('TIMESTAMPDIFF(MINUTE, c1.created_at, NOW()) = ?', [$cart_notification->config]) // >=
-                ->orderBy('c1.created_at', 'desc')
-                ->groupBy('c1.customer_id')
-                ->get();
+        // Fetch the active "cart" notification configuration
+        $cartNotification = StaticNotification::where('type', 'cart')
+            ->where('is_active', 1)
+            ->first();
 
-            $firebase = new FirebaseService();
+        // Exit early if no active configuration is found
+        if (!$cartNotification) {
+            return true;
+        }
 
-            foreach ($notifications as $notification) {
+        // Fetch eligible customers for notifications
+        $customersForNotification = $this->fetchEligibleCustomers($cartNotification);
 
-                try {
-                    $firebase->sendNotification(
-                        $notification->device_token,
-                        $cart_notification->title,
-                        $cart_notification->body,
-                        $cart_notification->data
-                    );
-
-
-                    Notification::create([
-                        'customer_id' => $notification->customer_id,
-                        'data' => $cart_notification->data,
-                        'title' => $cart_notification->title,
-                        'body' => $cart_notification->body,
-                        'sent_at' => now(),
-                        'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $cart_notification->config . ' minute')) : now()->addMinutes(1),
-                    ]);
-
-                    info('cart_notification');
-                    info(json_encode($notification));
-                } catch (\Exception $e) {
-                    info('cart_notification');
-                    info($e->getMessage());
-                }
-            }
+        // Send notifications to eligible customers
+        foreach ($customersForNotification as $customer) {
+            $this->sendNotificationToCustomer($customer, $cartNotification);
         }
 
         return true;
+    }
+
+    /**
+     * Fetch eligible customers for cart notifications based on the configuration.
+     *
+     * @param \App\Models\StaticNotification $cartNotification
+     * @return \Illuminate\Support\Collection
+     */
+    private function fetchEligibleCustomers($cartNotification)
+    {
+        return DB::table('carts as c1')
+            ->select('c1.customer_id', 'customers.device_token', 'c1.created_at')
+            ->join('customers', 'c1.customer_id', '=', 'customers.id')
+            ->whereNotNull('customers.device_token')
+            ->whereNotNull('c1.created_at')
+            ->where('c1.created_at', function ($query) {
+                $query->selectRaw('MAX(c2.created_at)')
+                    ->from('carts as c2')
+                    ->whereColumn('c2.customer_id', 'c1.customer_id');
+            })
+            ->whereRaw('TIMESTAMPDIFF(MINUTE, c1.created_at, NOW()) = ?', [$cartNotification->config])
+            ->orderBy('c1.created_at', 'desc')
+            ->groupBy('c1.customer_id')
+            ->get();
+    }
+
+    /**
+     * Send a notification to a specific customer.
+     *
+     * @param \stdClass $customer
+     * @param \App\Models\StaticNotification $cartNotification
+     */
+    private function sendNotificationToCustomer($customer, $cartNotification)
+    {
+        $firebase = new FirebaseService();
+
+        try {
+            // Send the notification via Firebase
+            $firebase->sendNotification(
+                $customer->device_token,
+                $cartNotification->title,
+                $cartNotification->body,
+                $cartNotification->data
+            );
+
+            // Log successful notification sending
+            $this->logNotificationSuccess($customer, $cartNotification);
+        } catch (\Exception $e) {
+            // Log any errors during notification sending
+            $this->logNotificationError($e);
+        }
+    }
+
+    /**
+     * Log successful notification sending and save the notification record.
+     *
+     * @param \stdClass $customer
+     * @param \App\Models\StaticNotification $cartNotification
+     */
+    private function logNotificationSuccess($customer, $cartNotification)
+    {
+        $scheduledAt = $customer->created_at
+            ? Carbon::parse($customer->created_at)->addMinutes($cartNotification->config)->format('Y-m-d H:i:s')
+            : now()->addMinutes(1);
+
+        $notification = Notification::create([
+            'customer_id' => $customer->customer_id,
+            'data' => $cartNotification->data,
+            'title' => $cartNotification->title,
+            'body' => $cartNotification->body,
+            'sent_at' => now(),
+            'scheduled_at' => $scheduledAt,
+        ]);
+
+        if ($notification) {
+            info('cart_notification');
+            info(json_encode($notification));
+        }
+    }
+
+    /**
+     * Log an error during notification sending.
+     *
+     * @param \Exception $exception
+     */
+    private function logNotificationError($exception)
+    {
+        info('cart_notification_error');
+        info($exception->getMessage());
     }
 }

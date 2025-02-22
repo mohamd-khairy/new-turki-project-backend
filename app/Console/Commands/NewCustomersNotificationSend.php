@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Notification;
 use App\Models\StaticNotification;
 use App\Services\FirebaseService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -41,44 +42,104 @@ class NewCustomersNotificationSend extends Command
      */
     public function handle()
     {
-        $new_customers = StaticNotification::where('type', 'new_customers')->where('is_active', 1)->first();
-        if ($new_customers) {
-            $notifications = DB::table('customers')
-                ->select('id', 'created_at', 'device_token', 'name')
-                ->whereNotNull('device_token')
-                ->whereRaw('TIMESTAMPDIFF(MINUTE, created_at, NOW()) = ?', [$new_customers->config]) // <=
-                ->get();
+        // Fetch the active "new_customers" notification configuration
+        $newCustomersNotification = StaticNotification::where('type', 'new_customers')
+            ->where('is_active', 1)
+            ->first();
 
-            $firebase = new FirebaseService();
-
-            foreach ($notifications as $notification) {
-
-                try {
-
-                    $firebase->sendNotification(
-                        $notification->device_token,
-                        str_replace('{user_name}', $notification->name, $new_customers->title),
-                        str_replace('{user_name}', $notification->name, $new_customers->body),
-                        $new_customers->data
-                    );
-
-                    Notification::create([
-                        'customer_id' => $notification->id,
-                        'data' => $new_customers->data,
-                        'title' => str_replace('{user_name}', $notification->name, $new_customers->title),
-                        'body' => str_replace('{user_name}', $notification->name, $new_customers->body),
-                        'sent_at' => now(),
-                        'scheduled_at' => $notification->created_at ? date('Y-m-d H:i:s', strtotime($notification->created_at . '+' . $new_customers->config . ' minute')) : now()->addMinutes(1),
-                    ]);
-
-                    info('new_customer_notification');
-                    info(json_encode($notification));
-                } catch (\Exception $e) {
-                    info('new_customer_notification');
-                    info($e->getMessage());
-                }
-            }
+        // Exit early if no active configuration is found
+        if (!$newCustomersNotification) {
+            return true;
         }
+
+        // Fetch eligible customers for notifications
+        $customersForNotification = $this->fetchEligibleCustomers($newCustomersNotification);
+
+        // Send notifications to eligible customers
+        foreach ($customersForNotification as $customer) {
+            $this->sendNotificationToCustomer($customer, $newCustomersNotification);
+        }
+
         return true;
+    }
+
+    /**
+     * Fetch eligible customers for notifications based on the configuration.
+     *
+     * @param \App\Models\StaticNotification $newCustomersNotification
+     * @return \Illuminate\Support\Collection
+     */
+    private function fetchEligibleCustomers($newCustomersNotification)
+    {
+        return DB::table('customers')
+            ->select('id', 'created_at', 'device_token', 'name')
+            ->whereNotNull('device_token')
+            ->whereRaw('TIMESTAMPDIFF(MINUTE, created_at, NOW()) = ?', [$newCustomersNotification->config])
+            ->get();
+    }
+
+    /**
+     * Send a notification to a specific customer.
+     *
+     * @param \stdClass $customer
+     * @param \App\Models\StaticNotification $newCustomersNotification
+     */
+    private function sendNotificationToCustomer($customer, $newCustomersNotification)
+    {
+        $firebase = new FirebaseService();
+
+        try {
+            // Send the notification via Firebase
+            $firebase->sendNotification(
+                $customer->device_token,
+                str_replace('{user_name}', $customer->name, $newCustomersNotification->title),
+                str_replace('{user_name}', $customer->name, $newCustomersNotification->body),
+                $newCustomersNotification->data
+            );
+
+            // Log successful notification sending
+            $this->logNotificationSuccess($customer, $newCustomersNotification);
+        } catch (\Exception $e) {
+            // Log any errors during notification sending
+            $this->logNotificationError($e);
+        }
+    }
+
+    /**
+     * Log successful notification sending and save the notification record.
+     *
+     * @param \stdClass $customer
+     * @param \App\Models\StaticNotification $newCustomersNotification
+     */
+    private function logNotificationSuccess($customer, $newCustomersNotification)
+    {
+        $scheduledAt = $customer->created_at
+            ? Carbon::parse($customer->created_at)->addMinutes($newCustomersNotification->config)->format('Y-m-d H:i:s')
+            : now()->addMinutes(1);
+
+        $notification = Notification::create([
+            'customer_id' => $customer->id,
+            'data' => $newCustomersNotification->data,
+            'title' => str_replace('{user_name}', $customer->name, $newCustomersNotification->title),
+            'body' => str_replace('{user_name}', $customer->name, $newCustomersNotification->body),
+            'sent_at' => now(),
+            'scheduled_at' => $scheduledAt,
+        ]);
+
+        if ($notification) {
+            info('new_customer_notification');
+            info(json_encode($notification));
+        }
+    }
+
+    /**
+     * Log an error during notification sending.
+     *
+     * @param \Exception $exception
+     */
+    private function logNotificationError($exception)
+    {
+        info('new_customer_notification_error');
+        info($exception->getMessage());
     }
 }

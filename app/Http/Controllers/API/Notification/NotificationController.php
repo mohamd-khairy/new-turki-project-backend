@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Cart;
 use App\Models\Customer;
+use App\Models\CustomNotification;
 use App\Models\Notification;
 use App\Models\StaticNotification;
 use Illuminate\Http\Request;
@@ -47,8 +48,6 @@ class NotificationController extends Controller
 
     public function updateStaticNotification(Request $request)
     {
-        DB::statement('SET sql_mode = " "');
-
         $request->validate([
             'title' => 'required|string',
             'body' => 'required|string',
@@ -63,17 +62,33 @@ class NotificationController extends Controller
             'title' => $request->title,
             'body' => $request->body,
             'config' => $request->config,
-            'is_active' => $request->is_active,
+            'is_active' => $request->is_active == 1 ? 1 : 0,
         ]);
 
         return successResponse($data);
     }
 
-    public function sendDirectNotification(Request $request)
+    public function allCustomNotifications(Request $request)
+    {
+        $data = CustomNotification::query()
+            ->when(request('start_date'), function ($query) {
+                $query->whereDate('created_at', '>=', request('start_date'));
+            })
+            ->when(request('end_date'), function ($query) {
+                $query->whereDate('created_at', '<=', request('end_date'));
+            })
+            ->latest('id')
+            ->paginate(request('per_page', 10));
+
+        return successResponse($data);
+    }
+
+    public function createCustomNotification(Request $request)
     {
         $validatedData = $request->validate([
             'title' => 'required|string',
             'body' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'scheduled_at' => 'required',
 
             'is_for_all' => 'required|boolean',
@@ -85,114 +100,112 @@ class NotificationController extends Controller
             'is_by_size' => 'required|boolean',
             'for_clients_only' => 'required|boolean',
 
-            'product_ids' => array('array'),
-            'product_ids.*' => array('required_with:product_ids', 'exists:products,id'),
-
-            'size_ids' => array('array'),
-            'size_ids.*' => array('required_with:size_ids', 'exists:sizes,id'),
-
-            'category_parent_ids' => array('array'),
-            'category_parent_ids.*' => array('required_with:category_parent_ids', 'exists:categories,id'),
-
-            'category_child_ids' => array('array'),
-            'category_child_ids.*' => array('required_with:category_child_ids', 'exists:sub_categories,id'),
-
-            'city_ids' => array('array'),
-            'city_ids.*' => array('required_with:city_ids', 'exists:cities,id'),
-
-            'country_ids' => array('array'),
-            'country_ids.*' => array('required_with:country_ids', 'exists:countries,id'),
-
-            'client_ids' => array('array'),
-            'client_ids.*' => array('required_with:client_ids', 'exists:customers,id'),
+            'product_ids' => 'nullable|required_if:is_by_product,1',
+            'size_ids' => 'nullable|required_if:is_by_size,1',
+            'category_parent_ids' => 'nullable|required_if:is_by_category,1',
+            'category_child_ids' => 'nullable|required_if:is_by_subcategory,1',
+            'city_ids' => 'nullable|required_if:is_by_city,1',
+            'country_ids' => 'nullable|required_if:is_by_country,1',
+            'client_ids' => 'nullable|required_if:for_clients_only,1',
         ]);
 
-        $userIds = [];
-        if ($validatedData['is_for_all'] == 1) {
-            $userIds += DB::table('customers')
-                ->whereNotNull('device_token')
-                ->pluck('id')->toArray();
-        } else {
-            if ($validatedData['for_clients_only'] == 1) {
-                $userIds += DB::table('customers')
-                    ->whereNotNull('device_token')
-                    ->whereIn('id', $validatedData['client_ids'])
-                    ->pluck('id')->toArray();
-            }
-            if ($validatedData['is_by_country'] == 1) {
-                if (in_array(1, $validatedData['country_ids'])) {
-                    $userIds += DB::table('customers')
-                        ->whereNotNull('device_token')
-                        ->select(
-                            'id',
-                            DB::raw('LEFT(mobile, 4) as mobile_prefix'),
-                        )->having('mobile_prefix', '=', '+966')->pluck('id')->toArray();
-                }
-                if (in_array(4, $validatedData['country_ids'])) {
-                    $userIds += DB::table('customers')
-                        ->whereNotNull('device_token')
-                        ->select(
-                            'id',
-                            DB::raw('LEFT(mobile, 4) as mobile_prefix'),
-                        )->having('mobile_prefix', '=', '+971')->pluck('id')->toArray();
-                }
-            }
-            if ($validatedData['is_by_city'] == 1) {
-                $userIds += DB::table('orders')
-                    ->join('addresses', 'orders.address_id', '=', 'addresses.id')
-                    ->join('cities', 'addresses.city_id', '=', 'cities.id')
-                    ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                    ->whereIn('cities.id', $validatedData['city_ids'])
-                    ->where('cities.is_active', 1)
-                    ->whereNotNull('customers.device_token')
-                    ->pluck('customers.id')->toArray();
-            }
-            if ($validatedData['is_by_product'] == 1) {
-                $userIds +=  DB::table('order_products')
-                    ->join('orders', 'order_products.order_ref_no', '=', 'orders.ref_no')
-                    ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                    ->whereIn('order_products.product_id', $validatedData['product_ids'])
-                    ->whereNotNull('customers.device_token')
-                    ->pluck('customers.id')->toArray();
-            }
-            if ($validatedData['is_by_size'] == 1) {
-                $userIds +=  DB::table('order_products')
-                    ->join('orders', 'order_products.order_ref_no', '=', 'orders.ref_no')
-                    ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                    ->whereIn('order_products.size_id', $validatedData['size_ids'])
-                    ->whereNotNull('customers.device_token')
-                    ->pluck('customers.id')->toArray();
+
+        $data = CustomNotification::create([
+            'title' => $request->title,
+            'body' => $request->body,
+            'image' => $request->image ?  url('public/storage/' . $request->image->store('custom_notifications', 'public')) : null,
+            'scheduled_at' => $request->scheduled_at,
+            'is_for_all' => $request->is_for_all,
+            'is_by_city' => $request->is_by_city,
+            'is_by_country' => $request->is_by_country,
+            'is_by_category' => $request->is_by_category,
+            'is_by_subcategory' => $request->is_by_subcategory,
+            'is_by_product' => $request->is_by_product,
+            'is_by_size' => $request->is_by_size,
+            'for_clients_only' => $request->for_clients_only,
+            'product_ids' => $request->is_by_product ? (collect(explode(',', $request->product_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'size_ids' => $request->is_by_size ? (collect(explode(',', $request->size_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'category_parent_ids' => $request->is_by_category ? (collect(explode(',', $request->category_parent_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'category_child_ids' => $request->is_by_subcategory ? (collect(explode(',', $request->category_child_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'city_ids' => $request->is_by_city ? (collect(explode(',', $request->city_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'country_ids' => $request->is_by_country ? (collect(explode(',', $request->country_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'client_ids' => $request->for_clients_only ? (collect(explode(',', $request->client_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            'is_active' => $request->is_active == 1 ? 1 : 0,
+        ]);
+
+        return successResponse($data);
+    }
+
+    public function updateCustomNotification(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'title' => 'required|string',
+            'body' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'scheduled_at' => 'required',
+            'is_for_all' => 'required|boolean',
+            'is_by_city' => 'required|boolean',
+            'is_by_country' => 'required|boolean',
+            'is_by_category' => 'required|boolean',
+            'is_by_subcategory' => 'required|boolean',
+            'is_by_product' => 'required|boolean',
+            'is_by_size' => 'required|boolean',
+            'for_clients_only' => 'required|boolean',
+            'product_ids' => 'nullable|required_if:is_by_product,1',
+            'size_ids' => 'nullable|required_if:is_by_size,1',
+            'category_parent_ids' => 'nullable|required_if:is_by_category,1',
+            'category_child_ids' => 'nullable|required_if:is_by_subcategory,1',
+            'city_ids' => 'nullable|required_if:is_by_city,1',
+            'country_ids' => 'nullable|required_if:is_by_country,1',
+            'client_ids' => 'nullable|required_if:for_clients_only,1',
+
+        ]);
+
+        $data = CustomNotification::where('id', $id)->first();
+
+        if ($data) {
+            $image = $data->image;
+            if ($request->image) {
+                if (isset(explode('/public', $data->image)[1]))
+                    unlink('public/' . explode('/public', $data->image)[1]);
+                $image = url('public/storage/' . $request->image->store('custom_notifications', 'public'));
             }
 
-            if ($validatedData['is_by_category'] == 1) {
-                $userIds += DB::table('order_products')
-                    ->join('orders', 'order_products.order_ref_no', '=', 'orders.ref_no')
-                    ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                    ->join('products', 'order_products.product_id', '=', 'products.id')
-                    ->whereIn('products.category_id', $validatedData['category_parent_ids'])
-                    ->whereNotNull('customers.device_token')
-                    ->pluck('customers.id')->toArray();
-            }
-            if ($validatedData['is_by_subcategory'] == 1) {
-                $userIds += DB::table('order_products')
-                    ->join('orders', 'order_products.order_ref_no', '=', 'orders.ref_no')
-                    ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                    ->join('products', 'order_products.product_id', '=', 'products.id')
-                    ->whereIn('products.sub_category_id', $validatedData['category_child_ids'])
-                    ->whereNotNull('customers.device_token')
-                    ->pluck('customers.id')->toArray();
-            }
+            $data->update([
+                'title' => $request->title ?? $data->title,
+                'body' => $request->body ?? $data->body,
+                'image' => $image,
+                'scheduled_at' => $request->scheduled_at ?? $data->scheduled_at,
+                'is_for_all' => $request->is_for_all ?? $data->is_for_all,
+                'is_by_city' => $request->is_by_city ?? $data->is_by_city,
+                'is_by_country' => $request->is_by_country ?? $data->is_by_country,
+                'is_by_category' => $request->is_by_category ?? $data->is_by_category,
+                'is_by_subcategory' => $request->is_by_subcategory ?? $data->is_by_subcategory,
+                'is_by_product' => $request->is_by_product ?? $data->is_by_product,
+                'is_by_size' => $request->is_by_size ?? $data->is_by_size,
+                'for_clients_only' => $request->for_clients_only ?? $data->for_clients_only,
+                'product_ids' => $request->is_by_product ? (collect(explode(',', $request->product_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'size_ids' => $request->is_by_size ? (collect(explode(',', $request->size_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'category_parent_ids' => $request->is_by_category ? (collect(explode(',', $request->category_parent_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'category_child_ids' => $request->is_by_subcategory ? (collect(explode(',', $request->category_child_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'city_ids' => $request->is_by_city ? (collect(explode(',', $request->city_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'country_ids' => $request->is_by_country ? (collect(explode(',', $request->country_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+                'client_ids' => $request->for_clients_only ? (collect(explode(',', $request->client_ids))->map(fn($item) => (int) $item)->toArray()) : null,
+            ]);
         }
 
-        $userIds = array_values(array_unique($userIds));
+        return successResponse($data);
+    }
+    public function deleteCustomNotification(Request $request, $id)
+    {
+        $data = CustomNotification::where('id', $id)->first();
 
-        $title = $request->title;
-        $body = $request->body;
-        $data = 'custom';
-
-        $this->saveNotification($userIds, $title, $body, $request->scheduled_at, $data);
-
-        return successResponse(['done']);
+        if ($data) {
+            if (isset(explode('/public', $data->image)[1]))
+                unlink('public/' . (explode('/public', $data->image)[1]));
+            $data->delete();
+        }
+        return successResponse($data);
     }
 
     public function updateDeviceToken(Request $request)

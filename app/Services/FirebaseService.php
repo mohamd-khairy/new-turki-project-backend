@@ -64,13 +64,13 @@ class FirebaseService
             ->withData(is_array($data) ? $data : [])
             ->withAndroidConfig([
                 'notification' => [
-                    'sound' => 'default', // Sound for Android
+                    'sound' => 'cowbell', // Sound for Android
                 ],
             ])
             ->withApnsConfig([
                 'payload' => [
                     'aps' => [
-                        'sound' => 'default', // Sound for iOS
+                        'sound' => 'cowbell.caf', // Sound for iOS
                     ],
                 ],
             ]);
