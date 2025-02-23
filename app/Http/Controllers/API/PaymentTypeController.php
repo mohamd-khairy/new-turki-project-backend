@@ -17,7 +17,7 @@ class PaymentTypeController extends Controller
      */
     public function getAll()
     {
-        $paymentType = PaymentType::where('active', '1')->get();
+        $paymentType = PaymentType::all();
         return response()->json(['success' => true ,'data'=> $paymentType,
         'message'=> 'Payment Types retrieved successfully', 'description'=> 'list Of Payment Types', 'code'=> 200 ],200);
     }
