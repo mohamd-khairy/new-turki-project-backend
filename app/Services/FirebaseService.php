@@ -6,6 +6,8 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class FirebaseService
 {
@@ -96,24 +98,38 @@ class FirebaseService
         //     'Content-Type' => 'application/json',
         // ])->post($fcmUrl, $notificationData);
 
-        $headers = [
-            'Authorization: key=' . $serverKey,
-            'Content-Type: application/json'
+        // $headers = [
+        //     'Authorization: key=' . $serverKey,
+        //     'Content-Type: application/json'
+        // ];
+
+        // $ch = curl_init();
+        // curl_setopt($ch, CURLOPT_URL, $fcmUrl);
+        // curl_setopt($ch, CURLOPT_POST, true);
+        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notificationData));
+
+        // // Execute the request and get the response
+        // $response = curl_exec($ch);
+
+        // // Close the cURL session
+        // curl_close($ch);
+
+
+        $client = new Client();
+        $response = $client->post($fcmUrl, [
+            'headers' => [
+                'Authorization' => 'key=' . $serverKey,
+                'Content-Type'  => 'application/json'
+            ],
+            'json' => $notificationData
+        ]);
+
+        $response = [
+            'status_code' => $response->getStatusCode(),
+            'body' => json_decode($response->getBody(), true)
         ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $fcmUrl);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notificationData));
-
-        // Execute the request and get the response
-        $response = curl_exec($ch);
-
-        // Close the cURL session
-        curl_close($ch);
-
 
 
         info('custom_notification_for_all');
