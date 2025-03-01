@@ -90,15 +90,34 @@ class FirebaseService
         ];
 
         // try {
-            //code...
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . $serverKey,
-                'Content-Type' => 'application/json',
-            ])->post($fcmUrl, $notificationData);
+        //code...
+        // $response = Http::withHeaders([
+        //     'Authorization' => 'key=' . $serverKey,
+        //     'Content-Type' => 'application/json',
+        // ])->post($fcmUrl, $notificationData);
+
+        $headers = [
+            'Authorization: key=' . $serverKey,
+            'Content-Type: application/json'
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $fcmUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notificationData));
+
+        // Execute the request and get the response
+        $response = curl_exec($ch);
+
+        // Close the cURL session
+        curl_close($ch);
 
 
-            info('custom_notification_for_all');
-            info(json_encode($response));
+
+        info('custom_notification_for_all');
+        info(json_encode($response));
         // } catch (\Throwable $th) {
         //     //throw $th;
         //     info('error_custom_notification_for_all');
