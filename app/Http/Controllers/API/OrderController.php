@@ -1417,7 +1417,7 @@ class OrderController extends Controller
             'customer_id' => auth()->user()->id,
             'payment_type_id' => $validated['payment_type_id'],
             'applied_discount_code' => $discountCode,
-            'version_app' => $app,
+            'version_app' => request( 'version_app', $app),
             "paid" => $paid ?? 0
         ];
 
