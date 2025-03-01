@@ -36,6 +36,10 @@ class FirebaseService
             'body' => $body,
         ];
 
+        $data = [
+            'image' => $image
+        ];
+
         // Add image to notification if provided
         if ($image) {
             $notification['image'] = $image;

@@ -40,6 +40,8 @@ class CustomNotificationSend extends Command
      * @return int
      */ public function handle()
     {
+        DB::statement('SET sql_mode = " "');
+
         // Fetch active custom notifications that are due to be sent
         $customNotifications = CustomNotification::query()
             ->where('scheduled_at', '<=', now())
@@ -55,7 +57,6 @@ class CustomNotificationSend extends Command
             $this->saveNotification($customer_data, $customNotification);
 
             $customNotification->update(['sent_at' => now()]);
-
         }
 
         return true;
@@ -168,14 +169,12 @@ class CustomNotificationSend extends Command
      */
     private function getUsersByCity($cityIds)
     {
-        return DB::table('orders')
+        return DB::table('addresses')
             ->select('customers.id', 'customers.device_token')
-            ->join('addresses', 'orders.address_id', '=', 'addresses.id')
-            ->join('cities', 'addresses.city_id', '=', 'cities.id')
-            ->join('customers', 'orders.customer_id', '=', 'customers.id')
-            ->whereIn('cities.id', $cityIds)
-            ->where('cities.is_active', 1)
+            ->join('customers', 'addresses.customer_id', '=', 'customers.id')
+            ->whereIn('addresses.city_id', $cityIds)
             ->whereNotNull('customers.device_token')
+            ->groupBy('addresses.customer_id')
             ->pluck('customers.id', 'customers.device_token')
             ->toArray();
     }
@@ -268,7 +267,7 @@ class CustomNotificationSend extends Command
         foreach ($customer_data as $deviceToken => $userId) {
             try {
                 // Send the notification via Firebase
-                $res= $firebase->sendNotification(
+                $res = $firebase->sendNotification(
                     $deviceToken,
                     $customNotification->title,
                     $customNotification->body,
@@ -285,7 +284,6 @@ class CustomNotificationSend extends Command
                     'body' => $customNotification->body,
                     'scheduled_at' => $customNotification->scheduled_at,
                 ];
-
             } catch (\Exception $e) {
                 // Log errors silently (optional: log to a file or monitoring system)
                 $this->logNotificationError($e);
