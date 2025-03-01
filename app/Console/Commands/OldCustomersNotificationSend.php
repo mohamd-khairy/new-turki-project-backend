@@ -48,13 +48,13 @@ class OldCustomersNotificationSend extends Command
         // Fetch eligible customers for notifications
         $customersForNotification = $this->fetchEligibleCustomers($oldCustomersNotification);
 
-        // Send notifications to eligible customers
-        foreach ($customersForNotification as $customer) {
-            if ($this->checkIfCustomerHasNotification($customer, $oldCustomersNotification)) {
-                continue;
-            }
-            $this->sendNotificationToCustomer($customer, $oldCustomersNotification);
-        }
+        // // Send notifications to eligible customers
+        // foreach ($customersForNotification as $customer) {
+        //     if ($this->checkIfCustomerHasNotification($customer, $oldCustomersNotification)) {
+        //         continue;
+        //     }
+        //     $this->sendNotificationToCustomer($customer, $oldCustomersNotification);
+        // }
 
         return true;
     }
@@ -98,7 +98,7 @@ class OldCustomersNotificationSend extends Command
                 DB::raw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) as last_order_days')
             )
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
+            // ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
             ->whereNotNull('customers.device_token')
             ->orderBy('orders.created_at', 'desc')
             ->groupBy('customers.id')
