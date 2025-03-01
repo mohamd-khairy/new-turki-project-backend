@@ -67,28 +67,7 @@ class OldCustomersNotificationSend extends Command
      */
     private function fetchEligibleCustomers($oldCustomersNotification)
     {
-        // return DB::table('customers')
-        //     ->select(
-        //         'customers.id',
-        //         'customers.device_token',
-        //         'customers.name',
-        //         'orders.ref_no',
-        //         'orders.created_at',
-        //         DB::raw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) as last_order_days')
-        //     )
-        //     ->join('orders', 'customers.id', '=', 'orders.customer_id')
-        //     ->where('orders.created_at', function ($query) {
-        //         $query->selectRaw('MAX(o2.created_at)')
-        //             ->from('orders as o2')
-        //             ->whereColumn('o2.customer_id', 'customers.id');
-        //     })
-        //     ->whereNotNull('customers.device_token')
-        //     ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
-        //     ->orderBy('orders.created_at', 'desc')
-        //     ->get();
-
-
-        $data = DB::table('customers')
+        $data= DB::table('customers')
             ->select(
                 'customers.id',
                 'customers.device_token',
@@ -98,11 +77,32 @@ class OldCustomersNotificationSend extends Command
                 DB::raw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) as last_order_days')
             )
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            // ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
+            ->where('orders.created_at', function ($query) {
+                $query->selectRaw('MAX(o2.created_at)')
+                    ->from('orders as o2')
+                    ->whereColumn('o2.customer_id', 'customers.id');
+            })
             ->whereNotNull('customers.device_token')
+            // ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
             ->orderBy('orders.created_at', 'desc')
-            ->groupBy('customers.id')
             ->get();
+
+
+        // $data = DB::table('customers')
+        //     ->select(
+        //         'customers.id',
+        //         'customers.device_token',
+        //         'customers.name',
+        //         'orders.ref_no',
+        //         'orders.created_at',
+        //         DB::raw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) as last_order_days')
+        //     )
+        //     ->join('orders', 'customers.id', '=', 'orders.customer_id')
+        //     // ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
+        //     ->whereNotNull('customers.device_token')
+        //     ->orderBy('orders.created_at', 'desc')
+        //     ->groupBy('customers.id')
+        //     ->get();
 
             info('hereeee');
             info($data);
