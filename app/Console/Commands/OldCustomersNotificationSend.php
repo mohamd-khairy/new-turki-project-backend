@@ -88,7 +88,7 @@ class OldCustomersNotificationSend extends Command
         //     ->get();
 
 
-        return DB::table('customers')
+        $data = DB::table('customers')
             ->select(
                 'customers.id',
                 'customers.device_token',
@@ -103,6 +103,11 @@ class OldCustomersNotificationSend extends Command
             ->orderBy('orders.created_at', 'desc')
             ->groupBy('customers.id')
             ->get();
+
+            info('hereeee');
+            info($data);
+
+            return $data;
     }
 
 

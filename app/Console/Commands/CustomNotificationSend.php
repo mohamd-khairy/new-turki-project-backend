@@ -55,9 +55,9 @@ class CustomNotificationSend extends Command
             if ($customNotification->is_for_all) {
                 // $customer_data += $this->getAllUsersWithDeviceTokens();
 
-                $firebase = new FirebaseService();
-                $firebase->sendForAll($customNotification->title, $customNotification->body, [], $customNotification->image);
-                continue;
+                // $firebase = new FirebaseService();
+                // $firebase->sendForAll($customNotification->title, $customNotification->body, [], $customNotification->image);
+                // continue;
             } else {
                 // Determine target user IDs based on notification criteria
                 $customer_data = $this->getCustomerDataForNotification($customNotification);
