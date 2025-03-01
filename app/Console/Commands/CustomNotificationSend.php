@@ -38,7 +38,8 @@ class CustomNotificationSend extends Command
      * Execute the console command.
      *
      * @return int
-     */ public function handle()
+     */
+    public function handle()
     {
         DB::statement('SET sql_mode = " "');
 
@@ -50,11 +51,20 @@ class CustomNotificationSend extends Command
 
         // Process each notification
         foreach ($customNotifications as $customNotification) {
-            // Determine target user IDs based on notification criteria
-            $customer_data = $this->getCustomerDataForNotification($customNotification);
 
-            // Save and send notifications for the targeted users
-            $this->saveNotification($customer_data, $customNotification);
+            if ($customNotification->is_for_all) {
+                // $customer_data += $this->getAllUsersWithDeviceTokens();
+
+                $firebase = new FirebaseService();
+                $firebase->sendForAll($customNotification->title, $customNotification->body, [], $customNotification->image);
+                continue;
+            } else {
+                // Determine target user IDs based on notification criteria
+                $customer_data = $this->getCustomerDataForNotification($customNotification);
+
+                // Save and send notifications for the targeted users
+                $this->saveNotification($customer_data, $customNotification);
+            }
 
             $customNotification->update(['sent_at' => now()]);
         }
@@ -72,30 +82,26 @@ class CustomNotificationSend extends Command
     {
         $customer_data = [];
 
-        if ($customNotification->is_for_all) {
-            $customer_data += $this->getAllUsersWithDeviceTokens();
-        } else {
-            if ($customNotification->for_clients_only) {
-                $customer_data += $this->getUsersByClientIds($customNotification->client_ids);
-            }
-            if ($customNotification->is_by_country) {
-                $customer_data += $this->getUsersByCountry($customNotification->country_ids);
-            }
-            if ($customNotification->is_by_city) {
-                $customer_data += $this->getUsersByCity($customNotification->city_ids);
-            }
-            if ($customNotification->is_by_product) {
-                $customer_data += $this->getUsersByProduct($customNotification->product_ids);
-            }
-            if ($customNotification->is_by_size) {
-                $customer_data += $this->getUsersBySize($customNotification->size_ids);
-            }
-            if ($customNotification->is_by_category) {
-                $customer_data += $this->getUsersByCategory($customNotification->category_parent_ids);
-            }
-            if ($customNotification->is_by_subcategory) {
-                $customer_data += $this->getUsersBySubcategory($customNotification->category_child_ids);
-            }
+        if ($customNotification->for_clients_only) {
+            $customer_data += $this->getUsersByClientIds($customNotification->client_ids);
+        }
+        if ($customNotification->is_by_country) {
+            $customer_data += $this->getUsersByCountry($customNotification->country_ids);
+        }
+        if ($customNotification->is_by_city) {
+            $customer_data += $this->getUsersByCity($customNotification->city_ids);
+        }
+        if ($customNotification->is_by_product) {
+            $customer_data += $this->getUsersByProduct($customNotification->product_ids);
+        }
+        if ($customNotification->is_by_size) {
+            $customer_data += $this->getUsersBySize($customNotification->size_ids);
+        }
+        if ($customNotification->is_by_category) {
+            $customer_data += $this->getUsersByCategory($customNotification->category_parent_ids);
+        }
+        if ($customNotification->is_by_subcategory) {
+            $customer_data += $this->getUsersBySubcategory($customNotification->category_child_ids);
         }
 
         return $customer_data;

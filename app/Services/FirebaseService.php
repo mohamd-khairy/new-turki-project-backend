@@ -74,22 +74,34 @@ class FirebaseService
     {
         $serverKey = 'AAAAg5KibHs:APA91bH3MCxkfFwNzvk46bk4hPPmsQcnRas2549F9K7IxWARe9IC-liRLsTG4PRVprp1MqGdX89YI1YU6KJDXkELxHQH2zq6vJWiUjKm1TmXa1ZTC0o8qnYBkkvLUv2SigpitRsO2eL9'; // Replace with your Firebase Server Key
         $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+        $data = [
+            'image' => $image
+        ];
 
         $notificationData = [
             'notification' => [
                 'title' => $title,
                 'body' => $body,
-                'sound' => 'default'
+                'sound' => 'cowbell'
             ],
             'data' => $data,
             'to' => '/topics/all', // This sends the notification to all subscribed users
         ];
 
-        $response = Http::withHeaders([
-            'Authorization' => 'key=' . $serverKey,
-            'Content-Type' => 'application/json',
-        ])->post($fcmUrl, $notificationData);
+        try {
+            //code...
+            $response = Http::withHeaders([
+                'Authorization' => 'key=' . $serverKey,
+                'Content-Type' => 'application/json',
+            ])->post($fcmUrl, $notificationData);
 
-        dd($response->json());
+
+            info('custom_notification_for_all');
+            info(json_encode($response));
+        } catch (\Throwable $th) {
+            //throw $th;
+            info('error_custom_notification_for_all');
+            info($th->getMessage());
+        }
     }
 }
