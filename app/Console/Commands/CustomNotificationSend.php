@@ -56,8 +56,7 @@ class CustomNotificationSend extends Command
 
             $customNotification->update(['sent_at' => now()]);
 
-            info('custom_notification');
-            info(json_encode($customNotifications));
+
         }
 
 
@@ -271,7 +270,7 @@ class CustomNotificationSend extends Command
         foreach ($customer_data as $deviceToken => $userId) {
             try {
                 // Send the notification via Firebase
-                $firebase->sendNotification(
+                $res= $firebase->sendNotification(
                     $deviceToken,
                     $customNotification->title,
                     $customNotification->body,
@@ -288,6 +287,10 @@ class CustomNotificationSend extends Command
                     'body' => $customNotification->body,
                     'scheduled_at' => $customNotification->scheduled_at,
                 ];
+
+                info('custom_notification');
+                info(json_encode($res));
+
             } catch (\Exception $e) {
                 // Log errors silently (optional: log to a file or monitoring system)
                 $this->logNotificationError($e);

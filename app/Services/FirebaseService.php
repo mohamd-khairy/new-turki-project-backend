@@ -29,32 +29,7 @@ class FirebaseService
         $this->messaging = $factory->createMessaging();
     }
 
-    // public function sendFcmNotification($deviceToken, $title, $body, $data = [])
-    // {
-    //     $serverKey = 'AAAAg5KibHs:APA91bH3MCxkfFwNzvk46bk4hPPmsQcnRas2549F9K7IxWARe9IC-liRLsTG4PRVprp1MqGdX89YI1YU6KJDXkELxHQH2zq6vJWiUjKm1TmXa1ZTC0o8qnYBkkvLUv2SigpitRsO2eL9'; // Replace with your Firebase Server Key
-
-    //     $url = 'https://fcm.googleapis.com/fcm/send';
-
-    //     $payload = [
-    //         'to' => $deviceToken, // Device token
-    //         'notification' => [
-    //             'title' => $title,
-    //             'body' => $body,
-    //             'sound' => 'default', // Sound for both Android and iOS
-    //         ],
-    //         'data' => [],
-    //     ];
-
-    //     $response = Http::withHeaders([
-    //         'Authorization' => 'key=' . $serverKey,
-    //         'Content-Type' => 'application/json',
-    //     ])->post($url, $payload);
-
-    //     dd($response->json());
-    //     // return $response->json();
-    // }
-
-    public function sendNotification($deviceToken, $title, $body, $data = [] , $image = null)
+    public function sendNotification($deviceToken, $title, $body, $data = [], $image = null)
     {
         $notification = [
             'title' => $title,
@@ -88,5 +63,29 @@ class FirebaseService
             ]);
 
         return $this->messaging->send($message);
+    }
+
+
+    public function sendForAll($title, $body, $data = [], $image = null)
+    {
+        $serverKey = 'AAAAg5KibHs:APA91bH3MCxkfFwNzvk46bk4hPPmsQcnRas2549F9K7IxWARe9IC-liRLsTG4PRVprp1MqGdX89YI1YU6KJDXkELxHQH2zq6vJWiUjKm1TmXa1ZTC0o8qnYBkkvLUv2SigpitRsO2eL9'; // Replace with your Firebase Server Key
+        $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+
+        $notificationData = [
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+                'sound' => 'default'
+            ],
+            'data' => $data,
+            'to' => '/topics/all', // This sends the notification to all subscribed users
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'key=' . $serverKey,
+            'Content-Type' => 'application/json',
+        ])->post($fcmUrl, $notificationData);
+
+        dd($response->json());
     }
 }
