@@ -88,23 +88,24 @@ class OldCustomersNotificationSend extends Command
         //     ->get();
 
 
-        $data = DB::table('orders as o')
-            ->select(
-                'c.id',
-                'c.device_token',
-                'c.name',
-                'o.ref_no',
-                'o.created_at',
-                DB::raw('TIMESTAMPDIFF(DAY, o.created_at, NOW()) as last_order_days')
-            )
-            ->join('customers as c', 'c.id', '=', 'o.customer_id')
-            ->whereNotNull('c.device_token')
-            ->whereRaw('o.created_at = (SELECT MAX(orders.created_at) FROM orders WHERE orders.customer_id = c.id)')
-            ->orderBy('o.created_at', 'desc')
-            ->get();
+        // $data = DB::table('orders as o')
+        //     ->select(
+        //         'c.id',
+        //         'c.device_token',
+        //         'c.name',
+        //         'o.ref_no',
+        //         'o.created_at',
+        //         DB::raw('TIMESTAMPDIFF(DAY, o.created_at, NOW()) as last_order_days')
+        //     )
+        //     ->join('customers as c', 'c.id', '=', 'o.customer_id')
+        //     ->whereNotNull('c.device_token')
+        //     ->whereRaw('o.created_at = (SELECT MAX(orders.created_at) FROM orders WHERE orders.customer_id = c.id)')
+        //     ->whereRaw('TIMESTAMPDIFF(DAY, orders.created_at, NOW()) = ?', [$oldCustomersNotification->config])
+        //     ->orderBy('o.created_at', 'desc')
+        //     ->get();
 
-        info('hereeee');
-        info($data);
+        // info('hereeee');
+        // info($data);
 
         return $data;
     }
