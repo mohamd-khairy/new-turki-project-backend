@@ -690,6 +690,7 @@ class OrderController extends Controller
                 ], 400);
             }
 
+
             $order = [
                 'ref_no' => GetNextOrderRefNo($country->code, $lastOrder != null ? $lastOrder->id + 1 : 1),
                 'delivery_fee' => $delivery,
