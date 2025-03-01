@@ -91,7 +91,17 @@ class FirebaseService
             'priority' => 'high'
         ];
 
-        $message = CloudMessage::fromArray($notificationData);
+
+        $message = CloudMessage::fromArray([
+            'topic' => '/topics/all',
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+                'sound' => 'cowbell'
+            ], // optional
+            'data' => $data, // optional
+        ]);
+
 
         $response =  $this->messaging->send($message);
 
