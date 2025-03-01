@@ -91,6 +91,11 @@ class FirebaseService
             'priority' => 'high'
         ];
 
+        $message = CloudMessage::fromArray($notificationData);
+
+        $response =  $this->messaging->send($message);
+
+
         // try {
         //code...
         // $response = Http::withHeaders([
@@ -117,19 +122,19 @@ class FirebaseService
         // curl_close($ch);
 
 
-        $client = new Client();
-        $response = $client->post($fcmUrl, [
-            'headers' => [
-                'Authorization' => 'key=' . $serverKey,
-                'Content-Type'  => 'application/json'
-            ],
-            'json' => $notificationData
-        ]);
+        // $client = new Client();
+        // $response = $client->post($fcmUrl, [
+        //     'headers' => [
+        //         'Authorization' => 'key=' . $serverKey,
+        //         'Content-Type'  => 'application/json'
+        //     ],
+        //     'json' => $notificationData
+        // ]);
 
-        $response = [
-            'status_code' => $response->getStatusCode(),
-            'body' => json_decode($response->getBody(), true)
-        ];
+        // $response = [
+        //     'status_code' => $response->getStatusCode(),
+        //     'body' => json_decode($response->getBody(), true)
+        // ];
 
 
         info('custom_notification_for_all');
