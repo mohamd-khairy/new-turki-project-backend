@@ -85,10 +85,11 @@ class FirebaseService
                 'sound' => 'cowbell'
             ],
             'data' => $data,
-            'to' => '/topics/all', // This sends the notification to all subscribed users
+            'to' => '/topics/all', // Sending to all topic subscribers
+            'priority' => 'high'
         ];
 
-        try {
+        // try {
             //code...
             $response = Http::withHeaders([
                 'Authorization' => 'key=' . $serverKey,
@@ -98,10 +99,10 @@ class FirebaseService
 
             info('custom_notification_for_all');
             info(json_encode($response));
-        } catch (\Throwable $th) {
-            //throw $th;
-            info('error_custom_notification_for_all');
-            info($th->getMessage());
-        }
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        //     info('error_custom_notification_for_all');
+        //     info($th->getMessage());
+        // }
     }
 }
