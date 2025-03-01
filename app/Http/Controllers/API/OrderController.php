@@ -708,7 +708,7 @@ class OrderController extends Controller
                 'customer_id' => $request->customer_id,
                 'payment_type_id' => $validated["using_wallet"] ? 8 : 1,
                 'applied_discount_code' => $discountCode,
-                'version_app' => $app,
+                'version_app' => request( 'version_app', $app),
                 'comment' => $validated['notes'] ?? null,
                 'boxes_count' => isset($validated["boxes_count"]) ? $validated["boxes_count"] : 0,
                 'dishes_count' => isset($validated["dishes_count"]) ? $validated["dishes_count"] : 0,
@@ -1255,6 +1255,7 @@ class OrderController extends Controller
             'address_id' => 'required|exists:addresses,id',
             'tamara_payment_name' => array('required_if:payment_type_id,==,4', 'in:PAY_BY_INSTALMENTS,PAY_BY_LATER'), // add 'tamara in payment_types table with id 4
             'no_instalments' => array('required_if:tamara_payment_name,==,PAY_BY_INSTALMENTS', 'numeric'),
+            'version_app' => 'nullable'
         ]);
 
         if (!isset($validated["comment"])) {
