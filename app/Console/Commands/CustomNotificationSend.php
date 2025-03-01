@@ -56,9 +56,7 @@ class CustomNotificationSend extends Command
 
             $customNotification->update(['sent_at' => now()]);
 
-
         }
-
 
         return true;
     }
@@ -288,9 +286,6 @@ class CustomNotificationSend extends Command
                     'scheduled_at' => $customNotification->scheduled_at,
                 ];
 
-                info('custom_notification');
-                info(json_encode($res));
-
             } catch (\Exception $e) {
                 // Log errors silently (optional: log to a file or monitoring system)
                 $this->logNotificationError($e);
@@ -300,6 +295,9 @@ class CustomNotificationSend extends Command
         // Bulk insert notifications into the database
         if (!empty($notifications)) {
             Notification::insert($notifications);
+
+            info('custom_notification');
+            info(json_encode($notifications));
         }
     }
 
