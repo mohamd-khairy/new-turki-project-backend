@@ -343,11 +343,11 @@ class OrderController extends Controller
 
                 if ($row->payment_status == 'Paid') {
                     $payment_price = round($row->payment_price + $row->wallet_amount_used, 2);
-                    $final_amount = round($row->order_subtotal - $row->discount_applied - $row->other_discount, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
                     $remain_amount = round($final_amount - $payment_price, 2);
                 } else {
                     $payment_price = round($row->wallet_amount_used, 2);
-                    $final_amount = round($row->order_subtotal - $row->discount_applied - $row->other_discount, 2);
+                    $final_amount = round($row->order_subtotal - $row->discount_applied, 2);
                     $remain_amount = round($final_amount - $payment_price, 2);
                 }
 
