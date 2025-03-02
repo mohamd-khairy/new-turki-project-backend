@@ -72,3 +72,26 @@ jobs:
             node_modules/
             tests/
             vendor/ # Unless your server has Composer installed
+
+
+  deploy_website:
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: almaraacompany.com
+          username: ${{ secrets.server_master_turki_name }}
+          password: ${{ secrets.server_master_turki_password }}
+          server-dir: /public_html/turkidabayeh.com/dashboard/ # Target directory on the server
+          protocol: ftps
+          port: 21
+          exclude: |
+            .git*
+            node_modules/
+            tests/
+            vendor/ # Unless your server has Composer installed
