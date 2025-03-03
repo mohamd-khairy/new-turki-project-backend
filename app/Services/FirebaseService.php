@@ -80,79 +80,40 @@ class FirebaseService
             'image' => $image
         ];
 
-        $notificationData = [
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-                'sound' => 'cowbell'
-            ],
-            'data' => $data,
-            'to' => '/topics/all', // Sending to all topic subscribers
-            'priority' => 'high'
-        ];
+        try {
+            $message = CloudMessage::withTarget('topic', 'all')
+                ->withNotification([
+                    'title' => $title,
+                    'body' => $body,
+                ])
+                ->withData(is_array($data) ? $data : [])
+                ->withAndroidConfig([
+                    'notification' => [
+                        'sound' => 'cowbell',
+                        'image' => $image, // Optional: Add image for Android
+                    ],
+                ])
+                ->withApnsConfig([
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'cowbell.caf',
+                            'mutable-content' => 1, // Required for rich notifications on iOS
+                        ],
+                    ],
+                    'fcm_options' => [
+                        'image' => $image, // iOS supports images this way
+                    ],
+                ]);
+
+            $response =  $this->messaging->send($message);
 
 
-        $message = CloudMessage::fromArray([
-            'topic' => '/topics/all',
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-                'sound' => 'cowbell'
-            ], // optional
-            'data' => $data, // optional
-        ]);
-
-
-        $response =  $this->messaging->send($message);
-
-
-        // try {
-        //code...
-        // $response = Http::withHeaders([
-        //     'Authorization' => 'key=' . $serverKey,
-        //     'Content-Type' => 'application/json',
-        // ])->post($fcmUrl, $notificationData);
-
-        // $headers = [
-        //     'Authorization: key=' . $serverKey,
-        //     'Content-Type: application/json'
-        // ];
-
-        // $ch = curl_init();
-        // curl_setopt($ch, CURLOPT_URL, $fcmUrl);
-        // curl_setopt($ch, CURLOPT_POST, true);
-        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($notificationData));
-
-        // // Execute the request and get the response
-        // $response = curl_exec($ch);
-
-        // // Close the cURL session
-        // curl_close($ch);
-
-
-        // $client = new Client();
-        // $response = $client->post($fcmUrl, [
-        //     'headers' => [
-        //         'Authorization' => 'key=' . $serverKey,
-        //         'Content-Type'  => 'application/json'
-        //     ],
-        //     'json' => $notificationData
-        // ]);
-
-        // $response = [
-        //     'status_code' => $response->getStatusCode(),
-        //     'body' => json_decode($response->getBody(), true)
-        // ];
-
-
-        info('custom_notification_for_all');
-        info(json_encode($response));
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        //     info('error_custom_notification_for_all');
-        //     info($th->getMessage());
-        // }
+            info('custom_notification_for_all');
+            info(json_encode($response));
+        } catch (\Throwable $th) {
+            //throw $th;
+            info('error_custom_notification_for_all');
+            info($th->getMessage());
+        }
     }
 }
