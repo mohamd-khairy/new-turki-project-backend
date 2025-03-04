@@ -19,6 +19,93 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
+use Illuminate\Support\Facades\Http;
+
+function sendOrderToTurkishop($order, $products)
+{
+    $url = 'https://turkishop.shop/api/sale_orders';
+    $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
+
+    $payload = [
+        "api_order_id" => $order['id'], // Order ID
+        "customer" => [
+            "name" => $order['customer']['name'],
+            "mobile" => $order['customer']['mobile'],
+            "address" => $order['selectedAddress']['address'],
+            "city" => $order['selectedAddress']['city']['name_ar'],
+        ],
+        "delivery_date" => $order['delivery_date'],
+        "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
+        "comment" => $order['comment'] ?? "",
+        "day" => date("l", strtotime($order["created_at"])),
+        "paid" => $order['paid'],
+        "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
+        "delivery_period" => $order['deliveryPeriod']['name_ar'],
+        "payment_method" => $order['paymentType']['name_ar'],
+        "products" => $products->toArray()
+    ];
+
+    // return $payload;
+
+    // dd($payload);
+
+    // $headers = [
+    //     'Authorization: ' . $token,
+    //     'Content-Type: application/json',
+    //     'Cookie: session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+    // ];
+
+    // $ch = curl_init();
+    // curl_setopt($ch, CURLOPT_URL, $url);
+    // curl_setopt($ch, CURLOPT_POST, true);
+    // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    // curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
+    // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    // $response = curl_exec($ch);
+    // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    // $error = curl_error($ch);
+
+    // curl_close($ch);
+
+    // return [
+    //     'status_code' => $httpCode,
+    //     'response' => json_decode($response, true),
+    //     'error' => $error
+    // ];
+
+    // $client = new Client();
+    // $response = $client->post($url, [
+    //     'headers' => [
+    //         'Authorization' => $token,
+    //         'Content-Type'  => 'application/json',
+    //         'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+    //         'Accept'        => 'application/json',
+    //     ],
+    //     'json' => $payload
+    // ]);
+    // return [
+    //     'status_code' => $response->getStatusCode(),
+    //     'body' => json_decode($response->getBody(), true)
+    // ];
+
+    $response = Http::withHeaders([
+        'Authorization' => $token,
+        'Content-Type'  => 'application/json',
+        'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+    ])->post($url, $payload);
+
+    return [
+        'status' => $response->status(),
+        'body' => $response->json(),
+    ];
+
+
+}
+
+
 function touchStock($order)
 {
     // try {
@@ -744,15 +831,15 @@ if (!function_exists('handleRoleOrderState')) {
 
         if (in_array('production_manager', $roles)) { // 'production_manager' => 'مسئول الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209','300', '301'],
-                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202','300', '301'],
+                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
+                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202', '300', '301'],
             ];
         }
 
         if (in_array('production_supervisor', $roles)) { // 'production_manager' => 'مشرف الانتاج',/////////////////
             $data = [
-                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209','300', '301'],
-                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202','300', '301'],
+                'status' => ['104', '105',  '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
+                'orders' => ['101', '104', '105', '106', '200', '204', '208', '202', '300', '301'],
             ];
         }
 
@@ -764,14 +851,14 @@ if (!function_exists('handleRoleOrderState')) {
         }
         if (in_array('store_manager', $roles)) { // 'store_manager' => 'مسئول المبيعات', //////////////
             $data = [
-                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209' ,'300', '301'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209' ,'300', '301'],
+                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
             ];
         }
         if (in_array('general_manager', $roles)) { // 'general_manager' => 'مشرف المبيعات',/////////////////
             $data = [
-                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209' ,'300', '301'],
-                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209' ,'300', '301'],
+                'status' => ['101', '102', '103', '106', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
+                'orders' => ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '200', '204', '208', '202', '203', '205', '206', '207', '209', '300', '301'],
             ];
         }
         if (in_array('delegate', $roles)) { // 'delegate' => 'مندوب',///////////////////

@@ -2,6 +2,7 @@
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderProduct;
 use App\Models\SizeStore;
 use App\Models\Stock;
 use App\Models\WalletLog;
@@ -34,7 +35,6 @@ Route::group(
 );
 
 Route::get('/', function () {
-    // Artisan::call('migrate');
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
     Artisan::call('view:clear');
@@ -43,17 +43,41 @@ Route::get('/', function () {
     // return view('welcome');
 
 
-    // Artisan::call('notification:send');
-    // Artisan::call('cart-notification:send');
-    // Artisan::call('new-customer-notification:send');
-    // Artisan::call('old-customer-notification:send');
+    // $order = Order::query()
+    //     ->with(
+    //         'paymentType',
+    //         'customer',
+    //         'orderState',
+    //         'deliveryPeriod',
+    //         'selectedAddress',
+    //     )->orderBy('id', 'desc')->first();
 
+    // $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
+    //     ->where('order_ref_no', $order->ref_no)
+    //     ->get()->map(function ($i) {
+    //         return [
+    //             'size' => $i->size ?  [
+    //                 'id' => $i->size->id,
+    //                 'name_ar' => $i->size->name_ar
+    //             ] : (object)[],
+    //             'preparation' => $i->preparation ?  [
+    //                 'id' => $i->preparation->id,
+    //                 'name_ar' => $i->preparation->name_ar
+    //             ] : (object)[],
+    //             'cut' => $i->cut ?  [
+    //                 'id' => $i->cut->id,
+    //                 'name_ar' => $i->cut->name_ar
+    //             ] : (object)[],
+    //             'shalwata' => $i->shalwata ?  [
+    //                 'id' => $i->shalwata->id,
+    //                 'name_ar' => $i->shalwata->name_ar
+    //             ] : (object)[],
+    //             'quantity' => $i->quantity,
+    //         ];
+    //     });
 
-    // $f = new FirebaseService();
-    // $token = 'fB8uIgdmBUFTrlje45faPW:APA91bFtyf2b7KKaUls4bM-rvWnWhQ6x0q3HACla1N4c_FmWgLBYAwcqYx2zJwTVYiKAs-BU7k981WuDIzwW8rObaogPz2NqNzMkICbMNl7gA7HRd4OxgBI';
-    // $f->sendNotification($token, 'الجودة عنواننا وسر تميزنا ', 'الجودة عنواننا وسر تميزنا ', ['key' => 'value']);
-    // $f->sendFcmNotification($token, 'الجودة عنواننا وسر تميزنا ', 'الجودة عنواننا وسر تميزنا ', ['key' => 'value']);
-
+    // $result = sendOrderToTurkishop($order, $products);
+    // dd($result);
 });
 
 

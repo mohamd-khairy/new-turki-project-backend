@@ -63,9 +63,6 @@ class FirebaseService
                         'mutable-content' => 1, // Required for rich notifications on iOS
                     ],
                 ],
-                'fcm_options' => [
-                    'image' => $image, // iOS supports images this way
-                ],
             ]);
 
         return $this->messaging->send($message);
@@ -99,10 +96,7 @@ class FirebaseService
                             'sound' => 'cowbell.caf',
                             'mutable-content' => 1, // Required for rich notifications on iOS
                         ],
-                    ],
-                    'fcm_options' => [
-                        'image' => $image, // iOS supports images this way
-                    ],
+                    ]
                 ]);
 
             $response =  $this->messaging->send($message);
