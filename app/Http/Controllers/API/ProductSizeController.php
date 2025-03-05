@@ -21,9 +21,16 @@ class ProductSizeController extends Controller
         if (request('pageSize')) {
             $size = Size::with('stores')->where('use_again', true)->get();
         } else {
-            $size = Size::with('stores')->when(request('q'), function ($query) {
+            $size = Size::with('stores')
+            ->when(request('q'), function ($query) {
                 $query->where('name_ar', 'like', '%' . request('q') . '%');
             })
+                ->when(request('search'), function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('name_ar', 'like', '%' . request('search') . '%')
+                            ->orWhere('name_en', 'like', '%' . request('search') . '%');
+                    });
+                })
                 ->when(request('product_id'), function ($query) {
                     $query->whereHas('sizeProducts', function ($query) {
                         $query->where('product_id', request('product_id'));
