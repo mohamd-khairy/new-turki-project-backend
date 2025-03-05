@@ -34,17 +34,23 @@ function sendOrderToTurkishop($order, $products)
             "address" => $order['selectedAddress']['address'],
             "city" => $order['selectedAddress']['city']['name_ar'],
         ],
+        "using_wallet" => $order['using_wallet'],
+        "wallet_amount_used" => $order['wallet_amount_used'],
+        "applied_discount_code" => $order['applied_discount_code'],
+        "discount_applied" => $order['discount_applied'],
+        "long" => $order['selectedAddress']['long'],
+        "lat" => $order['selectedAddress']['lat'],
         "delivery_date" => $order['delivery_date'],
         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
         "comment" => $order['comment'] ?? "",
         "day" => date("l", strtotime($order["created_at"])),
         "paid" => $order['paid'],
+        "custom_state" => $order['orderState']['odoo_status'],
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
         "delivery_period" => $order['deliveryPeriod']['name_ar'],
         "payment_method" => $order['paymentType']['name_ar'],
         "products" => $products->toArray()
     ];
-
     // return $payload;
 
     // dd($payload);
@@ -101,8 +107,6 @@ function sendOrderToTurkishop($order, $products)
         'status' => $response->status(),
         'body' => $response->json(),
     ];
-
-
 }
 
 
