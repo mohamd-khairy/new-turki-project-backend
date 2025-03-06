@@ -44,7 +44,7 @@ function sendOrderToTurkishop($order, $products)
         "delivery_date" => $order['delivery_date'],
         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
         "comment" => $order['comment'] ?? "",
-        "day" => date("l", strtotime($order["created_at"])),
+        "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
         "paid" => $order['paid'],
         "custom_state" => $order['orderState']['odoo_status'],
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
