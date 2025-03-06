@@ -26,6 +26,92 @@ function sendOrderToTurkishop($order, $products)
     $url = 'https://turkishop.shop/api/sale_orders';
     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
 
+    $products = $products->toArray();
+
+    foreach ($products as $key => $product) {
+        #product_1
+        if (in_array($product->size_id, [17, 2, 3, 4, 18, 19, 20, 21, 26, 27, 28, 29])) {
+
+            if ($product->is_kwar3 == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1049,
+                        'name_ar' => 'كوارع'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_karashah == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1051,
+                        'name_ar' => 'كرشة'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_lyh == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1054,
+                        'name_ar' => 'لية'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+        }
+        if (in_array($product->size_id, [6, 178, 8, 9, 22, 23, 24, 25, 30, 31, 32, 33])) {
+
+            if ($product->is_kwar3 == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1050,
+                        'name_ar' => 'كوارع'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_karashah == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1052,
+                        'name_ar' => 'كرشة'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_lyh == false) {
+                $products[] = [
+                    'size' =>   [
+                        'id' => 1055,
+                        'name_ar' => 'لية'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+        }
+        # code...
+    }
+
+    dd($products);
     $payload = [
         "api_order_id" => $order['id'], // Order ID
         "customer" => [
@@ -49,7 +135,7 @@ function sendOrderToTurkishop($order, $products)
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
         "delivery_period" => $order['deliveryPeriod']['name_ar'],
         "payment_method" => $order['paymentType']['name_ar'],
-        "products" => $products->toArray()
+        "products" => $products
     ];
     // return $payload;
 
