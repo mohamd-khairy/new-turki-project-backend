@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\Http;
 
 function sendOrderToTurkishop($order, $products)
 {
-    $url = 'https://turkishop.shop/api/sale_orders';
+    // $url = 'https://turkishop.shop/api/sale_orders';
+    $url = 'http://213.136.77.102:8069/api/sale_orders';
     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
 
     $payload = [

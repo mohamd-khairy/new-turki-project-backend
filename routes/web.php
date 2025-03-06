@@ -39,45 +39,45 @@ Route::get('/', function () {
     Artisan::call('config:cache');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
-    dd(PHP_VERSION, 'here');
+    // dd(PHP_VERSION, 'here');
     // return view('welcome');
 
 
-    // $order = Order::query()
-    //     ->with(
-    //         'paymentType',
-    //         'customer',
-    //         'orderState',
-    //         'deliveryPeriod',
-    //         'selectedAddress',
-    //     )->orderBy('id', 'desc')->first();
+    $order = Order::query()
+        ->with(
+            'paymentType',
+            'customer',
+            'orderState',
+            'deliveryPeriod',
+            'selectedAddress',
+        )->orderBy('id', 'desc')->first();
 
-    // $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-    //     ->where('order_ref_no', $order->ref_no)
-    //     ->get()->map(function ($i) {
-    //         return [
-    //             'size' => $i->size ?  [
-    //                 'id' => $i->size->id,
-    //                 'name_ar' => $i->size->name_ar
-    //             ] : (object)[],
-    //             'preparation' => $i->preparation ?  [
-    //                 'id' => $i->preparation->id,
-    //                 'name_ar' => $i->preparation->name_ar
-    //             ] : (object)[],
-    //             'cut' => $i->cut ?  [
-    //                 'id' => $i->cut->id,
-    //                 'name_ar' => $i->cut->name_ar
-    //             ] : (object)[],
-    //             'shalwata' => $i->shalwata ?  [
-    //                 'id' => $i->shalwata->id,
-    //                 'name_ar' => $i->shalwata->name_ar
-    //             ] : (object)[],
-    //             'quantity' => $i->quantity,
-    //         ];
-    //     });
+    $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
+        ->where('order_ref_no', $order->ref_no)
+        ->get()->map(function ($i) {
+            return [
+                'size' => $i->size ?  [
+                    'id' => $i->size->id,
+                    'name_ar' => $i->size->name_ar
+                ] : (object)[],
+                'preparation' => $i->preparation ?  [
+                    'id' => $i->preparation->id,
+                    'name_ar' => $i->preparation->name_ar
+                ] : (object)[],
+                'cut' => $i->cut ?  [
+                    'id' => $i->cut->id,
+                    'name_ar' => $i->cut->name_ar
+                ] : (object)[],
+                'shalwata' => $i->shalwata ?  [
+                    'id' => $i->shalwata->id,
+                    'name_ar' => $i->shalwata->name_ar
+                ] : (object)[],
+                'quantity' => $i->quantity,
+            ];
+        });
 
-    // $result = sendOrderToTurkishop($order, $products);
-    // dd($result);
+    $result = sendOrderToTurkishop($order, $products);
+    dd($result);
 });
 
 
