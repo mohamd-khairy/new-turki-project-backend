@@ -56,32 +56,32 @@ function sendOrderToTurkishop($order, $products)
 
     // dd($payload);
 
-    // $headers = [
-    //     'Authorization: ' . $token,
-    //     'Content-Type: application/json',
-    //     'Cookie: session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
-    // ];
+    $headers = [
+        'Authorization: ' . $token,
+        'Content-Type: application/json',
+        'Cookie: session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+    ];
 
-    // $ch = curl_init();
-    // curl_setopt($ch, CURLOPT_URL, $url);
-    // curl_setopt($ch, CURLOPT_POST, true);
-    // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    // curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-    // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
-    // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-    // $response = curl_exec($ch);
-    // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    // $error = curl_error($ch);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
 
-    // curl_close($ch);
+    curl_close($ch);
 
-    // return [
-    //     'status_code' => $httpCode,
-    //     'response' => json_decode($response, true),
-    //     'error' => $error
-    // ];
+    return [
+        'status_code' => $httpCode,
+        'response' => json_decode($response, true),
+        'error' => $error
+    ];
 
     // $client = new Client();
     // $response = $client->post($url, [
@@ -98,16 +98,16 @@ function sendOrderToTurkishop($order, $products)
     //     'body' => json_decode($response->getBody(), true)
     // ];
 
-    $response = Http::withHeaders([
-        'Authorization' => $token,
-        'Content-Type'  => 'application/json',
-        'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
-    ])->post($url, $payload);
+    // $response = Http::withHeaders([
+    //     'Authorization' => $token,
+    //     'Content-Type'  => 'application/json',
+    //     'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+    // ])->post($url, $payload);
 
-    return [
-        'status' => $response->status(),
-        'body' => $response->json(),
-    ];
+    // return [
+    //     'status' => $response->status(),
+    //     'body' => $response->json(),
+    // ];
 }
 
 
