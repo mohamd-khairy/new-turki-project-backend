@@ -158,7 +158,7 @@ class CustomNotificationSend extends Command
             if ($prefix) {
                 $customer_data += DB::table('customers')
                     ->whereNotNull('device_token')
-                    ->select('id', DB::raw('LEFT(mobile, 4) as mobile_prefix'))
+                    ->select('id', 'device_token', DB::raw('LEFT(mobile, 4) as mobile_prefix'))
                     ->having('mobile_prefix', '=', $prefix)
                     ->pluck('id', 'device_token')
                     ->toArray();

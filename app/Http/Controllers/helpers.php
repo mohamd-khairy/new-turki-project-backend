@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\Http;
 
 function sendOrderToTurkishop($order, $products)
 {
-    $url = 'https://turkishop.shop/api/sale_orders';
+    // $url = 'https://turkishop.shop/api/sale_orders';
+    $url = 'http://213.136.77.102:8069/api/sale_orders';
     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
 
     $products = $products->toArray();
@@ -129,7 +130,7 @@ function sendOrderToTurkishop($order, $products)
         "delivery_date" => $order['delivery_date'],
         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
         "comment" => $order['comment'] ?? "",
-        "day" => date("l", strtotime($order["created_at"])),
+        "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
         "paid" => $order['paid'],
         "custom_state" => $order['orderState']['odoo_status'],
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
