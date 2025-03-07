@@ -27,6 +27,133 @@ function sendOrderToTurkishop($order, $products)
     $url = 'http://213.136.77.102:8069/api/sale_orders';
     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
 
+    $new_products = [];
+    foreach ($products as $key => $product) {
+        #product_1
+        if (in_array($product->size_id, [17, 2, 3, 4, 18, 19, 20, 21, 26, 27, 28, 29])) {
+
+            if ($product->is_kwar3 == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1049,
+                        'name_ar' => 'كوارع'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_karashah == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1051,
+                        'name_ar' => 'كرشة'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_lyh == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1054,
+                        'name_ar' => 'لية'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_ras == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1053,
+                        'name_ar' => 'رأس'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+        }
+        if (in_array($product->size_id, [6, 178, 8, 9, 22, 23, 24, 25, 30, 31, 32, 33])) {
+
+            if ($product->is_kwar3 == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1050,
+                        'name_ar' => 'كوارع'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_karashah == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1052,
+                        'name_ar' => 'كرشة'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+            if ($product->is_lyh == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1055,
+                        'name_ar' => 'لية'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
+        }
+        if ($product->shalwata_id != null) {
+            $new_products[] = [
+                'size' =>   [
+                    'id' => 1056,
+                    'name_ar' => 'شلوطة'
+                ],
+                'preparation' =>  (object)[],
+                'cut' =>  (object)[],
+                'shalwata' =>  (object)[],
+                'quantity' => 1,
+            ];
+        }
+        # code...
+        $new_products[] = [
+            'size' => $product->size ?  [
+                'id' => $product->size->id,
+                'name_ar' => $product->size->name_ar
+            ] : (object)[],
+            'preparation' => $product->preparation ?  [
+                'id' => $product->preparation->id,
+                'name_ar' => $product->preparation->name_ar
+            ] : (object)[],
+            'cut' => $product->cut ?  [
+                'id' => $product->cut->id,
+                'name_ar' => $product->cut->name_ar
+            ] : (object)[],
+            'shalwata' => $product->shalwata ?  [
+                'id' => $product->shalwata->id,
+                'name_ar' => $product->shalwata->name_ar
+            ] : (object)[],
+            'quantity' => $product->quantity,
+        ];
+    }
+
     $payload = [
         "api_order_id" => $order['id'], // Order ID
         "customer" => [
@@ -50,7 +177,7 @@ function sendOrderToTurkishop($order, $products)
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
         "delivery_period" => $order['deliveryPeriod']['name_ar'],
         "payment_method" => $order['paymentType']['name_ar'],
-        "products" => $products
+        "products" => $new_products
     ];
     // return $payload;
 

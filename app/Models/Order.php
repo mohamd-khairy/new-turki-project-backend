@@ -74,9 +74,31 @@ class Order extends Model
             try {
                 streamOrder($model->ref_no, 'message');
 
+                $order = $model->load(
+                    'paymentType',
+                    'customer',
+                    'orderState',
+                    'deliveryPeriod',
+                    'selectedAddress',
+                );
+
+                info('test order');
+                info($order->ref_no);
+                info($order->toArray());
+
+                $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
+                    ->where('order_ref_no', $order->ref_no)
+                    ->get();
+
+                $result = sendOrderToTurkishop($order, $products);
+                info($order->ref_no);
+                info(json_encode($result));
+
                 // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
                 //throw $th;
+                info($order->ref_no);
+                info($th->getMessage());
             }
         });
 
@@ -223,6 +245,6 @@ class Order extends Model
 
     public function cashier_payments()
     {
-        return $this->hasMany(CashierPayment::class, 'order_ref_no' , 'ref_no')->with('payment_type');
+        return $this->hasMany(CashierPayment::class, 'order_ref_no', 'ref_no')->with('payment_type');
     }
 }
