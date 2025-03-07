@@ -46,7 +46,8 @@ class SendToOdoo extends Command
                 'orderState',
                 'deliveryPeriod',
                 'selectedAddress',
-            )->where('sent_to_odoo', 0)->orderBy('id', 'desc')
+            )->where('sent_to_odoo', 0)
+            ->orderBy('id', 'desc')
             ->take(10)
             ->get();
 
@@ -54,11 +55,7 @@ class SendToOdoo extends Command
 
             $order->update(['sent_to_odoo' => 1]);
 
-            $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-                ->where('order_ref_no', $order->ref_no)
-                ->get();
-
-            $result = sendOrderToTurkishop($order, $products);
+            $result = sendOrderToTurkishop($order);
             info('test send to odoo');
             info($order->ref_no);
             info(json_encode($result));

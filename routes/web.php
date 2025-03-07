@@ -51,11 +51,8 @@ Route::get('/{ref_no}', function ($ref_no) {
             'selectedAddress',
         )->where('ref_no', $ref_no)->orderBy('id', 'desc')->first();
 
-    $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-        ->where('order_ref_no', $order->ref_no)
-        ->get();
 
-    $result = sendOrderToTurkishop($order, $products);
+    $result = sendOrderToTurkishop($order);
     dd($result);
 });
 

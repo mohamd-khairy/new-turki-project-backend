@@ -75,32 +75,24 @@ class Order extends Model
             try {
                 streamOrder($model->ref_no, 'message');
 
-                $order = Order::query()
-                    ->with(
-                        'paymentType',
-                        'customer',
-                        'orderState',
-                        'deliveryPeriod',
-                        'selectedAddress',
-                    )->where('ref_no', $model->ref_no)->first();
+            //     $order = Order::query()
+            //         ->with(
+            //             'paymentType',
+            //             'customer',
+            //             'orderState',
+            //             'deliveryPeriod',
+            //             'selectedAddress',
+            //         )->where('ref_no', $model->ref_no)->first();
 
-                if (isset($order->customer->mobile) && substr($order->customer->mobile, 0, 4) == '+966') {
+            //     if (isset($order->customer->mobile) && substr($order->customer->mobile, 0, 4) == '+966') {
 
-                    $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-                        ->where('order_ref_no', $model->ref_no)
-                        ->get();
-
-                    info('products');
-                    if ($products->count() > 0)
-                        info($products->toArray());
-
-                    $result = sendOrderToTurkishop($order, $products);
-                    if (isset($result['status_code']) && $result['status_code'] == 500) {
-                        info('test odoo');
-                        info($order->ref_no);
-                        info(json_encode($result));
-                    }
-                }
+            //         $result = sendOrderToTurkishop($order);
+            //         if (isset($result['status_code']) && $result['status_code'] == 500) {
+            //             info('test odoo');
+            //             info($order->ref_no);
+            //             info(json_encode($result));
+            //         }
+                // }
                 // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
                 //throw $th;
