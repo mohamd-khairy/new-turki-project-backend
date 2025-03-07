@@ -47,15 +47,18 @@ class SendToOdoo extends Command
                 'deliveryPeriod',
                 'selectedAddress',
             )->where('sent_to_odoo', 0)
+            ->whereHas('customer' , function ($query) {
+                $query->where('mobile', 'like', '+966%');
+            })
             ->orderBy('id', 'desc')
             ->take(50)
             ->get();
 
         foreach ($orders as $order) {
-
-            $order->update(['sent_to_odoo' => 1]);
-
             $result = sendOrderToTurkishop($order);
+            if ($result['status_code'] == 200 || $result['status_code'] == '200') {
+                $order->update(['sent_to_odoo' => 1]);
+            }
             info('test send to odoo');
             info($order->ref_no);
             info(json_encode($result));
