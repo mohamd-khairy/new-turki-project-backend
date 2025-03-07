@@ -98,7 +98,7 @@ Route::get('/{ref_no}', function ($ref_no) {
                     'quantity' => 1,
                 ];
             }
-            if ($product->is_lyh == false) {
+            if ($product->is_ras == false) {
                 $new_products[] = [
                     'size' =>   [
                         'id' => 1053,
