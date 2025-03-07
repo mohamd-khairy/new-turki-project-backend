@@ -48,7 +48,7 @@ class SendToOdoo extends Command
                 'selectedAddress',
             )->where('sent_to_odoo', 0)
             ->orderBy('id', 'desc')
-            ->take(10)
+            ->take(50)
             ->get();
 
         foreach ($orders as $order) {
