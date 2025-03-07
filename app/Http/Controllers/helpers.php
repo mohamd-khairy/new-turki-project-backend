@@ -181,7 +181,7 @@ function sendOrderToTurkishop($order, $products)
     ];
     // return $payload;
 
-    info($payload);
+    info(json_encode($payload));
 
     $headers = [
         'Authorization: ' . $token,
