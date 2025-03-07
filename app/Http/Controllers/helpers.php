@@ -171,8 +171,6 @@ function sendOrderToTurkishop($order)
         "wallet_amount_used" => $order['wallet_amount_used'],
         "applied_discount_code" => $order['applied_discount_code'],
         "discount_applied" => $order['discount_applied'],
-        "long" => isset($order['selectedAddress']['long']) ? $order['selectedAddress']['long'] : "",
-        "lat" => isset($order['selectedAddress']['lat']) ? $order['selectedAddress']['lat'] : "",
         "delivery_date" => $order['delivery_date'],
         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
         "comment" => $order['comment'] ?? "",
@@ -184,6 +182,13 @@ function sendOrderToTurkishop($order)
         "payment_method" => isset($order['paymentType']['name_ar']) ? $order['paymentType']['name_ar'] : "",
         "products" => $new_products
     ];
+
+    if(isset($order['selectedAddress']['long'])){
+        $payload['long'] = $order['selectedAddress']['long'];
+    }
+    if(isset($order['selectedAddress']['lat'])){
+        $payload['lat'] = $order['selectedAddress']['lat'];
+    }
     // return $payload;
 
     // info(json_encode($payload));
