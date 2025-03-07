@@ -42,7 +42,6 @@ Route::get('/{ref_no}', function ($ref_no) {
     // dd(PHP_VERSION, 'here');
     // return view('welcome');
 
-
     $order = Order::query()
         ->with(
             'paymentType',
@@ -50,7 +49,7 @@ Route::get('/{ref_no}', function ($ref_no) {
             'orderState',
             'deliveryPeriod',
             'selectedAddress',
-        )->where('ref_no' , $ref_no)->orderBy('id', 'desc')->first();
+        )->where('ref_no', $ref_no)->orderBy('id', 'desc')->first();
 
     $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
         ->where('order_ref_no', $order->ref_no)

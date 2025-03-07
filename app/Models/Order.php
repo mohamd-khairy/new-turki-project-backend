@@ -57,7 +57,8 @@ class Order extends Model
         'printed_at',
         'foodics_integrate_id',
         'later',
-        'other_discount'
+        'other_discount',
+        'sent_to_odoo'
     ];
 
     protected $hidden = ['address'];
@@ -75,27 +76,26 @@ class Order extends Model
                 streamOrder($model->ref_no, 'message');
 
                 $order = Order::query()
-                ->with(
-                    'paymentType',
-                    'customer',
-                    'orderState',
-                    'deliveryPeriod',
-                    'selectedAddress',
-                )->where('ref_no' , $model->ref_no)->first();
+                    ->with(
+                        'paymentType',
+                        'customer',
+                        'orderState',
+                        'deliveryPeriod',
+                        'selectedAddress',
+                    )->where('ref_no', $model->ref_no)->first();
 
                 if (isset($order->customer->mobile) && substr($order->customer->mobile, 0, 4) == '+966') {
-                    info('test order');
-                    info($order->ref_no);
-                    info($order->toArray());
 
                     $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
                         ->where('order_ref_no', $order->ref_no)
                         ->get();
 
                     $result = sendOrderToTurkishop($order, $products);
-                    info('test odoo');
-                    info($order->ref_no);
-                    info(json_encode($result));
+                    if (isset($result['status_code']) && $result['status_code'] == 500) {
+                        info('test odoo');
+                        info($order->ref_no);
+                        info(json_encode($result));
+                    }
                 }
                 // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
