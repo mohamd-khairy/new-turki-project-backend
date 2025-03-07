@@ -26,7 +26,7 @@ function sendOrderToTurkishop($order)
     // $url = 'https://turkishop.shop/api/sale_orders';
     $url = 'http://213.136.77.102:8069/api/sale_orders';
     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
-
+    $session_id = 'bc561b363e835da392833b6d0978233408c5901d';
 
     $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
         ->where('order_ref_no', $order->ref_no)
@@ -183,10 +183,10 @@ function sendOrderToTurkishop($order)
         "products" => $new_products
     ];
 
-    if(isset($order['selectedAddress']['long'])){
+    if (isset($order['selectedAddress']['long'])) {
         $payload['long'] = $order['selectedAddress']['long'];
     }
-    if(isset($order['selectedAddress']['lat'])){
+    if (isset($order['selectedAddress']['lat'])) {
         $payload['lat'] = $order['selectedAddress']['lat'];
     }
     // return $payload;
@@ -196,7 +196,7 @@ function sendOrderToTurkishop($order)
     $headers = [
         'Authorization: ' . $token,
         'Content-Type: application/json',
-        'Cookie: session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+        'Cookie: session_id=' . $session_id,
     ];
 
     $ch = curl_init();
