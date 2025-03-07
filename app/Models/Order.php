@@ -91,12 +91,14 @@ class Order extends Model
                     ->get();
 
                 $result = sendOrderToTurkishop($order, $products);
+                info('test odoo');
                 info($order->ref_no);
                 info(json_encode($result));
 
                 // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
                 //throw $th;
+                info('test error order');
                 info($order->ref_no);
                 info($th->getMessage());
             }
