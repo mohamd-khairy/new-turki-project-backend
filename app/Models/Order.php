@@ -87,8 +87,12 @@ class Order extends Model
                 if (isset($order->customer->mobile) && substr($order->customer->mobile, 0, 4) == '+966') {
 
                     $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-                        ->where('order_ref_no', $order->ref_no)
+                        ->where('order_ref_no', $model->ref_no)
                         ->get();
+
+                    info('products');
+                    if ($products->count() > 0)
+                        info($products->toArray());
 
                     $result = sendOrderToTurkishop($order, $products);
                     if (isset($result['status_code']) && $result['status_code'] == 500) {
