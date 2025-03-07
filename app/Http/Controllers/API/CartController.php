@@ -316,15 +316,18 @@ class CartController extends Controller
         $TotalAmountBeforeDiscount = $totalItemsAmount + $totalAddonsAmount;
 
         if ($discountCode != null) {
-            list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = app(CouponController::class)->discountProcess($discountCode, $cartProducts, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
-            if ($couponValid == null) {
-                return response()->json([
-                    'success' => false,
-                    'data' => Cart::where('customer_id', auth()->user()->id)->get(),
-                    'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1],
-                    'description' => 'invalid coupon used',
-                    'code' => '400',
-                ], 400);
+            try {
+                list($couponValid, $discountAmount, $TotalAmountAfterDiscount, $couponValidatingResponse, $applicableProductIds) = app(CouponController::class)->discountProcess($discountCode, $cartProducts, $TotalAmountBeforeDiscount, $discountAmount, $TotalAmountAfterDiscount, $country->id, $currentCity->id);
+                if ($couponValid == null) {
+                    return response()->json([
+                        'success' => false,
+                        'data' => Cart::where('customer_id', auth()->user()->id)->get(),
+                        'message' => $couponValidatingResponse[0] . ":" . $couponValidatingResponse[1],
+                        'description' => 'invalid coupon used',
+                        'code' => '400',
+                    ], 400);
+                }
+            } catch (\Exception $e) {
             }
         } else {
             $TotalAmountAfterDiscount = $TotalAmountBeforeDiscount;
