@@ -98,6 +98,18 @@ Route::get('/{ref_no}', function ($ref_no) {
                     'quantity' => 1,
                 ];
             }
+            if ($product->is_lyh == false) {
+                $new_products[] = [
+                    'size' =>   [
+                        'id' => 1053,
+                        'name_ar' => 'رأس'
+                    ],
+                    'preparation' =>  (object)[],
+                    'cut' =>  (object)[],
+                    'shalwata' =>  (object)[],
+                    'quantity' => 1,
+                ];
+            }
         }
         if (in_array($product->size_id, [6, 178, 8, 9, 22, 23, 24, 25, 30, 31, 32, 33])) {
 
