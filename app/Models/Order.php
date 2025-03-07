@@ -74,27 +74,29 @@ class Order extends Model
             try {
                 streamOrder($model->ref_no, 'message');
 
-                $order = $model->load(
+                $order = Order::query()
+                ->with(
                     'paymentType',
                     'customer',
                     'orderState',
                     'deliveryPeriod',
                     'selectedAddress',
-                );
+                )->where('ref_no' , $model->ref_no)->first();
 
-                info('test order');
-                info($order->ref_no);
-                info($order->toArray());
+                if (isset($order->customer->mobile) && substr($order->customer->mobile, 0, 4) == '+966') {
+                    info('test order');
+                    info($order->ref_no);
+                    info($order->toArray());
 
-                $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-                    ->where('order_ref_no', $order->ref_no)
-                    ->get();
+                    $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
+                        ->where('order_ref_no', $order->ref_no)
+                        ->get();
 
-                $result = sendOrderToTurkishop($order, $products);
-                info('test odoo');
-                info($order->ref_no);
-                info(json_encode($result));
-
+                    $result = sendOrderToTurkishop($order, $products);
+                    info('test odoo');
+                    info($order->ref_no);
+                    info(json_encode($result));
+                }
                 // OrderToFoodics($model->ref_no);
             } catch (\Throwable $th) {
                 //throw $th;
