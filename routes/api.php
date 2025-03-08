@@ -77,6 +77,7 @@ Route::prefix("v2")->group(function () {
         Route::post('cashier-refund-order/{ref_no}', [CashierController::class, 'cashierOrderRefund'])->name('cashier-order-refund');
         Route::get('cashier-later-orders', [CashierController::class, 'cashierLaterOrder'])->name('cashier-later-orders');
 
+
         Route::apiResource('cashier-moneys', CashierMoneyController::class);
 
         /************************************* static notifications routes ******************************************************** */
@@ -326,6 +327,7 @@ Route::prefix("v2")->group(function () {
 
         /*********************OrderController***************** */
         Route::prefix('orders')->middleware('auth:sanctum')->group(function () {
+            Route::post('edit-order-data', [OrderController::class, 'editOrderFromOdoo']); //
             Route::post('edit-order', [OrderController::class, 'editOrder']); //
             Route::post('create-order', [OrderController::class, 'createOrderForDashboard']); //
             Route::post('add-order-product', [OrderController::class, 'addOrderProducts']); //

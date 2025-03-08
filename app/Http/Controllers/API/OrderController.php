@@ -13,6 +13,7 @@ use App\Models\Discount;
 use App\Models\MinOrder;
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\OrderState;
 use App\Models\Payment;
 use App\Models\PaymentType;
 use App\Models\Product;
@@ -613,6 +614,49 @@ class OrderController extends Controller
         }
     }
 
+    public function editOrderFromOdoo(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'ref_no' => 'required',
+                'order_status' => 'required',
+            ]);
+
+            $order = Order::where('ref_no', $request->ref_no)->first();
+
+            if (!$order) {
+                return failResponse([], 'no order with this number');
+            }
+
+
+            $order_state = OrderState::where('odoo_status', $order->order_status)->first();
+
+            if ($order_state) {
+
+                $order->update(['order_state_id' => $order_state->code]);
+
+                if ($order_state->code == "200") {
+                    cashBack($order);
+                    touchStock($order);
+                }
+            } else {
+                return failResponse([], 'no status with this value');
+            }
+
+            DB::commit();
+
+            return successResponse($order->refresh(), 'order updated successfully');
+        } catch (\Throwable $th) {
+
+
+            DB::rollBack();
+
+            // throw $th;
+            return failResponse([], $th->getMessage());
+        }
+    }
     public function removeDiscount($id)
     {
         $order = Order::where('id', $id)->first();
@@ -709,7 +753,7 @@ class OrderController extends Controller
                 'customer_id' => $request->customer_id,
                 'payment_type_id' => $validated["using_wallet"] ? 8 : 1,
                 'applied_discount_code' => $discountCode,
-                'version_app' => request( 'version_app', $app),
+                'version_app' => request('version_app', $app),
                 'comment' => $validated['notes'] ?? null,
                 'boxes_count' => isset($validated["boxes_count"]) ? $validated["boxes_count"] : 0,
                 'dishes_count' => isset($validated["dishes_count"]) ? $validated["dishes_count"] : 0,
@@ -1418,7 +1462,7 @@ class OrderController extends Controller
             'customer_id' => auth()->user()->id,
             'payment_type_id' => $validated['payment_type_id'],
             'applied_discount_code' => $discountCode,
-            'version_app' => request( 'version_app', $app),
+            'version_app' => request('version_app', $app),
             "paid" => $paid ?? 0
         ];
 
