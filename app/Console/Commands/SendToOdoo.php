@@ -39,29 +39,38 @@ class SendToOdoo extends Command
      */
     public function handle(): void
     {
-        $orders = Order::query()
-            ->with(
-                'paymentType',
-                'customer',
-                'orderState',
-                'deliveryPeriod',
-                'selectedAddress',
-            )->where('sent_to_odoo', 0)
-            ->whereHas('customer' , function ($query) {
-                $query->where('mobile', 'like', '+966%');
-            })
-            ->orderBy('id', 'desc')
-            ->take(50)
-            ->get();
+        try {
 
-        foreach ($orders as $order) {
-            $result = sendOrderToTurkishop($order);
-            if ($result['status_code'] == 200 || $result['status_code'] == '200') {
-                $order->update(['sent_to_odoo' => 1]);
+            $orders = Order::query()
+                ->with(
+                    'paymentType',
+                    'customer',
+                    'orderState',
+                    'deliveryPeriod',
+                    'selectedAddress',
+                )->where('sent_to_odoo', 0)
+                ->whereHas('customer', function ($query) {
+                    $query->where('mobile', 'like', '+966%');
+                })
+                ->orderBy('id', 'desc')
+                ->take(50)
+                ->get();
+
+            foreach ($orders as $order) {
+                $result = sendOrderToTurkishop($order);
+                if ($result['status_code'] == 200 || $result['status_code'] == '200') {
+                    $order->update(['sent_to_odoo' => 1]);
+                }
+                info('test send to odoo');
+                info($order->ref_no);
+                info(json_encode($result));
             }
-            info('test send to odoo');
-            info($order->ref_no);
-            info(json_encode($result));
+
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+            info('error send to odoo');
+            info($th->getMessage());
         }
     }
 }
