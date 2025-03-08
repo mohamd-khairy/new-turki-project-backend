@@ -52,7 +52,7 @@ class SendToOdoo extends Command
                 ->whereHas('customer', function ($query) {
                     $query->where('mobile', 'like', '+966%');
                 })
-                ->whereDate('created_at', today())
+                ->whereDate('created_at', date('Y-m-d'))
                 ->orderBy('id', 'desc')
                 ->take(50)
                 ->get();
