@@ -267,6 +267,8 @@ class OdooService
 
         curl_close($ch);
 
+        info('code : ' . $httpCode . ' error : ' . $error);
+
         if ($httpCode == 200) {
             // 🔹 قراءة الكوكيز من الملف
             $cookies = file_get_contents($cookieFile);
@@ -276,7 +278,7 @@ class OdooService
 
             $session_id = $matches[1] ?? null;
 
-
+            info($session_id);
             // return [
             //     'status_code' => $httpCode,
             //     'response' => json_decode($response, true),
