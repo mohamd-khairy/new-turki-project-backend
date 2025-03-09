@@ -250,51 +250,57 @@ class OdooService
             ]
         ];
 
-        $cookieFile = public_path('cookies.txt');
+        // $cookieFile = public_path('cookies.txt');
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->auth_url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        // $ch = curl_init();
+        // curl_setopt($ch, CURLOPT_URL, $this->auth_url);
+        // curl_setopt($ch, CURLOPT_POST, true);
+        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
+        // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        // $response = curl_exec($ch);
+        // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        // $error = curl_error($ch);
 
-        curl_close($ch);
+        // curl_close($ch);
 
-        info('code : ' . $httpCode . ' error : ' . $error);
+        // return [
+        //     'status_code' => $httpCode,
+        //     'response' => json_decode($response, true),
+        //     'error' => $error
+        // ];
+
+        $headers = [
+            'Content-Type' => 'application/json',
+        ];
+
+        $response = Http::withHeaders($headers)->post($this->auth_url, $payload);
+
+        $cookies = $response->cookies();
+
+        $session_id =  $cookies->getCookieByName('session_id')->getValue();
+
+        $httpCode = $response->status();
+
+        info('code : ' . $httpCode);
 
         if ($httpCode == 200) {
-            // 🔹 قراءة الكوكيز من الملف
-            $cookies = file_get_contents($cookieFile);
+            // // 🔹 قراءة الكوكيز من الملف
+            // $cookies = file_get_contents($cookieFile);
 
-            // 🔹 استخراج `session_id` من الكوكيز
-            preg_match('/session_id\s+([^\s]+)/', $cookies, $matches);
+            // // 🔹 استخراج `session_id` من الكوكيز
+            // preg_match('/session_id\s+([^\s]+)/', $cookies, $matches);
 
-            $session_id = $matches[1] ?? null;
+            // $session_id = $matches[1] ?? null;
 
-            info($session_id);
-            // return [
-            //     'status_code' => $httpCode,
-            //     'response' => json_decode($response, true),
-            //     'error' => $error
-            // ];
+            // info($session_id);
 
 
-            // $headers = [
-            //     'Content-Type' => 'application/json',
-            // ];
 
-            // $response = Http::withHeaders($headers)->post($this->auth_url, $payload);
 
-            // $cookies = $response->cookies();
-
-            // $session_id =  $cookies->getCookieByName('session_id')->getValue();
 
             if (isset($session_id)) {
                 $setting = DB::table('setting_apps')->where('key', 'session_id')->first();
