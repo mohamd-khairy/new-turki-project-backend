@@ -250,7 +250,7 @@ class OdooService
             ]
         ];
 
-        $cookieFile = storage_path('cookies.txt');
+        $cookieFile = public_path('cookies.txt');
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->auth_url);
