@@ -7,6 +7,7 @@ use App\Models\SizeStore;
 use App\Models\Stock;
 use App\Models\WalletLog;
 use App\Services\FirebaseService;
+use App\Services\OdooService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,8 @@ Route::get('/{ref_no}', function ($ref_no) {
     // dd(PHP_VERSION, 'here');
     // return view('welcome');
 
+    $odooService = new OdooService();
+
     $order = Order::query()
         ->with(
             'paymentType',
@@ -52,7 +55,7 @@ Route::get('/{ref_no}', function ($ref_no) {
         )->where('ref_no', $ref_no)->orderBy('id', 'desc')->first();
 
 
-    $result = sendOrderToTurkishop($order);
+    $result = $odooService->sendOrderToTurkishop($order);
     dd($result);
 });
 
