@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Services\OdooService;
 use Illuminate\Console\Command;
 
 class SendToOdoo extends Command
@@ -40,6 +41,7 @@ class SendToOdoo extends Command
     public function handle(): void
     {
         try {
+            $odooService = new OdooService();
 
             $orders = Order::query()
                 ->with(
@@ -53,13 +55,14 @@ class SendToOdoo extends Command
                     $query->where('mobile', 'like', '+966%');
                 })
                 ->whereDate('created_at', date('Y-m-d'))
+                ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime('-2 minutes')))
                 ->orderBy('id', 'desc')
                 ->take(50)
                 ->get();
 
             foreach ($orders as $order) {
-                $result = sendOrderToTurkishop($order);
-                if ($result['status_code'] == 200 || $result['status_code'] == '200') {
+                $result = $odooService->sendOrderToTurkishop($order);
+                if ($result['status_code'] == 200) {
                     $order->update(['sent_to_odoo' => 1]);
                 }
                 info('test send to odoo');
