@@ -198,7 +198,6 @@ class OdooService
             'Cookie: session_id=' . $this->session_id,
         ];
 
-        dd($headers);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->url);
         curl_setopt($ch, CURLOPT_POST, true);
