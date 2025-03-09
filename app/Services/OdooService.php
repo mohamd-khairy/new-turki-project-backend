@@ -193,36 +193,14 @@ class OdooService
     public function sendCurlRequest($payload)
     {
         $headers = [
-            'Authorization: ' . $this->token,
-            'Content-Type: application/json',
-            'Cookie: session_id=' . $this->session_id,
+            'Authorization' => $this->token,
+            'Content-Type' => 'application/json',
+            'Cookie' => 'session_id=' . $this->session_id,
         ];
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $response = Http::withHeaders($headers)->post($this->url, $payload);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-
-        curl_close($ch);
-
-
-        // $headers = [
-        //     'Authorization' => $this->token,
-        //     'Content-Type' => 'application/json',
-        //     'Cookie' => 'session_id=' . $this->session_id,
-        // ];
-
-        // $response = Http::withHeaders($headers)->post($this->url, $payload);
-
-        // $httpCode = $response->status();
+        $httpCode = $response->status();
 
         if ($httpCode == 404) {
             $this->getSessionId();
@@ -231,7 +209,6 @@ class OdooService
         return [
             'status_code' => $httpCode,
             'response' => json_decode($response, true),
-            'error' => $error,
         ];
     }
 
@@ -250,29 +227,6 @@ class OdooService
             ]
         ];
 
-        // $cookieFile = public_path('cookies.txt');
-
-        // $ch = curl_init();
-        // curl_setopt($ch, CURLOPT_URL, $this->auth_url);
-        // curl_setopt($ch, CURLOPT_POST, true);
-        // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
-        // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
-        // $response = curl_exec($ch);
-        // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        // $error = curl_error($ch);
-
-        // curl_close($ch);
-
-        // return [
-        //     'status_code' => $httpCode,
-        //     'response' => json_decode($response, true),
-        //     'error' => $error
-        // ];
-
         $headers = [
             'Content-Type' => 'application/json',
         ];
@@ -285,22 +239,7 @@ class OdooService
 
         $httpCode = $response->status();
 
-        info('code : ' . $httpCode);
-
         if ($httpCode == 200) {
-            // // 🔹 قراءة الكوكيز من الملف
-            // $cookies = file_get_contents($cookieFile);
-
-            // // 🔹 استخراج `session_id` من الكوكيز
-            // preg_match('/session_id\s+([^\s]+)/', $cookies, $matches);
-
-            // $session_id = $matches[1] ?? null;
-
-            // info($session_id);
-
-
-
-
 
             if (isset($session_id)) {
                 $setting = DB::table('setting_apps')->where('key', 'session_id')->first();
@@ -316,7 +255,6 @@ class OdooService
                         'value' => $session_id
                     ]);
                 }
-
 
                 return $session_id;
             }
