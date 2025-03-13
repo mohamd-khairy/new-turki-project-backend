@@ -223,7 +223,7 @@ class OdooService
             "params" => [
                 "db" => "turkishop",
                 "login" => "admin",
-                "password" => "admin12"
+                "password" => "Om123"
             ]
         ];
 
