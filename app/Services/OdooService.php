@@ -173,6 +173,7 @@ class OdooService
             "comment" => $order['comment'] ?? "",
             "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
             "paid" => $order['paid'],
+            "city" => isset($order['selectedAddress']['city']['name_ar']) ? $order['selectedAddress']['city']['name_ar'] : "",
             "custom_state" =>  isset($order['orderState']['odoo_status']) ? $order['orderState']['odoo_status'] : "",
             "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
             "delivery_period" => isset($order['deliveryPeriod']['name_ar']) ? $order['deliveryPeriod']['name_ar'] : "",
