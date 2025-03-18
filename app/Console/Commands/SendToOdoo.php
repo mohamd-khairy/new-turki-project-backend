@@ -55,9 +55,9 @@ class SendToOdoo extends Command
                     $query->where('mobile', 'like', '+966%');
                 })
                 ->whereDate('created_at', date('Y-m-d'))
-                ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime('-2 minutes')))
+                ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime('-4 minutes')))
                 ->orderBy('id', 'desc')
-                ->take(50)
+                ->take(10)
                 ->get();
 
             foreach ($orders as $order) {
