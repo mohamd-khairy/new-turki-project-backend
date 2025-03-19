@@ -1050,6 +1050,9 @@ class OrderController extends Controller
 
         $discountAmount = Discount::isValidForCashier($discount, $data, $TotalAmountBeforeDiscount, $country_id, $city_id);
 
+        if ($discountAmount > $discount->max_discount) {
+            $discountAmount = $discount->max_discount;
+        }
         return $discountAmount ?? 0;
     }
 
