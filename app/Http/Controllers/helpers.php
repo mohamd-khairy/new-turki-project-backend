@@ -164,30 +164,30 @@ function sendOrderToTurkishop($order)
         "customer" => [
             "name" => $order['customer']['name'],
             "mobile" => $order['customer']['mobile'],
-            "address" => isset($order['selectedAddress']['address']) ? $order['selectedAddress']['address'] : "",
-            "city" => isset($order['selectedAddress']['city']['name_ar']) ? $order['selectedAddress']['city']['name_ar'] : "",
+            "address" => isset($order['selectedAddress']['address']) ? $order['selectedAddress']['address'] : "شمال الرياض",
+            "city" => isset($order['selectedAddress']['city']['name_ar']) ? $order['selectedAddress']['city']['name_ar'] : "شمال الرياض",
         ],
         "using_wallet" => $order['using_wallet'],
         "wallet_amount_used" => $order['wallet_amount_used'],
         "applied_discount_code" => $order['applied_discount_code'],
         "discount_applied" => $order['discount_applied'],
-        "delivery_date" => $order['delivery_date'],
+        "delivery_date" => $order['delivery_date'] ?? date("Y-m-d"),
         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
         "comment" => $order['comment'] ?? "",
         "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
         "paid" => $order['paid'],
         "custom_state" =>  isset($order['orderState']['odoo_status']) ? $order['orderState']['odoo_status'] : "",
         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
-        "delivery_period" => isset($order['deliveryPeriod']['name_ar']) ? $order['deliveryPeriod']['name_ar'] : "",
+        "delivery_period" => isset($order['deliveryPeriod']['name_ar']) ? $order['deliveryPeriod']['name_ar'] : "فترة الظهر",
         "payment_method" => isset($order['paymentType']['name_ar']) ? $order['paymentType']['name_ar'] : "",
         "products" => $new_products
     ];
 
-    if (isset($order['selectedAddress']['long'])) {
-        $payload['long'] = $order['selectedAddress']['long'];
+    if (isset($order['selectedAddress']['long']) && !empty($order['selectedAddress']['long'])) {
+        $payload['long'] = $order['selectedAddress']['long'] ?? '0.000000';
     }
-    if (isset($order['selectedAddress']['lat'])) {
-        $payload['lat'] = $order['selectedAddress']['lat'];
+    if (isset($order['selectedAddress']['lat']) && !empty($order['selectedAddress']['lat'])) {
+        $payload['lat'] = $order['selectedAddress']['lat'] ?? '0.000000';
     }
     // return $payload;
 
