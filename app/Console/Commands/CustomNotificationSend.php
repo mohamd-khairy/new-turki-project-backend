@@ -289,6 +289,8 @@ class CustomNotificationSend extends Command
                     'title' => $customNotification->title,
                     'body' => $customNotification->body,
                     'scheduled_at' => $customNotification->scheduled_at,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
             } catch (\Exception $e) {
                 // Log errors silently (optional: log to a file or monitoring system)
