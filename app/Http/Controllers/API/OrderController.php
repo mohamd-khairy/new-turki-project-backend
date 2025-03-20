@@ -631,7 +631,7 @@ class OrderController extends Controller
             }
 
 
-            $order_state = OrderState::where('odoo_status', $order->order_status)->first();
+            $order_state = OrderState::where('odoo_status', $request->order_status)->first();
 
             if ($order_state) {
 
