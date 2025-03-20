@@ -15,7 +15,8 @@ class OrderState extends Model
         'customer_state_en',
         'customer_state_ar',
         'code',
-        'is_active'
+        'is_active',
+        'odoo_status'
     ];
    protected $primaryKey = 'code';
 
