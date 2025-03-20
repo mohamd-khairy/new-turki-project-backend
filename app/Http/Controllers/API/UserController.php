@@ -30,7 +30,7 @@ class UserController extends Controller
     {
         $data = User::with(['roles', 'permissions'])->orderBy('id', 'desc')
             ->whereHas('roles', function ($q) {
-                $q->where('name', '!=', 'admin');
+                // $q->where('name', '!=', 'admin');
                 if (request('role_id')) {
                     $q->where('id', request('role_id'));
                 }
@@ -38,6 +38,7 @@ class UserController extends Controller
                     $q->where('name', request('role_name'));
                 }
             })
+            ->where('email' , '!=' , 'admin@admin.com')
             ->where('id', '!=', auth()->id());
 
         $data = request('per_page') == -1 ? $data->get() : $data->paginate(request('per_page', 200));
