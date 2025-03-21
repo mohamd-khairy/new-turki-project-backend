@@ -12,6 +12,7 @@ use App\Services\OdooService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,41 +45,19 @@ Route::get('/{ref_no}', function ($ref_no) {
     // dd(PHP_VERSION, 'here');
     // return view('welcome');
 
-    // $odooService = new OdooService();
+    $odooService = new OdooService();
 
-    // $order = Order::query()
-    //     ->with(
-    //         'paymentType',
-    //         'customer',
-    //         'orderState',
-    //         'deliveryPeriod',
-    //         'selectedAddress',
-    //     )->where('ref_no', $ref_no)->orderBy('id', 'desc')->first();
-
-
-    // $result = $odooService->sendOrderToTurkishop($order);
+    $order = Order::query()
+        ->with(
+            'paymentType',
+            'customer',
+            'orderState',
+            'deliveryPeriod',
+            'selectedAddress',
+        )->where('ref_no', $ref_no)->orderBy('id', 'desc')->first();
 
 
-    $customNotification = CustomNotification::query()
-        ->where('scheduled_at', '<=', now())
-        ->first();
-
-    $customer_data = [
-        'eNDHD0EyikpthENUAx8ES0:APA91bEdbMNrydd0GsooEO5k5xHcRqeLbuanPvji4EgMjdQih0_VsOpfmb0gOvH3F0V-_WxShi5r3wW4S8XA2GFolhkgHEOscCwmUec0TKJwCACnUMBLnXHoR6scExAofVRCWzc9FupD',
-        'fB8uIgdmBUFTrlje45faPW:APA91bHerCHVe9aH3lvTw6DzrNsPd0beAr7AQczfAe2bOA4NSfkP3Kl80OGZs9ZxEBQcBAOUQ08TULmbThhNdyv2h0-UHRRykuMchgzLFbJb2iMVUD0Vx2g'
-    ];
-
-    $firebase = new FirebaseService();
-
-    $res = $firebase->sendBulkNotification(
-        $customer_data,
-        $customNotification->title,
-        $customNotification->body,
-        $customNotification->data,
-        $customNotification->image
-    );
-
-    dd($res);
+    $result = $odooService->sendOrderToTurkishop($order);
 });
 
 

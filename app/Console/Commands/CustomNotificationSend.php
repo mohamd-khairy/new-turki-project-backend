@@ -44,35 +44,127 @@ class CustomNotificationSend extends Command
         DB::statement('SET sql_mode = " "');
 
         // Fetch active custom notifications that are due to be sent
-        $customNotifications = CustomNotification::query()
+        $customNotification = CustomNotification::query()
             ->where('scheduled_at', '<=', now())
             ->whereNull('sent_at')
-            ->get();
+            ->first();
 
-        // Process each notification
-        foreach ($customNotifications as $customNotification) {
+        $customNotification->update(['sent_at' => now()]);
 
-            if ($customNotification->is_for_all) {
-                // $customer_data += $this->getAllUsersWithDeviceTokens();
-
-                $firebase = new FirebaseService();
-                $firebase->sendForAll($customNotification->title, $customNotification->body, [], $customNotification->image);
-                // continue;
-            } else {
-                // Determine target user IDs based on notification criteria
-                $customer_data = $this->getCustomerDataForNotification($customNotification);
-
-                // Save and send notifications for the targeted users
-                // $this->saveNotification($customer_data, $customNotification);
-
-                $this->sendBulkNotification($customer_data, $customNotification);
-            }
-
-            $customNotification->update(['sent_at' => now()]);
+        if ($customNotification->is_for_all) {
+            $this->sendForAll($customNotification);
+        } elseif ($customNotification->is_by_country) {
+            $this->sendByCountry($customNotification);
+        } else {
+            $this->sendToTargetedUsers($customNotification);
         }
+
+        info('All custom_notifications processed');
 
         return true;
     }
+
+    /**
+     * Send notification to all users.
+     *
+     * @param  $customNotification
+     * @return void
+     */
+    protected function sendForAll($customNotification)
+    {
+        $firebase = new FirebaseService();
+
+        $firebase->sendForAll(
+            $customNotification->title,
+            $customNotification->body,
+            [],
+            $customNotification->image,
+            'all'
+        );
+    }
+
+    /**
+     * Get the topic for a specific country.
+     *
+     * @param int $countryId
+     * @return string|null
+     */
+    protected function getCountryTopic(int $countryId): ?string
+    {
+        $topics = [
+            1 => 'saudi_device',
+            4 => 'emarat_device',
+        ];
+
+        return $topics[$countryId] ?? null;
+    }
+
+    /**
+     * Send notification based on countries.
+     *
+     * @param  $customNotification
+     * @return void
+     */
+    protected function sendByCountry($customNotification)
+    {
+        $firebase = new FirebaseService();
+
+        foreach ($customNotification->country_ids as $countryId) {
+            $topic = $this->getCountryTopic($countryId);
+
+            if ($topic) {
+                $firebase->sendForAll(
+                    $customNotification->title,
+                    $customNotification->body,
+                    [],
+                    $customNotification->image,
+                    $topic
+                );
+            }
+        }
+    }
+    /**
+     * Send notification to targeted users.
+     *
+     * @return void
+     */
+    protected function sendToTargetedUsers($customNotification)
+    {
+        $customerData = $this->getCustomerDataForNotification($customNotification);
+        $this->saveNotification($customerData, $customNotification);
+    }
+
+    /**
+     * Save and send notifications for the targeted users.
+     *
+     * @param array $customer_data
+     * @param \stdClass $customNotification
+     */
+    private function saveNotification($customer_data, $customNotification)
+    {
+        $chunkSize = 500; // Adjust this based on your needs
+        $chunks = array_chunk($customer_data, $chunkSize, true);
+        $firebase = new FirebaseService();
+
+        foreach ($chunks as $chunk) {
+            foreach ($chunk as $deviceToken) {
+                try {
+                    // Send the notification via Firebase
+                    $res = $firebase->sendNotification(
+                        $deviceToken,
+                        $customNotification->title,
+                        $customNotification->body,
+                        $customNotification->data,
+                        $customNotification->image
+                    );
+                } catch (\Exception $e) {
+                    // Log errors silently (optional: log to a file or monitoring system)
+                    $this->logNotificationError($e);
+                }
+            }
+        }
+    }
+
 
     /**
      * Get user IDs based on the notification's targeting criteria.
@@ -88,9 +180,9 @@ class CustomNotificationSend extends Command
         if ($customNotification->for_clients_only) {
             $customer_data = array_merge($customer_data, $this->getUsersByClientIds($customNotification->client_ids));
         }
-        if ($customNotification->is_by_country) {
-            $customer_data = array_merge($customer_data, $this->getUsersByCountry($customNotification->country_ids));
-        }
+        // if ($customNotification->is_by_country) {
+        //     $customer_data = array_merge($customer_data, $this->getUsersByCountry($customNotification->country_ids));
+        // }
         if ($customNotification->is_by_city) {
             $customer_data = array_merge($customer_data, $this->getUsersByCity($customNotification->city_ids));
         }
@@ -113,20 +205,6 @@ class CustomNotificationSend extends Command
         return $customer_data;
     }
 
-
-    /**
-     * Fetch all users with device tokens.
-     *
-     * @return array
-     */
-    private function getAllUsersWithDeviceTokens()
-    {
-        return DB::table('customers')
-            ->whereNotNull('device_token')
-            ->pluck('id', 'device_token')
-            ->toArray();
-    }
-
     /**
      * Fetch users by client IDs.
      *
@@ -138,7 +216,7 @@ class CustomNotificationSend extends Command
         return DB::table('customers')
             ->whereNotNull('device_token')
             ->whereIn('id', $clientIds)
-            ->pluck('id', 'device_token')
+            ->pluck('device_token')
             ->toArray();
     }
 
@@ -264,77 +342,6 @@ class CustomNotificationSend extends Command
             ->whereNotNull('customers.device_token')
             ->pluck('customers.device_token')
             ->toArray();
-    }
-
-    /**
-     * Save and send notifications for the targeted users.
-     *
-     * @param array $customer_data
-     * @param \stdClass $customNotification
-     */
-    // private function saveNotification($customer_data, $customNotification)
-    // {
-    //     $notifications = [];
-    //     $firebase = new FirebaseService();
-
-    //     foreach ($customer_data as $deviceToken => $userId) {
-    //         try {
-    //             // Send the notification via Firebase
-    //             $res = $firebase->sendNotification(
-    //                 $deviceToken,
-    //                 $customNotification->title,
-    //                 $customNotification->body,
-    //                 $customNotification->data,
-    //                 $customNotification->image
-    //             );
-
-    //             // Prepare notification data for bulk insertion
-    //             $notifications[] = [
-    //                 'customer_id' => $userId,
-    //                 'data' => 'custom_notification',
-    //                 'sent_at' => now(),
-    //                 'title' => $customNotification->title,
-    //                 'body' => $customNotification->body,
-    //                 'scheduled_at' => $customNotification->scheduled_at,
-    //                 'created_at' => now(),
-    //                 'updated_at' => now(),
-    //             ];
-    //         } catch (\Exception $e) {
-    //             // Log errors silently (optional: log to a file or monitoring system)
-    //             $this->logNotificationError($e);
-    //         }
-    //     }
-
-    //     // Bulk insert notifications into the database
-    //     if (!empty($notifications)) {
-    //         Notification::insert($notifications);
-
-    //         info('custom_notification');
-    //         info(json_encode($notifications));
-    //     }
-    // }
-
-
-    private function sendBulkNotification($customer_data, $customNotification)
-    {
-        $firebase = new FirebaseService();
-
-        try {
-
-            $res = $firebase->sendBulkNotification(
-                $customer_data,
-                $customNotification->title,
-                $customNotification->body,
-                $customNotification->data,
-                $customNotification->image
-            );
-
-            info('custom_notification');
-            info(json_encode($res));
-        } catch (\Exception $e) {
-            // Log errors silently (optional: log to a file or monitoring system)
-            $this->logNotificationError($e);
-        }
     }
 
     /**
