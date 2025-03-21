@@ -102,7 +102,13 @@ class FirebaseService
                 ],
             ]);
 
-        return $this->messaging->sendMulticast($message, $deviceTokens);
+        $report =  $this->messaging->sendMulticast($message, $deviceTokens);
+
+        return response()->json([
+            'success_count' => $report->successes()->count(),
+            'failure_count' => $report->failures()->count(),
+        ]);
+
     }
 
 
