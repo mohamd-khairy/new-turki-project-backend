@@ -63,7 +63,9 @@ class CustomNotificationSend extends Command
                 $customer_data = $this->getCustomerDataForNotification($customNotification);
 
                 // Save and send notifications for the targeted users
-                $this->saveNotification($customer_data, $customNotification);
+                // $this->saveNotification($customer_data, $customNotification);
+
+                $this->sendBulkNotification($customer_data, $customNotification);
             }
 
             $customNotification->update(['sent_at' => now()]);
@@ -165,7 +167,7 @@ class CustomNotificationSend extends Command
                     ->whereNotNull('device_token')
                     ->select('id', 'device_token', DB::raw('LEFT(mobile, 4) as mobile_prefix'))
                     ->having('mobile_prefix', '=', $prefix)
-                    ->pluck('id', 'device_token')
+                    ->pluck('device_token')
                     ->toArray();
             }
         }
@@ -186,7 +188,7 @@ class CustomNotificationSend extends Command
             ->whereIn('addresses.city_id', $cityIds)
             ->whereNotNull('customers.device_token')
             ->groupBy('addresses.customer_id')
-            ->pluck('customers.id', 'customers.device_token')
+            ->pluck('customers.device_token')
             ->toArray();
     }
 
@@ -204,7 +206,7 @@ class CustomNotificationSend extends Command
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->whereIn('order_products.product_id', $productIds)
             ->whereNotNull('customers.device_token')
-            ->pluck('customers.id', 'customers.device_token')
+            ->pluck('customers.device_token')
             ->toArray();
     }
 
@@ -222,7 +224,7 @@ class CustomNotificationSend extends Command
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->whereIn('order_products.size_id', $sizeIds)
             ->whereNotNull('customers.device_token')
-            ->pluck('customers.id', 'customers.device_token')
+            ->pluck('customers.device_token')
             ->toArray();
     }
 
@@ -241,7 +243,7 @@ class CustomNotificationSend extends Command
             ->join('products', 'order_products.product_id', '=', 'products.id')
             ->whereIn('products.category_id', $categoryIds)
             ->whereNotNull('customers.device_token')
-            ->pluck('customers.id', 'customers.device_token')
+            ->pluck('customers.device_token')
             ->toArray();
     }
 
@@ -260,7 +262,7 @@ class CustomNotificationSend extends Command
             ->join('products', 'order_products.product_id', '=', 'products.id')
             ->whereIn('products.sub_category_id', $subcategoryIds)
             ->whereNotNull('customers.device_token')
-            ->pluck('customers.id', 'customers.device_token')
+            ->pluck('customers.device_token')
             ->toArray();
     }
 
@@ -270,45 +272,68 @@ class CustomNotificationSend extends Command
      * @param array $customer_data
      * @param \stdClass $customNotification
      */
-    private function saveNotification($customer_data, $customNotification)
+    // private function saveNotification($customer_data, $customNotification)
+    // {
+    //     $notifications = [];
+    //     $firebase = new FirebaseService();
+
+    //     foreach ($customer_data as $deviceToken => $userId) {
+    //         try {
+    //             // Send the notification via Firebase
+    //             $res = $firebase->sendNotification(
+    //                 $deviceToken,
+    //                 $customNotification->title,
+    //                 $customNotification->body,
+    //                 $customNotification->data,
+    //                 $customNotification->image
+    //             );
+
+    //             // Prepare notification data for bulk insertion
+    //             $notifications[] = [
+    //                 'customer_id' => $userId,
+    //                 'data' => 'custom_notification',
+    //                 'sent_at' => now(),
+    //                 'title' => $customNotification->title,
+    //                 'body' => $customNotification->body,
+    //                 'scheduled_at' => $customNotification->scheduled_at,
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
+    //             ];
+    //         } catch (\Exception $e) {
+    //             // Log errors silently (optional: log to a file or monitoring system)
+    //             $this->logNotificationError($e);
+    //         }
+    //     }
+
+    //     // Bulk insert notifications into the database
+    //     if (!empty($notifications)) {
+    //         Notification::insert($notifications);
+
+    //         info('custom_notification');
+    //         info(json_encode($notifications));
+    //     }
+    // }
+
+
+    private function sendBulkNotification($customer_data, $customNotification)
     {
-        $notifications = [];
         $firebase = new FirebaseService();
 
-        foreach ($customer_data as $deviceToken => $userId) {
-            try {
-                // Send the notification via Firebase
-                $res = $firebase->sendNotification(
-                    $deviceToken,
-                    $customNotification->title,
-                    $customNotification->body,
-                    $customNotification->data,
-                    $customNotification->image
-                );
+        try {
 
-                // Prepare notification data for bulk insertion
-                $notifications[] = [
-                    'customer_id' => $userId,
-                    'data' => 'custom_notification',
-                    'sent_at' => now(),
-                    'title' => $customNotification->title,
-                    'body' => $customNotification->body,
-                    'scheduled_at' => $customNotification->scheduled_at,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            } catch (\Exception $e) {
-                // Log errors silently (optional: log to a file or monitoring system)
-                $this->logNotificationError($e);
-            }
-        }
-
-        // Bulk insert notifications into the database
-        if (!empty($notifications)) {
-            Notification::insert($notifications);
+            $res = $firebase->sendBulkNotification(
+                $customer_data,
+                $customNotification->title,
+                $customNotification->body,
+                $customNotification->data,
+                $customNotification->image
+            );
 
             info('custom_notification');
-            info(json_encode($notifications));
+            info(json_encode($res));
+        } catch (\Exception $e) {
+            // Log errors silently (optional: log to a file or monitoring system)
+            $this->logNotificationError($e);
         }
     }
 

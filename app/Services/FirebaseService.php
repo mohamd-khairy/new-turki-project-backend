@@ -68,6 +68,43 @@ class FirebaseService
         return $this->messaging->send($message);
     }
 
+    public function sendBulkNotification($deviceTokens, $title, $body, $data = [], $image = null)
+    {
+        $notification = [
+            'title' => $title,
+            'body' => $body,
+        ];
+
+        $data = [
+            'image' => $image
+        ];
+
+        // Add image to notification if provided
+        if ($image) {
+            $notification['image'] = $image;
+        }
+
+        $message = CloudMessage::new()
+            ->withNotification($notification)
+            ->withData(is_array($data) ? $data : [])
+            ->withAndroidConfig([
+                'notification' => [
+                    'sound' => 'cowbell',
+                    'image' => $image, // Optional: Add image for Android
+                ],
+            ])
+            ->withApnsConfig([
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'cowbell.caf',
+                        'mutable-content' => 1, // Required for rich notifications on iOS
+                    ],
+                ],
+            ]);
+
+        return $this->messaging->sendMulticast($message, $deviceTokens);
+    }
+
 
     public function sendForAll($title, $body, $data = [], $image = null)
     {
