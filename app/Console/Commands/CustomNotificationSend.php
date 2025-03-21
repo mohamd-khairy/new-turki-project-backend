@@ -104,6 +104,8 @@ class CustomNotificationSend extends Command
             $customer_data += $this->getUsersBySubcategory($customNotification->category_child_ids);
         }
 
+        $customer_data = array_unique($customer_data, SORT_REGULAR);
+
         return $customer_data;
     }
 
