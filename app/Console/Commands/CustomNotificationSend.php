@@ -78,36 +78,39 @@ class CustomNotificationSend extends Command
      * @param \stdClass $customNotification
      * @return array
      */
+
     private function getCustomerDataForNotification($customNotification)
     {
         $customer_data = [];
 
         if ($customNotification->for_clients_only) {
-            $customer_data += $this->getUsersByClientIds($customNotification->client_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersByClientIds($customNotification->client_ids));
         }
         if ($customNotification->is_by_country) {
-            $customer_data += $this->getUsersByCountry($customNotification->country_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersByCountry($customNotification->country_ids));
         }
         if ($customNotification->is_by_city) {
-            $customer_data += $this->getUsersByCity($customNotification->city_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersByCity($customNotification->city_ids));
         }
         if ($customNotification->is_by_product) {
-            $customer_data += $this->getUsersByProduct($customNotification->product_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersByProduct($customNotification->product_ids));
         }
         if ($customNotification->is_by_size) {
-            $customer_data += $this->getUsersBySize($customNotification->size_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersBySize($customNotification->size_ids));
         }
         if ($customNotification->is_by_category) {
-            $customer_data += $this->getUsersByCategory($customNotification->category_parent_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersByCategory($customNotification->category_parent_ids));
         }
         if ($customNotification->is_by_subcategory) {
-            $customer_data += $this->getUsersBySubcategory($customNotification->category_child_ids);
+            $customer_data = array_merge($customer_data, $this->getUsersBySubcategory($customNotification->category_child_ids));
         }
 
+        // Remove duplicate values
         $customer_data = array_unique($customer_data, SORT_REGULAR);
 
         return $customer_data;
     }
+
 
     /**
      * Fetch all users with device tokens.
