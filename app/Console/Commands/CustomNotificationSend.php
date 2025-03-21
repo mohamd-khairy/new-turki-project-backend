@@ -49,18 +49,19 @@ class CustomNotificationSend extends Command
             ->whereNull('sent_at')
             ->first();
 
-        $customNotification->update(['sent_at' => now()]);
+        if ($customNotification) {
+            $customNotification->update(['sent_at' => now()]);
 
-        if ($customNotification->is_for_all) {
-            $this->sendForAll($customNotification);
-        } elseif ($customNotification->is_by_country) {
-            $this->sendByCountry($customNotification);
-        } else {
-            $this->sendToTargetedUsers($customNotification);
+            if ($customNotification->is_for_all) {
+                $this->sendForAll($customNotification);
+            } elseif ($customNotification->is_by_country) {
+                $this->sendByCountry($customNotification);
+            } else {
+                $this->sendToTargetedUsers($customNotification);
+            }
+
+            info('All custom_notifications processed');
         }
-
-        info('All custom_notifications processed');
-
         return true;
     }
 
