@@ -620,11 +620,11 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             $request->validate([
-                'ref_no' => 'required',
+                'id' => 'required',
                 'order_status' => 'required',
             ]);
 
-            $order = Order::where('ref_no', $request->ref_no)->first();
+            $order = Order::where('id', $request->id)->first();
 
             if (!$order) {
                 return failResponse([], 'no order with this number');
