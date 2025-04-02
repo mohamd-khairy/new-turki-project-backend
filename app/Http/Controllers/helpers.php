@@ -46,7 +46,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             if ($product->is_karashah == false) {
@@ -58,7 +58,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             if ($product->is_lyh == false) {
@@ -70,7 +70,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             if ($product->is_ras == false) {
@@ -82,7 +82,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
         }
@@ -97,7 +97,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             if ($product->is_karashah == false) {
@@ -109,7 +109,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             if ($product->is_lyh == false) {
@@ -121,7 +121,7 @@ function sendOrderToTurkishop($order)
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
         }
@@ -134,7 +134,7 @@ function sendOrderToTurkishop($order)
                 'preparation' =>  (object)[],
                 'cut' =>  (object)[],
                 'shalwata' =>  (object)[],
-                'quantity' => 1,
+                'quantity' => $product->quantity,
             ];
         }
         # code...
