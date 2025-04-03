@@ -58,6 +58,7 @@ Route::get('/{ref_no}', function ($ref_no) {
 
 
     $result = $odooService->sendOrderToTurkishop($order);
+    dd($result);
 });
 
 
