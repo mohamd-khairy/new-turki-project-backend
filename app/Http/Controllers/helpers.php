@@ -21,231 +21,231 @@ use Illuminate\Support\Str;
 
 use Illuminate\Support\Facades\Http;
 
-function sendOrderToTurkishop($order)
-{
-    // $url = 'https://turkishop.shop/api/sale_orders';
-    $url = 'https://turkeymeat49-turkey-shop.odoo.com/api/sale_orders';
-    $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
-    $session_id = '6b65b4bde5af8d3c8eb9d4303ff5284195eff33d';
+// function sendOrderToTurkishop($order)
+// {
+//     // $url = 'https://turkishop.shop/api/sale_orders';
+//     $url = 'https://turkeymeat49-turkey-shop.odoo.com/api/sale_orders';
+//     $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b'; // Replace with your actual token
+//     $session_id = '6b65b4bde5af8d3c8eb9d4303ff5284195eff33d';
 
-    $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
-        ->where('order_ref_no', $order->ref_no)
-        ->get();
+//     $products = OrderProduct::with('preparation', 'size', 'cut', 'shalwata')
+//         ->where('order_ref_no', $order->ref_no)
+//         ->get();
 
-    $new_products = [];
-    foreach ($products as $key => $product) {
-        #product_1
-        if (in_array($product->size_id, [17, 2, 3, 4, 18, 19, 20, 21, 26, 27, 28, 29])) {
+//     $new_products = [];
+//     foreach ($products as $key => $product) {
+//         #product_1
+//         if (in_array($product->size_id, [17, 2, 3, 4, 18, 19, 20, 21, 26, 27, 28, 29])) {
 
-            if ($product->is_kwar3 == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1049,
-                        'name_ar' => 'كوارع'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-            if ($product->is_karashah == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1051,
-                        'name_ar' => 'كرشة'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-            if ($product->is_lyh == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1054,
-                        'name_ar' => 'لية'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-            if ($product->is_ras == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1053,
-                        'name_ar' => 'رأس'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-        }
-        if (in_array($product->size_id, [6, 178, 8, 9, 22, 23, 24, 25, 30, 31, 32, 33])) {
+//             if ($product->is_kwar3 == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1049,
+//                         'name_ar' => 'كوارع'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//             if ($product->is_karashah == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1051,
+//                         'name_ar' => 'كرشة'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//             if ($product->is_lyh == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1054,
+//                         'name_ar' => 'لية'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//             if ($product->is_ras == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1053,
+//                         'name_ar' => 'رأس'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//         }
+//         if (in_array($product->size_id, [6, 178, 8, 9, 22, 23, 24, 25, 30, 31, 32, 33])) {
 
-            if ($product->is_kwar3 == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1050,
-                        'name_ar' => 'كوارع'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-            if ($product->is_karashah == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1052,
-                        'name_ar' => 'كرشة'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-            if ($product->is_lyh == false) {
-                $new_products[] = [
-                    'size' =>   [
-                        'id' => 1055,
-                        'name_ar' => 'لية'
-                    ],
-                    'preparation' =>  (object)[],
-                    'cut' =>  (object)[],
-                    'shalwata' =>  (object)[],
-                    'quantity' => $product->quantity,
-                ];
-            }
-        }
-        if ($product->shalwata_id != null) {
-            $new_products[] = [
-                'size' =>   [
-                    'id' => 1056,
-                    'name_ar' => 'شلوطة'
-                ],
-                'preparation' =>  (object)[],
-                'cut' =>  (object)[],
-                'shalwata' =>  (object)[],
-                'quantity' => $product->quantity,
-            ];
-        }
-        # code...
-        $new_products[] = [
-            'size' => $product->size ?  [
-                'id' => $product->size->id,
-                'name_ar' => $product->size->name_ar
-            ] : (object)[],
-            'preparation' => $product->preparation ?  [
-                'id' => $product->preparation->id,
-                'name_ar' => $product->preparation->name_ar
-            ] : (object)[],
-            'cut' => $product->cut ?  [
-                'id' => $product->cut->id,
-                'name_ar' => $product->cut->name_ar
-            ] : (object)[],
-            'shalwata' => $product->shalwata ?  [
-                'id' => $product->shalwata->id,
-                'name_ar' => $product->shalwata->name_ar
-            ] : (object)[],
-            'quantity' => $product->quantity,
-        ];
-    }
+//             if ($product->is_kwar3 == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1050,
+//                         'name_ar' => 'كوارع'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//             if ($product->is_karashah == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1052,
+//                         'name_ar' => 'كرشة'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//             if ($product->is_lyh == false) {
+//                 $new_products[] = [
+//                     'size' =>   [
+//                         'id' => 1055,
+//                         'name_ar' => 'لية'
+//                     ],
+//                     'preparation' =>  (object)[],
+//                     'cut' =>  (object)[],
+//                     'shalwata' =>  (object)[],
+//                     'quantity' => $product->quantity,
+//                 ];
+//             }
+//         }
+//         if ($product->shalwata_id != null) {
+//             $new_products[] = [
+//                 'size' =>   [
+//                     'id' => 1056,
+//                     'name_ar' => 'شلوطة'
+//                 ],
+//                 'preparation' =>  (object)[],
+//                 'cut' =>  (object)[],
+//                 'shalwata' =>  (object)[],
+//                 'quantity' => $product->quantity,
+//             ];
+//         }
+//         # code...
+//         $new_products[] = [
+//             'size' => $product->size ?  [
+//                 'id' => $product->size->id,
+//                 'name_ar' => $product->size->name_ar
+//             ] : (object)[],
+//             'preparation' => $product->preparation ?  [
+//                 'id' => $product->preparation->id,
+//                 'name_ar' => $product->preparation->name_ar
+//             ] : (object)[],
+//             'cut' => $product->cut ?  [
+//                 'id' => $product->cut->id,
+//                 'name_ar' => $product->cut->name_ar
+//             ] : (object)[],
+//             'shalwata' => $product->shalwata ?  [
+//                 'id' => $product->shalwata->id,
+//                 'name_ar' => $product->shalwata->name_ar
+//             ] : (object)[],
+//             'quantity' => $product->quantity,
+//         ];
+//     }
 
-    $payload = [
-        "api_order_id" => $order['id'], // Order ID
-        "customer" => [
-            "name" => $order['customer']['name'],
-            "mobile" => $order['customer']['mobile'],
-            "address" => isset($order['selectedAddress']['address']) ? $order['selectedAddress']['address'] : "شمال الرياض",
-            "city" => isset($order['selectedAddress']['city']['name_ar']) ? $order['selectedAddress']['city']['name_ar'] : "شمال الرياض",
-        ],
-        "using_wallet" => $order['using_wallet'],
-        "wallet_amount_used" => $order['wallet_amount_used'],
-        "applied_discount_code" => $order['applied_discount_code'],
-        "discount_applied" => $order['discount_applied'],
-        "delivery_date" => date("Y-m-d", strtotime($order['delivery_date'] ?? date("Y-m-d"))),
-        "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
-        "comment" => $order['comment'] ?? "",
-        "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
-        "paid" => $order['paid'],
-        "custom_state" =>  isset($order['orderState']['odoo_status']) ? $order['orderState']['odoo_status'] : "",
-        "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
-        "delivery_period" => isset($order['deliveryPeriod']['name_ar']) ? $order['deliveryPeriod']['name_ar'] : "فترة الظهر",
-        "payment_method" => isset($order['paymentType']['name_ar']) ? $order['paymentType']['name_ar'] : "",
-        "products" => $new_products
-    ];
+//     $payload = [
+//         "api_order_id" => $order['id'], // Order ID
+//         "customer" => [
+//             "name" => $order['customer']['name'],
+//             "mobile" => $order['customer']['mobile'],
+//             "address" => isset($order['selectedAddress']['address']) ? $order['selectedAddress']['address'] : "شمال الرياض",
+//             "city" => isset($order['selectedAddress']['city']['name_ar']) ? $order['selectedAddress']['city']['name_ar'] : "شمال الرياض",
+//         ],
+//         "using_wallet" => $order['using_wallet'],
+//         "wallet_amount_used" => $order['wallet_amount_used'],
+//         "applied_discount_code" => $order['applied_discount_code'],
+//         "discount_applied" => $order['discount_applied'],
+//         "delivery_date" => date("Y-m-d", strtotime($order['delivery_date'] ?? date("Y-m-d"))),
+//         "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
+//         "comment" => $order['comment'] ?? "",
+//         "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
+//         "paid" => $order['paid'],
+//         "custom_state" =>  isset($order['orderState']['odoo_status']) ? $order['orderState']['odoo_status'] : "",
+//         "delivery_time" => date('H:i:s', strtotime($order['created_at'])),
+//         "delivery_period" => isset($order['deliveryPeriod']['name_ar']) ? $order['deliveryPeriod']['name_ar'] : "فترة الظهر",
+//         "payment_method" => isset($order['paymentType']['name_ar']) ? $order['paymentType']['name_ar'] : "",
+//         "products" => $new_products
+//     ];
 
-    if (isset($order['selectedAddress']['long']) && !empty($order['selectedAddress']['long'])) {
-        $payload['long'] = $order['selectedAddress']['long'] ?? '0.000000';
-    }
-    if (isset($order['selectedAddress']['lat']) && !empty($order['selectedAddress']['lat'])) {
-        $payload['lat'] = $order['selectedAddress']['lat'] ?? '0.000000';
-    }
-    // return $payload;
+//     if (isset($order['selectedAddress']['long']) && !empty($order['selectedAddress']['long'])) {
+//         $payload['long'] = $order['selectedAddress']['long'] ?? '0.000000';
+//     }
+//     if (isset($order['selectedAddress']['lat']) && !empty($order['selectedAddress']['lat'])) {
+//         $payload['lat'] = $order['selectedAddress']['lat'] ?? '0.000000';
+//     }
+//     // return $payload;
 
-    // info(json_encode($payload));
+//     // info(json_encode($payload));
 
-    $headers = [
-        'Authorization: ' . $token,
-        'Content-Type: application/json',
-        'Cookie: session_id=' . $session_id,
-    ];
+//     $headers = [
+//         'Authorization: ' . $token,
+//         'Content-Type: application/json',
+//         'Cookie: session_id=' . $session_id,
+//     ];
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+//     $ch = curl_init();
+//     curl_setopt($ch, CURLOPT_URL, $url);
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+//     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification if needed
+//     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
+//     $response = curl_exec($ch);
+//     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+//     $error = curl_error($ch);
 
-    curl_close($ch);
+//     curl_close($ch);
 
-    return [
-        'status_code' => $httpCode,
-        'response' => json_decode($response, true),
-        'error' => $error
-    ];
+//     return [
+//         'status_code' => $httpCode,
+//         'response' => json_decode($response, true),
+//         'error' => $error
+//     ];
 
-    // $client = new Client();
-    // $response = $client->post($url, [
-    //     'headers' => [
-    //         'Authorization' => $token,
-    //         'Content-Type'  => 'application/json',
-    //         'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
-    //         'Accept'        => 'application/json',
-    //     ],
-    //     'json' => $payload
-    // ]);
-    // return [
-    //     'status_code' => $response->getStatusCode(),
-    //     'body' => json_decode($response->getBody(), true)
-    // ];
+//     // $client = new Client();
+//     // $response = $client->post($url, [
+//     //     'headers' => [
+//     //         'Authorization' => $token,
+//     //         'Content-Type'  => 'application/json',
+//     //         'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+//     //         'Accept'        => 'application/json',
+//     //     ],
+//     //     'json' => $payload
+//     // ]);
+//     // return [
+//     //     'status_code' => $response->getStatusCode(),
+//     //     'body' => json_decode($response->getBody(), true)
+//     // ];
 
-    // $response = Http::withHeaders([
-    //     'Authorization' => $token,
-    //     'Content-Type'  => 'application/json',
-    //     'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
-    // ])->post($url, $payload);
+//     // $response = Http::withHeaders([
+//     //     'Authorization' => $token,
+//     //     'Content-Type'  => 'application/json',
+//     //     'Cookie'        => 'session_id=3e594e3f81312915f022b090f71dfbc42999b1ad',
+//     // ])->post($url, $payload);
 
-    // return [
-    //     'status' => $response->status(),
-    //     'body' => $response->json(),
-    // ];
-}
+//     // return [
+//     //     'status' => $response->status(),
+//     //     'body' => $response->json(),
+//     // ];
+// }
 
 
 function touchStock($order)

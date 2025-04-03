@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Http;
 
 class OdooService
 {
-    public $url = 'http://213.136.77.102:8069/api/sale_orders';
+    // public $url = 'http://213.136.77.102:8069/api/sale_orders';
+    public $url = 'https://turkeymeat49-turkey-shop.odoo.com/api/sale_orders';
+
     public $auth_url = 'https://turkishop.shop/web/session/authenticate';
-    public $token = 'd93095a67ff516c273d19b1d9d2db21f549d898b';
+    public $token = 'e455bc19aac5d340b1fcad1d85c94cc5116d1477';
     public $session_id;
 
     public function __construct()
@@ -43,7 +45,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
                 if ($product->is_karashah == false) {
@@ -55,7 +57,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
                 if ($product->is_lyh == false) {
@@ -67,7 +69,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
                 if ($product->is_ras == false) {
@@ -79,7 +81,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
             }
@@ -94,7 +96,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
                 if ($product->is_karashah == false) {
@@ -106,7 +108,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
                 if ($product->is_lyh == false) {
@@ -118,7 +120,7 @@ class OdooService
                         'preparation' =>  (object)[],
                         'cut' =>  (object)[],
                         'shalwata' =>  (object)[],
-                        'quantity' => 1,
+                        'quantity' => $product->quantity,
                     ];
                 }
             }
@@ -131,7 +133,7 @@ class OdooService
                     'preparation' =>  (object)[],
                     'cut' =>  (object)[],
                     'shalwata' =>  (object)[],
-                    'quantity' => 1,
+                    'quantity' => $product->quantity,
                 ];
             }
             # code...
@@ -168,7 +170,7 @@ class OdooService
             "wallet_amount_used" => $order['wallet_amount_used'],
             "applied_discount_code" => $order['applied_discount_code'],
             "discount_applied" => $order['discount_applied'],
-            "delivery_date" => $order['delivery_date'],
+            "delivery_date" => date("Y-m-d", strtotime($order['delivery_date'] ?? date("Y-m-d"))),
             "date_order" => date("Y-m-d H:i:s", strtotime($order["created_at"])),
             "comment" => $order['comment'] ?? "",
             "day" =>  strtolower(date("l", strtotime($order["created_at"]))),
