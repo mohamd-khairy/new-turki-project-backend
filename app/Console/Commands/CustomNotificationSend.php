@@ -320,7 +320,14 @@ class CustomNotificationSend extends Command
             ->join('orders', 'order_products.order_ref_no', '=', 'orders.ref_no')
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->join('products', 'order_products.product_id', '=', 'products.id')
-            ->whereIn('products.category_id', $categoryIds)
+            // ->whereIn('products.category_id', $categoryIds)
+            ->where(function ($q) use ($categoryIds) {
+                $q->whereIn('products.category_id', $categoryIds);
+
+                foreach ($categoryIds as $id) {
+                    $q->orWhereJsonContains('products.other_category_ids', $id);
+                }
+            })
             ->whereNotNull('customers.device_token')
             ->pluck('customers.device_token')
             ->toArray();

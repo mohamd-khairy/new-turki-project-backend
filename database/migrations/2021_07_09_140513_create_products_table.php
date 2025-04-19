@@ -30,6 +30,7 @@ class CreateProductsTable extends Migration
             $table->boolean('is_picked_up')->default('0');
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('sub_category_id')->nullable();
+            $table->string('other_category_ids')->nullable();
 
             $table->foreign('shalwata_id')->references('id')->on('shalwatas')->onDelete('cascade');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

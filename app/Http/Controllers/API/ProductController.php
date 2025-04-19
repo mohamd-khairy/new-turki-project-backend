@@ -128,7 +128,12 @@ class ProductController extends Controller
             }
 
             if (request('category_id')) {
-                $products = $products->where('category_id', request('category_id'));
+                $products = $products
+                    // ->where('category_id', request('category_id'));
+                    ->where(function ($q) {
+                        $q->where('category_id', request('category_id'))
+                            ->orWhereJsonContains('other_category_ids', request('category_id'));
+                    });
             }
 
 
@@ -242,7 +247,6 @@ class ProductController extends Controller
 
     public function getProductByCategory(Request $request, $category)
     {
-
         $category = Category::find($category);
         if ($category == null)
             return response()->json([
@@ -252,6 +256,7 @@ class ProductController extends Controller
                 'description' => '',
                 'code' => '404'
             ], 404);
+
 
         // get by location
         $point = $request->query('longitude') . " " . $request->query('latitude');
@@ -271,10 +276,30 @@ class ProductController extends Controller
 
         if ($currentCity != null) {
             $subCategoryIds = SubCategoryCity::where('city_id', $currentCity->id)->distinct()->pluck('sub_category_id');
-            $subcategories = SubCategory::whereIn('id', $subCategoryIds)->where('category_id', $category->id)->distinct()->orderBy('sort', 'ASC')->get();
+
+            $subcategories = SubCategory::whereIn('id', $subCategoryIds)
+                ->where('category_id', $category->id)->distinct()->orderBy('sort', 'ASC')->get();
             $productIds = ProductCity::where('city_id', $currentCity->id)->distinct()->pluck('product_id');
-            foreach ($subcategories as $d) {
+
+            /*********** */
+            $productIds2 = Product::whereNotNull('products.other_category_ids')
+                ->whereJsonContains('other_category_ids', $category->id)->get();
+
+
+            // dd($category->id);
+            // dd($productIds2);
+            /*********** */
+
+            foreach ($subcategories as $k => $d) {
+
                 $arr = array_intersect($d->products()->pluck('id')->toArray(), $productIds->toArray());
+                /*********** */
+                if ($k == 0 && $productIds2->count() > 0) {
+                    $arr = array_merge($arr, $productIds2->pluck('id')->toArray());
+                }
+                /*********** */
+
+
                 $d->products = Product::whereIn('id', $arr)->active()->with('productImages', 'tags')->orderBy('sort', 'asc')->get();
             }
         } else
@@ -360,15 +385,24 @@ class ProductController extends Controller
                     'city_ids' => array('required', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
                     'images' => 'array|nullable',
                     "images.*"  => "required|image|mimes:png,jpg,jpeg|max:4048",
+                    'other_category_ids' => array('nullable', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
+
                 ]);
 
                 $validatedData = $requestData->validated();
 
                 $productCreationData = $request->except('integrate_id', 'preparation_ids', 'size_ids', 'cut_ids', 'payment_type_ids', 'city_ids', 'images');
 
+                if ($validatedData['other_category_ids']) {
+                    $ids = is_array($validatedData['other_category_ids']) ? $validatedData['other_category_ids'] : explode(',', $validatedData['other_category_ids']);
+                    $productCreationData['other_category_ids'] = array_map('intval', $ids);
+                }
+
+
                 $product = Product::create($productCreationData);
 
                 if ($product) {
+
 
                     if ($validatedData['city_ids']) {
                         $city_ids = is_array($validatedData['city_ids']) ? $validatedData['city_ids'] : explode(',', $validatedData['city_ids']);
@@ -425,8 +459,8 @@ class ProductController extends Controller
             return DB::transaction(function () use ($request, $product) {
 
                 $requestData = Validator::make($request->post(), [
-                    'name_ar' => 'string|max:255',//|unique:products,name_ar,' . $product->id,
-                    'name_en' => 'string|max:255',//|unique:products,name_en,' . $product->id,
+                    'name_ar' => 'string|max:255', //|unique:products,name_ar,' . $product->id,
+                    'name_en' => 'string|max:255', //|unique:products,name_en,' . $product->id,
                     'description_ar' => 'string|max:255',
                     'description_en' => 'string|max:255',
                     'weight' => 'nullable|string|max:255',
@@ -452,6 +486,7 @@ class ProductController extends Controller
                     'city_ids' => array('required', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
                     'images' => 'array|nullable',
                     "images.*"  => "required|image|mimes:png,jpg,jpeg|max:4048",
+                    'other_category_ids' => array('nullable', 'regex:(^([-+] ?)?[0-9]+(,[0-9]+)*$)'),
                 ]);
 
                 if ($requestData->fails())
@@ -465,6 +500,12 @@ class ProductController extends Controller
                 $subCategory = SubCategory::where([['category_id', $validatedData['category_id']], ['id', $validatedData['sub_category_id']]])->get()->first();
                 if ($subCategory == null)
                     return response()->json(['success' => false, 'data' => null, 'message' => "failed, check your selected sub category!", 'description' => "", 'code' => "400"], 400);
+
+                if ($validatedData['other_category_ids']) {
+                    $ids = is_array($validatedData['other_category_ids']) ? $validatedData['other_category_ids'] : explode(',', $validatedData['other_category_ids']);
+                    $productCreationData['other_category_ids'] = array_map('intval', $ids);
+                }
+
 
                 $product->update($productCreationData);
 

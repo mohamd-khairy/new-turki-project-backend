@@ -57,7 +57,7 @@ class SendToOdoo extends Command
                 ->where('ref_no', 'like', 'SA%')
                 ->whereDate('created_at', date('Y-m-d'))
                 ->whereNotIn('order_state_id', ['104', '109', '200'])
-                ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime('-4 minutes')))
+                ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime('-2 minutes')))
                 ->orderBy('id', 'desc')
                 ->take(10)
                 ->get();

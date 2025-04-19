@@ -45,7 +45,8 @@ class Product extends Model
         'is_picked_up',
         'category_id',
         'integrate_id',
-        'sub_category_id'
+        'sub_category_id',
+        'other_category_ids'
     ];
 
     protected $casts = [
@@ -56,6 +57,7 @@ class Product extends Model
         'is_kwar3' => 'boolean',
         'is_Ras' => 'boolean',
         'is_lyh' => 'boolean',
+        'other_category_ids' => 'array'
     ];
 
 
@@ -204,7 +206,4 @@ class Product extends Model
     {
         return config('app.url') . Storage::url($this->thumbnail);
     }
-
-
-
 }

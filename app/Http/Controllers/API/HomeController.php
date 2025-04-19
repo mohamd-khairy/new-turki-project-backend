@@ -157,7 +157,12 @@ class HomeController extends Controller
         }
 
         if (request('category_id')) {
-            $data = $data->where('products.category_id', request('category_id'));
+            $data = $data
+                // ->where('products.category_id', request('category_id'));
+                ->where(function ($q) {
+                    $q->where('products.category_id', request('category_id'))
+                        ->orWhereJsonContains('products.other_category_ids', request('category_id'));
+                });
         }
 
         if (request('country_id') == 4) {
