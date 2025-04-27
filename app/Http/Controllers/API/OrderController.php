@@ -283,7 +283,7 @@ class OrderController extends Controller
 
     public function exportCsv($orders)
     {
-        $data = $orders->take(50000)
+        $data = $orders//->take(50000)
             ->select(
                 'orders.id',
                 'orders.ref_no',
@@ -304,9 +304,10 @@ class OrderController extends Controller
                 'orders.order_subtotal',
                 'orders.discount_applied',
                 'orders.wallet_amount_used',
+                'orders.created_at',
                 'addresses.country_id as address_country_id'
             )
-            ->whereNotNull('address_id')
+            // ->whereNotNull('address_id')
             ->get();
         // Define CSV file headers
         $headers = [
@@ -337,6 +338,8 @@ class OrderController extends Controller
                 "المبلغ الدفوع",
                 "حالة الدفع",
                 "المبلغ المتبقي",
+                "الخصم",
+                "تاريخ الطلب"
             ]);
 
             // Write data rows
@@ -368,6 +371,8 @@ class OrderController extends Controller
                     $payment_price,
                     $row->payment_status,
                     $remain_amount,
+                    $row->discount_applied,
+                    $row->created_at
                 ]);
             }
 
